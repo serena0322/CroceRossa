@@ -1,26 +1,31 @@
+from __future__ import annotations
+from typing import List
+
 class Checklist:
-    def __init__(self, elementi: list):
-        # Ogni elemento è una stringa, inizialmente non completato
-        self.elementi = {elemento: False for elemento in elementi}
+    def __init__(self, controlli: List[str], km_inizio: str, km_fine: str):
+        self.km_inizio = km_inizio
+        self.km_fine = km_fine
+        self.controlli = {elemento: False for elemento in controlli}
 
     def completa_elemento(self, elemento: str):
-        if elemento in self.elementi:
-            self.elementi[elemento] = True
-            print(f"Elemento '{elemento}' completato.")
+        if elemento in self.controlli:
+            self.controlli[elemento] = True
+            print(f"✅ Elemento '{elemento}' completato.")
         else:
-            print(f"L'elemento '{elemento}' non è presente nella checklist.")
+            print(f"⚠️ L'elemento '{elemento}' non è presente nella checklist.")
 
     def annulla_elemento(self, elemento: str):
-        if elemento in self.elementi:
-            self.elementi[elemento] = False
-            print(f"Elemento '{elemento}' segnato come non completato.")
+        if elemento in self.controlli:
+            self.controlli[elemento] = False
+            print(f"❌ Elemento '{elemento}' segnato come non completato.")
         else:
-            print(f"L'elemento '{elemento}' non è presente nella checklist.")
+            print(f"⚠️ L'elemento '{elemento}' non è presente nella checklist.")
 
-    def checklist_completata(self):
-        return all(self.elementi.values())
+    def checklist_completata(self) -> bool:
+        return all(self.controlli.values())
 
     def riepilogo(self):
-        for elem, stato in self.elementi.items():
-            stato_txt = "✓" if stato else "✗"
-            print(f"{stato_txt} {elem}")
+        print(f"📋 Checklist (km iniziali: {self.km_inizio}, finali: {self.km_fine}):")
+        for elem, stato in self.controlli.items():
+            simbolo = "✓" if stato else "✗"
+            print(f"  {simbolo} {elem}")
