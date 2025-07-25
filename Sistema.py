@@ -71,7 +71,7 @@ class Sistema:
             print("⚠️ Turno non trovato.")
             return
 
-        turno.assegna_volontario(volontario)
+        turno.assegna_turno(volontario)
 
     # --- Gestione corsi ---
     def aggiungi_corso(self, corso: Corso):
@@ -95,7 +95,7 @@ class Sistema:
         volontario = self.get_volontario(cod_fiscale)
         if volontario:
             volontario.prenota_turno(turno)
-            turno.assegna_volontario(volontario)
+            turno.assegna_turno(volontario)
 
     def annulla_turno(self, cod_fiscale: int, turno: Turno):
         volontario = self.get_volontario(cod_fiscale)

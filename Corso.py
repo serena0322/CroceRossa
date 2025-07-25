@@ -28,6 +28,7 @@ class Corso:
         self.checklist = checklist
         self.referente: Optional[Referente] = None
         self.partecipanti: List[Volontario] = []
+        self.stato: List[str] = ["Proposto", "In corso" , "Concluso"]
 
     def aggiungi_partecipante(self, volontario: Volontario):
         if volontario not in self.partecipanti:
