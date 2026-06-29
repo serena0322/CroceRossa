@@ -7,3 +7,7 @@
 /dataSources/
 /dataSources.local.xml
 crocerossa-1084b-firebase-adminsdk-*.json
+.DS_Store
+__pycache__/
+*.pyc
+*firebase-adminsdk*.json

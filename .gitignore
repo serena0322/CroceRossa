@@ -1,0 +1,14 @@
+# Cache di Python e file di sistema
+__pycache__/
+*.pyc
+.DS_Store
+
+# Ambienti Virtuali (MOLTO IMPORTANTE)
+venv/
+env/
+
+# Impostazioni locali dell'Editor
+.idea/
+
+# Sicurezza e Chiavi del Database
+*firebase-adminsdk*.json
