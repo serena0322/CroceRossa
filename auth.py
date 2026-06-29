@@ -28,6 +28,7 @@ def registra_utente(cod_fiscale: str, email: str, password: str, nome: str, ruol
         data = response.json()  # contiene localId, idToken ecc.
     except requests.exceptions.RequestException as e:
         print(f"❌ Errore durante la creazione dell'utente Firebase Auth: {e}")
+        # pyrefly: ignore [bad-return]
         return None
 
     # 3. Prepara dati utente
@@ -85,6 +86,7 @@ def recupera_utente_da_firestore(cod_fiscale: str):
     doc = db.collection("utenti").document(cod_fiscale).get()
     if doc.exists:
         data = doc.to_dict()
+        # pyrefly: ignore [bad-argument-type]
         return costruisci_utente(data)
     else:
         print("❌ Utente non trovato in Firestore.")

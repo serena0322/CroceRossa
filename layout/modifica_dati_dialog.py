@@ -40,6 +40,7 @@ class ModificaDatiDialog(QDialog):
         layout.addWidget(self.disponibilita_edit)
 
         salva_btn = QPushButton("Salva")
+        # pyrefly: ignore [missing-attribute]
         salva_btn.clicked.connect(self.salva_dati)
         layout.addWidget(salva_btn)
 

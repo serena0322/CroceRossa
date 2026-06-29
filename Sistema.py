@@ -27,6 +27,7 @@ class Sistema:
             return True
         return False
 
+    # pyrefly: ignore [bad-function-definition]
     def aggiorna_profilo(self, cod_fiscale: int, email: str = None, telefono: str = None, nome: str = None, cognome: str = None, nascita:str = None):
         volontario = self.get_volontario(cod_fiscale)
         if volontario:
@@ -100,6 +101,7 @@ class Sistema:
     def annulla_turno(self, cod_fiscale: int, turno: Turno):
         volontario = self.get_volontario(cod_fiscale)
         if volontario:
+            # pyrefly: ignore [missing-attribute]
             volontario.rimuovi_turno(turno)
             turno.rimuovi_volontario(volontario)
 

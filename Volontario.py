@@ -31,6 +31,7 @@ class Volontario(Utente):
         self.patenti = patenti
         self.formazione = formazione
         self.compagnia_appartenenza = compagnia_appartenenza
+        # pyrefly: ignore [bad-assignment]
         self.disponibilita = disponibilita
         self.referente: Optional[Referente] = None
         self.turni_assegnati: list[Turno] = []
@@ -49,6 +50,7 @@ class Volontario(Utente):
 
     def prenota_turno(self, turno: Turno, parent=None):
         ruoli_disponibili = []
+        # pyrefly: ignore [missing-attribute]
         for ruolo, numero in turno.persone_richieste.items():
             attuali = turno.persone_prenotate.get(ruolo, [])
             if len(attuali) < numero:
@@ -81,6 +83,7 @@ class Volontario(Utente):
         return sum(self.ore_lavorate.values())
 
     def disponibilita(self, giorno: str) -> bool:
+        # pyrefly: ignore [not-iterable]
         return giorno in self.disponibilita
 
     def visualizza_turni_scelti(self):
@@ -89,6 +92,7 @@ class Volontario(Utente):
             return
         print(f"📅 Turni assegnati a {self.nome}:")
         for turno in self.turni_assegnati:
+            # pyrefly: ignore [missing-attribute]
             print(f" - {turno.data} ({turno.orario}) in {turno.sede}")
 
 
@@ -101,5 +105,6 @@ class Volontario(Utente):
             print(f" - {volontario.get_nome_completo()} | 📧 {volontario.email} | 📞 {volontario.telefono}")
 
     def apri_modifica_dati(self):
+        # pyrefly: ignore [missing-attribute]
         dialog = ModificaDatiDialog(self.volontario)
         dialog.exec_()

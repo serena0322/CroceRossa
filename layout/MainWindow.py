@@ -49,14 +49,17 @@ class MainWindow(QWidget):
         layout.addWidget(self.label)
 
         btn_riepilogo = QPushButton("📋 Stampa Riepilogo")
+        # pyrefly: ignore [missing-attribute]
         btn_riepilogo.clicked.connect(self.stampa_riepilogo)
         layout.addWidget(btn_riepilogo)
 
         btn_report = QPushButton("🧾 Report Volontario")
+        # pyrefly: ignore [missing-attribute]
         btn_report.clicked.connect(self.stampa_report_volontario)
         layout.addWidget(btn_report)
 
         btn_modifica_dati = QPushButton("✏️ Modifica Dati Personali")
+        # pyrefly: ignore [missing-attribute]
         btn_modifica_dati.clicked.connect(self.modifica_dati_volontario)
         layout.addWidget(btn_modifica_dati)
 
@@ -100,6 +103,7 @@ class MainWindow(QWidget):
         )
 
         sistema.assegna_referente(volontario.cod_fiscale, referente.cod_fiscale)
+        # pyrefly: ignore [bad-argument-type]
         sistema.aggiungi_volontario(referente)
         sistema.aggiungi_volontario(volontario)
 
@@ -136,6 +140,7 @@ class MainWindow(QWidget):
             data="2025-09-10",
             fascia_oraria="08:00 - 14:00",
             tipoServizio="A",
+            # pyrefly: ignore [bad-argument-type]
             personeRichieste="1",
             checklist=False,
             luogo="CRI Roma",

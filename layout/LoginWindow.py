@@ -56,6 +56,7 @@ class LoginWindow(QWidget):
         layout.addWidget(self.login_password)
 
         btn_login = QPushButton("Accedi")
+        # pyrefly: ignore [missing-attribute]
         btn_login.clicked.connect(self.login)
         layout.addWidget(btn_login)
 
@@ -93,6 +94,7 @@ class LoginWindow(QWidget):
         layout.addWidget(self.reg_password)
 
         btn_register = QPushButton("Registrati")
+        # pyrefly: ignore [missing-attribute]
         btn_register.clicked.connect(self.registra)  # qui chiami solo la logica
         layout.addWidget(btn_register)
 

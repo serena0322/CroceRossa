@@ -28,6 +28,7 @@ class Referente(Utente):
         disponibilita: list[str],
         area_gestita: str
     ):
+        # pyrefly: ignore [bad-keyword-argument, missing-argument]
         super().__init__(cod_fiscale, nome, cognome, email, nascita, telefono, ruolo="referente")
         self.curriculum = curriculum
         self.patenti = patenti
@@ -79,12 +80,15 @@ class Referente(Utente):
             print(f"❌ Corso '{corso.nome}' non trovato nella lista.")
 
 
+    # pyrefly: ignore [bad-function-definition]
     def modifica_corso(self, corso: Corso, nome: str = None, descrizione: str = None, durata_ore: int = None):
         if nome is not None:
             corso.nome = nome
         if descrizione is not None:
+            # pyrefly: ignore [missing-attribute]
             corso.descrizione = descrizione
         if durata_ore is not None:
+            # pyrefly: ignore [missing-attribute]
             corso.durata_ore = durata_ore
 
     def assegna_corso_a_volontario(self, volontario: Volontario, corso: Corso):

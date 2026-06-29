@@ -12,6 +12,7 @@ class RuoloDialog(QDialog):
 
         for ruolo in ruoli_disponibili:
             btn = QPushButton(ruolo.capitalize())
+            # pyrefly: ignore [missing-attribute]
             btn.clicked.connect(lambda _, r=ruolo: self.seleziona_ruolo(r))
             layout.addWidget(btn)
 

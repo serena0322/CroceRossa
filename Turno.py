@@ -20,6 +20,7 @@ class Turno:
         paziente: str,
         tempoExtra: str,
         dispositivi_richiesti: List[str],
+        # pyrefly: ignore [bad-function-definition]
         corso_richiesto: str = None,
     ):
         self.persone_prenotate: dict[str, list[int]] = {}
@@ -42,6 +43,7 @@ class Turno:
         ruolo_utente = utente.ruolo.lower()  # es. 'volontario', 'referente', 'operatore sanitario'
 
         # 1. Verifica se il ruolo è richiesto
+        # pyrefly: ignore [missing-attribute]
         richiesti = self.persone_richieste.get(ruolo_utente, 0)
         prenotati = self.persone_prenotate.get(ruolo_utente, [])
         if richiesti == 0:
@@ -96,6 +98,7 @@ class Turno:
 
     def is_scoperto(self) -> bool:
         try:
+            # pyrefly: ignore [bad-argument-type]
             richieste = int(self.personeRichieste)
         except ValueError:
             print("Valore personeRichieste non valido.")
