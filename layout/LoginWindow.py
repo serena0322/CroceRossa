@@ -1,19 +1,24 @@
 from PyQt5.QtWidgets import (
-    QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton,
+    QWidget, QVBoxLayout, QLineEdit, QPushButton,
     QTabWidget, QMessageBox, QSpacerItem, QSizePolicy
 )
-from FirebaseConfig import api_key
-from FirebaseConfig import db
+
+# 🧹 Pulizia: Via tutti gli import di Firebase e Auth diretti!
+# Importiamo invece il Modello e il Controller secondo il pattern MVC
 from Sistema import Sistema
-from auth import login_utente, registra_utente
+from GestioneUtenteController import GestioneUtenteController
+from Utente import Utente
 
 class LoginWindow(QWidget):
     def __init__(self, sistema: Sistema, callback_login_success):
         super().__init__()
         self.setWindowTitle("🔐 Accesso - Croce Rossa")
-        self.resize(350, 300)
+        self.resize(350, 450) # Leggermente ingrandita per ospitare i nuovi campi
         self.sistema = sistema
         self.callback_login_success = callback_login_success
+        
+        # Inizializziamo il nostro "Direttore d'orchestra"
+        self.controller = GestioneUtenteController()
 
         self.setStyleSheet("""
             QWidget {
@@ -46,9 +51,9 @@ class LoginWindow(QWidget):
         widget = QWidget()
         layout = QVBoxLayout()
 
-        self.login_codice = QLineEdit()
-        self.login_codice.setPlaceholderText("Email")
-        layout.addWidget(self.login_codice)
+        self.login_email = QLineEdit()
+        self.login_email.setPlaceholderText("Email")
+        layout.addWidget(self.login_email)
 
         self.login_password = QLineEdit()
         self.login_password.setPlaceholderText("Password")
@@ -68,9 +73,9 @@ class LoginWindow(QWidget):
         widget = QWidget()
         layout = QVBoxLayout()
 
-        self.reg_codice = QLineEdit()
-        self.reg_codice.setPlaceholderText("Email")
-        layout.addWidget(self.reg_codice)
+        self.reg_email = QLineEdit()
+        self.reg_email.setPlaceholderText("Email")
+        layout.addWidget(self.reg_email)
 
         self.reg_nome = QLineEdit()
         self.reg_nome.setPlaceholderText("Nome")
@@ -83,9 +88,19 @@ class LoginWindow(QWidget):
         self.reg_cod_fiscale = QLineEdit()
         self.reg_cod_fiscale.setPlaceholderText("Codice Fiscale")
         layout.addWidget(self.reg_cod_fiscale)
+        
+        # --- Nuovi campi aggiunti per rispettare il Modello UML ---
+        self.reg_data_nascita = QLineEdit()
+        self.reg_data_nascita.setPlaceholderText("Data di nascita (GG/MM/AAAA)")
+        layout.addWidget(self.reg_data_nascita)
+        
+        self.reg_telefono = QLineEdit()
+        self.reg_telefono.setPlaceholderText("Telefono")
+        layout.addWidget(self.reg_telefono)
+        # ---------------------------------------------------------
 
         self.reg_ruolo = QLineEdit()
-        self.reg_ruolo.setPlaceholderText("Ruolo")
+        self.reg_ruolo.setPlaceholderText("Ruolo (es: volontario)")
         layout.addWidget(self.reg_ruolo)
 
         self.reg_password = QLineEdit()
@@ -95,7 +110,7 @@ class LoginWindow(QWidget):
 
         btn_register = QPushButton("Registrati")
         # pyrefly: ignore [missing-attribute]
-        btn_register.clicked.connect(self.registra)  # qui chiami solo la logica
+        btn_register.clicked.connect(self.registra)
         layout.addWidget(btn_register)
 
         layout.addSpacerItem(QSpacerItem(20, 20, QSizePolicy.Minimum, QSizePolicy.Expanding))
@@ -103,62 +118,48 @@ class LoginWindow(QWidget):
         return widget
 
     def login(self):
-        email = self.login_codice.text().strip()
+        email = self.login_email.text().strip()
         password = self.login_password.text().strip()
 
-        try:
-            data = login_utente(email, password, api_key)
-            if data:
-                QMessageBox.information(self, "Login", f"✅ Login riuscito per {email}")
-                self.callback_login_success()
-                self.close()
-            else:
-                QMessageBox.warning(self, "Errore", "❌ Credenziali errate.")
-        except Exception as e:
-            QMessageBox.critical(self, "Errore", f"Errore durante il login:\n{e}")
+        # Il controller si occupa di validare e interrogare Firebase
+        successo = self.controller.effettuaLogin(email, password)
+        
+        if successo:
+            QMessageBox.information(self, "Login", f"✅ Login riuscito!")
+            self.callback_login_success()
+            self.close()
+        else:
+            QMessageBox.warning(self, "Errore", "❌ Credenziali errate o formato non valido.")
+
 
     def registra(self):
-        try:
-            email = self.reg_codice.text().strip()
-            nome = self.reg_nome.text().strip()
-            cognome = self.reg_cognome.text().strip()
-            password = self.reg_password.text().strip()
-            cod_fiscale = self.reg_cod_fiscale.text().strip()
-            ruolo = self.reg_ruolo.text().strip().lower()  # standardizza in minuscolo
+        # 1. Raccoglie i dati dai campi di testo
+        email = self.reg_email.text().strip()
+        nome = self.reg_nome.text().strip()
+        cognome = self.reg_cognome.text().strip()
+        cod_fiscale = self.reg_cod_fiscale.text().strip()
+        data_nascita = self.reg_data_nascita.text().strip()
+        telefono = self.reg_telefono.text().strip()
+        ruolo = self.reg_ruolo.text().strip().lower()
+        password = self.reg_password.text().strip()
 
-            # Chiamata a Firebase Auth
-            firebase_user = registra_utente(cod_fiscale, email, password, nome, ruolo)
-            if not firebase_user:
-                QMessageBox.warning(self, "Errore", "❌ Email già registrata.")
-                return
+        # 2. Crea un'Entità pura
+        nuovo_utente = Utente(
+            cod_fiscale=cod_fiscale,
+            nome=nome,
+            cognome=cognome,
+            email=email,
+            data_nascita=data_nascita,
+            ruolo=ruolo,
+            telefono=telefono
+        )
 
-            id_documento = cod_fiscale
+        # 3. Passa l'Entità al Controller per il salvataggio
+        successo = self.controller.registraAccount(nuovo_utente, password)
 
-            # Collezioni standardizzate in minuscolo
-            if ruolo == "volontario":
-                collezione = "Volontario"
-            elif ruolo == "referente":
-                collezione = "Referente"
-            elif ruolo == "operatore_sanitario":
-                collezione = "Operatore_Sanitario"
-            else:
-                QMessageBox.critical(self, "Errore", f"❌ Ruolo non valido: {ruolo}")
-                return
-
-            # Salvataggio nella collezione corretta
-            db.collection(collezione).document(id_documento).set({
-                "cod_fiscale": cod_fiscale,
-                "nome": nome,
-                "cognome": cognome,
-                "email": email,
-                "ruolo": ruolo
-            })
-
+        if successo:
             QMessageBox.information(self, "Registrazione", "✅ Account creato con successo.")
-
-            # 🔁 PASSAGGIO A MAIN WINDOW
-            self.callback_login_success()  # Chiama la MainWindow
-            self.close()  # Chiudi la finestra di login
-
-        except Exception as e:
-            QMessageBox.critical(self, "Errore", f"Registrazione fallita:\n{e}")
+            self.callback_login_success()
+            self.close()
+        else:
+            QMessageBox.warning(self, "Errore", "❌ Registrazione fallita. Controlla i dati inseriti.")
