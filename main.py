@@ -14,8 +14,16 @@ class AppController:
         self.login_window.show()
 
     def apri_main(self):
-        self.main_window = MainWindow(self.sistema)
+        self.main_window = MainWindow(self.sistema, self.esegui_logout)
         self.main_window.show()
+
+    def esegui_logout(self):
+        if self.main_window:
+            self.main_window.close()
+            self.main_window = None
+        self.sistema.logged_user = None
+        self.login_window = LoginWindow(self.sistema, self.apri_main)
+        self.login_window.show()
 
     def run(self):
         sys.exit(self.app.exec_())

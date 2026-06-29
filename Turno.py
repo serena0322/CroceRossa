@@ -1,8 +1,6 @@
 from __future__ import annotations
 from typing import List, TYPE_CHECKING
 
-from Utente import Utente
-
 if TYPE_CHECKING:
     from Volontario import Volontario
     from Mezzo import Mezzo
@@ -10,104 +8,164 @@ if TYPE_CHECKING:
 class Turno:
     def __init__(
         self,
-        id_turno: int,
-        data: str,
-        fascia_oraria: str,
-        tipoServizio: str,
-        personeRichieste: dict[str, int],
-        checklist: bool,
-        luogo: str,
-        paziente: str,
-        tempoExtra: str,
-        dispositivi_richiesti: List[str],
-        # pyrefly: ignore [bad-function-definition]
+        id: str = "",
+        data: str = "",
+        luogoDestinazione: str = "",
+        luogoPrelevamento: str = "",
+        oraInizio: str = "",
+        oraFine: str = "",
+        patenteRichiesta: str = "",
+        paziente: str = "",
+        personeRichieste: int = 1,
+        stato: str = "Proposto",
+        tipoServizio: str = "",
+        # Compatibility parameters:
+        id_turno: int = None,
+        fascia_oraria: str = None,
+        luogo: str = None,
         corso_richiesto: str = None,
+        checklist: bool = False,
+        tempoExtra: str = "",
+        dispositivi_richiesti: List[str] = None
     ):
-        self.persone_prenotate: dict[str, list[int]] = {}
-        self.id_turno = id_turno
+        self.id = str(id_turno) if id_turno is not None else id
         self.data = data
-        self.fascia_oraria = fascia_oraria
-        self.tipoServizio = tipoServizio
-        self.personeRichieste = personeRichieste
-        self.checklist = checklist
-        self.luogo = luogo
-        self.paziente = paziente
-        self.tempoExtra = tempoExtra
-        self.dispositivi_richiesti = dispositivi_richiesti
-        self.corso_richiesto = corso_richiesto
+        self.luogoDestinazione = luogoDestinazione if luogoDestinazione else (luogo if luogo else "")
+        self.luogoPrelevamento = luogoPrelevamento if luogoPrelevamento else (luogo if luogo else "")
+        
+        if fascia_oraria and " - " in fascia_oraria:
+            parts = fascia_oraria.split(" - ")
+            self.oraInizio = parts[0]
+            self.oraFine = parts[1]
+        else:
+            self.oraInizio = oraInizio
+            self.oraFine = oraFine
 
+        self.patenteRichiesta = patenteRichiesta if patenteRichiesta else (corso_richiesto if corso_richiesto else "")
+        self.paziente = paziente
+        
+        try:
+            self.personeRichieste = int(personeRichieste)
+        except (ValueError, TypeError):
+            self.personeRichieste = 1
+            
+        self.stato = stato
+        self.tipoServizio = tipoServizio
+        
+        # Compatibility attributes
         self.volontari_assegnati: List[Volontario] = []
         self.mezzo: Mezzo | None = None
+        self.checklist = checklist
+        self.tempoExtra = tempoExtra
+        self.dispositivi_richiesti = dispositivi_richiesti if dispositivi_richiesti is not None else []
+        self.corso_richiesto = self.patenteRichiesta
+        self.persone_richieste = {"volontario": self.personeRichieste}
+        self.persone_prenotate = {}
+        self.volontari_ruoli: dict[str, str] = {}
 
-    def assegna_turno(self, utente: Utente):
-        ruolo_utente = utente.ruolo.lower()  # es. 'volontario', 'referente', 'operatore sanitario'
+    @property
+    def id_turno(self) -> int:
+        try:
+            return int(self.id)
+        except ValueError:
+            return 0
+            
+    @id_turno.setter
+    def id_turno(self, val: int):
+        self.id = str(val)
 
-        # 1. Verifica se il ruolo è richiesto
-        # pyrefly: ignore [missing-attribute]
-        richiesti = self.persone_richieste.get(ruolo_utente, 0)
-        prenotati = self.persone_prenotate.get(ruolo_utente, [])
-        if richiesti == 0:
-            print(f"❌ Il ruolo '{ruolo_utente}' non è richiesto per questo turno.")
-            return
-        if len(prenotati) >= richiesti:
-            print(f"❌ Tutti i posti per il ruolo '{ruolo_utente}' sono già occupati.")
-            return
+    @property
+    def luogo(self) -> str:
+        return self.luogoDestinazione
+        
+    @luogo.setter
+    def luogo(self, val: str):
+        self.luogoDestinazione = val
+        self.luogoPrelevamento = val
 
-        # 2. Verifica che non sia già stato assegnato
-        if utente.cod_fiscale in prenotati:
-            print(f"⚠️ {utente.get_nome_completo()} è già assegnato come {ruolo_utente} a questo turno.")
-            return
+    @property
+    def fascia_oraria(self) -> str:
+        return f"{self.oraInizio} - {self.oraFine}"
+        
+    @fascia_oraria.setter
+    def fascia_oraria(self, val: str):
+        if " - " in val:
+            parts = val.split(" - ")
+            self.oraInizio = parts[0]
+            self.oraFine = parts[1]
 
-        # 3. Verifica il corso richiesto
-        if self.corso_richiesto:
-            corsi_frequentati = getattr(utente, "corsi_frequentati", [])
-            if self.corso_richiesto not in [c.nome for c in corsi_frequentati]:
-                print(f"❌ {utente.get_nome_completo()} non ha il corso richiesto: {self.corso_richiesto}.")
-                return
+    def aggiornaDati(self, **kwargs) -> None:
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
 
-        # 4. Assegna al turno
-        self.persone_prenotate.setdefault(ruolo_utente, []).append(utente.cod_fiscale)
-        if hasattr(utente, "turni_assegnati"):
-            utente.turni_assegnati.append(self)
+    def aggiungiVolontario(self, v: Volontario) -> bool:
+        if len(self.volontari_assegnati) < self.personeRichieste:
+            if v not in self.volontari_assegnati:
+                self.volontari_assegnati.append(v)
+                self.persone_prenotate.setdefault(v.ruolo, []).append(v.cod_fiscale)
+                if self not in v.turni_assegnati:
+                    v.turni_assegnati.append(self)
+                if len(self.volontari_assegnati) == self.personeRichieste:
+                    self.stato = "Completo"
+                return True
+        return False
 
-        print(f"✅ {utente.get_nome_completo()} assegnato come {ruolo_utente} al turno del {self.data}.")
+    def assegna_turno(self, utente: Volontario) -> bool:
+        return self.aggiungiVolontario(utente)
+
+    def getVolontariIscritti(self) -> List[Volontario]:
+        return self.volontari_assegnati
+
+    def isCompleto(self) -> bool:
+        return len(self.volontari_assegnati) >= self.personeRichieste
+
+    def rimuoviVolontario(self, v: Volontario) -> None:
+        if v in self.volontari_assegnati:
+            self.volontari_assegnati.remove(v)
+            if v.cod_fiscale in self.persone_prenotate.get(v.ruolo, []):
+                self.persone_prenotate[v.ruolo].remove(v.cod_fiscale)
+            if self in v.turni_assegnati:
+                v.turni_assegnati.remove(self)
+            self.stato = "Aperto"
 
     def rimuovi_volontario(self, volontario: Volontario):
-        if volontario in self.volontari_assegnati:
-            self.volontari_assegnati.remove(volontario)
-            volontario.turni_assegnati.remove(self)
-            print(f"{volontario.nome} è stato rimosso dal turno del {self.data}.")
-        else:
-            print(f"{volontario.nome} non era assegnato a questo turno.")
+        self.rimuoviVolontario(volontario)
 
     def assegna_mezzo(self, mezzo: Mezzo):
         self.mezzo = mezzo
-        mezzo.assegna_a_turno(self)
-        print(f"Mezzo {mezzo.targa} assegnato al turno del {self.data}.")
+        if self not in mezzo.turni_assegnati:
+            mezzo.assegna_a_turno(self)
 
     def completa_checklist(self):
         self.checklist = True
-        print(f"Checklist completata per il turno del {self.data}.")
 
     def cambia_stato(self, nuovo_stato: str):
-        if nuovo_stato in ["Proposto", "Confermato", "Annullato", "Concluso"]:
-            self.stato = nuovo_stato
-            print(f"Stato del turno aggiornato a {self.stato}.")
-        else:
-            print("Stato non valido.")
+        self.stato = nuovo_stato
 
     def is_scoperto(self) -> bool:
-        try:
-            # pyrefly: ignore [bad-argument-type]
-            richieste = int(self.personeRichieste)
-        except ValueError:
-            print("Valore personeRichieste non valido.")
-            return True
-        return len(self.volontari_assegnati) < richieste
+        return not self.isCompleto()
 
     def richiede_corso(self) -> bool:
-        return self.corso_richiesto is not None
+        return bool(self.patenteRichiesta)
 
     def dispositivi_mancanti(self, disponibili: List[str]) -> List[str]:
         return [d for d in self.dispositivi_richiesti if d not in disponibili]
 
+    def aggiorna_firestore(self):
+        from FirebaseConfig import db
+        db.collection("turni").document(self.id).set({
+            "id": self.id,
+            "data": self.data,
+            "luogoDestinazione": self.luogoDestinazione,
+            "luogoPrelevamento": self.luogoPrelevamento,
+            "oraInizio": self.oraInizio,
+            "oraFine": self.oraFine,
+            "patenteRichiesta": self.patenteRichiesta,
+            "paziente": self.paziente,
+            "personeRichieste": self.personeRichieste,
+            "persone_richieste": self.persone_richieste,
+            "stato": self.stato,
+            "tipoServizio": self.tipoServizio,
+            "volontari_ruoli": self.volontari_ruoli
+        }, merge=True)

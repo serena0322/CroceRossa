@@ -1,0 +1,14 @@
+{
+  "_comment": "Credenziali OAuth 2.0 per accesso Google (tipo: App Desktop)",
+  "_istruzioni": [
+    "1. Vai su: https://console.cloud.google.com/apis/credentials?project=crocerossa-1084b",
+    "2. Clicca 'Crea Credenziali' → 'ID client OAuth 2.0'",
+    "3. Tipo applicazione: 'App desktop'",
+    "4. Nome: 'Croce Rossa App' → Crea",
+    "NOTA: Per le App Desktop NON c'è il campo URI — è normale!",
+    "      Google permette automaticamente http://localhost su qualsiasi porta.",
+    "5. Assicurati che 'Google Sign-In' sia abilitato in Firebase Authentication"
+  ],
+  "client_id": "540289205969-sjb6bjraqsiq9mkm44dt4j0t1b5749hg.apps.googleusercontent.com",
+  "client_secret": "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"
+}

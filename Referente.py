@@ -12,7 +12,7 @@ from Volontario import Volontario
 
 from Utente import Utente
 
-class Referente(Utente):
+class Referente(Volontario):
     def __init__(
         self,
         cod_fiscale: int,
@@ -26,15 +26,27 @@ class Referente(Utente):
         formazione: list,
         compagnia_appartenenza: str,
         disponibilita: list[str],
-        area_gestita: str
+        area_gestita: str,
+        qualifiche: list[str] | None = None,
+        monteOreTotale: int = 0
     ):
         # pyrefly: ignore [bad-keyword-argument, missing-argument]
-        super().__init__(cod_fiscale, nome, cognome, email, nascita, telefono, ruolo="referente")
-        self.curriculum = curriculum
-        self.patenti = patenti
-        self.formazione = formazione
-        self.compagnia_appartenenza = compagnia_appartenenza
-        self.disponibilita = disponibilita
+        super().__init__(
+            cod_fiscale=cod_fiscale,
+            nome=nome,
+            cognome=cognome,
+            email=email,
+            data_nascita=nascita,
+            telefono=telefono,
+            ruolo="referente",
+            curriculum=curriculum,
+            patenti=patenti,
+            formazione=formazione,
+            compagnia_appartenenza=compagnia_appartenenza,
+            disponibilita=disponibilita,
+            monteOreTotale=monteOreTotale,
+            qualifiche=qualifiche
+        )
         self.area_gestita = area_gestita
 
     def crea_corso(
@@ -105,3 +117,16 @@ class Referente(Utente):
         if corso not in volontario.corsi_frequentati:
             volontario.corsi_frequentati.append(corso)
             print(f"{volontario.get_nome_completo()} ha completato il corso {corso.nome}")
+
+    def to_dict(self) -> dict:
+        d = super().to_dict()
+        d.update({
+            "monteOreTotale": getattr(self, "monteOreTotale", 0),
+            "patenti": self.patenti,
+            "qualifiche": getattr(self, "qualifiche", []),
+            "disponibilita": self.disponibilita,
+            "curriculum": self.curriculum,
+            "compagnia_appartenenza": self.compagnia_appartenenza,
+            "area_gestita": self.area_gestita
+        })
+        return d

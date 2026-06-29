@@ -20,7 +20,7 @@ class OperatoreSanitario(Utente):
             nome=nome,
             cognome=cognome,
             email=email,
-            nascita=nascita,
+            data_nascita=nascita,
             telefono=telefono,
             ruolo=ruolo
         )

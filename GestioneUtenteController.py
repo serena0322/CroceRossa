@@ -26,7 +26,7 @@ class GestioneUtenteController:
             
         return True
 
-    def effettuaLogin(self, email: str, password: str) -> bool:
+    def effettuaLogin(self, email: str, password: str, sistema=None) -> bool:
         """
         Gestisce il flusso di autenticazione.
         Verifica prima i formati e poi interroga il backend.
@@ -44,6 +44,11 @@ class GestioneUtenteController:
             if user_doc.exists:
                 dati_utente = user_doc.to_dict() or {}
                 nome_utente = dati_utente.get('nome', 'Volontario') 
+                
+                from UtenteFactory import costruisci_utente
+                logged_user = costruisci_utente(dati_utente)
+                if sistema:
+                    sistema.logged_user = logged_user
                 
                 print(f"✅ Login effettuato con successo. Benvenuto {nome_utente}")
                 return True

@@ -7,7 +7,7 @@ def costruisci_utente(data: dict):
     ruolo = data.get("ruolo")
 
     if ruolo == "volontario":
-        return Volontario(
+        u = Volontario(
             cod_fiscale=data["cod_fiscale"],
             nome=data["nome"],
             cognome=data.get("cognome", ""),
@@ -16,12 +16,16 @@ def costruisci_utente(data: dict):
             telefono=data.get("telefono", ""),
             curriculum=data.get("curriculum", ""),
             patenti=data.get("patenti", []),
-            formazione=data.get("formazione", []),
+            qualifiche=data.get("qualifiche", []),
+            monteOreTotale=data.get("monteOreTotale", 0),
+            formazione=[],
             compagnia_appartenenza=data.get("compagnia_appartenenza", ""),
             disponibilita=data.get("disponibilita", [])
         )
+        u.patente_pdf_path = data.get("patente_pdf_path", "")
+        return u
     elif ruolo == "referente":
-        return Referente(
+        r = Referente(
             cod_fiscale=data["cod_fiscale"],
             nome=data["nome"],
             cognome=data.get("cognome", ""),
@@ -30,11 +34,15 @@ def costruisci_utente(data: dict):
             telefono=data.get("telefono", ""),
             curriculum=data.get("curriculum", ""),
             patenti=data.get("patenti", []),
-            formazione=data.get("formazione", []),
+            qualifiche=data.get("qualifiche", []),
+            monteOreTotale=data.get("monteOreTotale", 0),
+            formazione=[],
             compagnia_appartenenza=data.get("compagnia_appartenenza", ""),
             disponibilita=data.get("disponibilita", []),
             area_gestita=data.get("area_gestita", "")
         )
+        r.patente_pdf_path = data.get("patente_pdf_path", "")
+        return r
     elif ruolo == "operatore sanitario":
         return OperatoreSanitario(
             cod_fiscale=data["cod_fiscale"],
