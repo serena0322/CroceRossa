@@ -15,24 +15,24 @@ from Utente import Utente
 class Referente(Volontario):
     def __init__(
         self,
-        cod_fiscale: int,
-        nome: str,
-        cognome: str,
-        email: str,
-        nascita: str,
-        telefono: str,
-        curriculum: str,
-        patenti: list[str],
-        formazione: list,
-        compagnia_appartenenza: str,
-        disponibilita: list[str],
-        area_gestita: str,
+        cod_fiscale: str = "",
+        nome: str = "",
+        cognome: str = "",
+        email: str = "",
+        nascita: str = "",
+        telefono: str = "",
+        curriculum: str = "",
+        patenti: list[str] | None = None,
+        formazione: list | None = None,
+        compagnia_appartenenza: str = "",
+        disponibilita: list[str] | None = None,
+        area_gestita: str = "",
         qualifiche: list[str] | None = None,
-        monteOreTotale: int = 0
+        monteOreTotale: int = 0,
+        **kwargs
     ):
-        # pyrefly: ignore [bad-keyword-argument, missing-argument]
         super().__init__(
-            cod_fiscale=cod_fiscale,
+            cod_fiscale=str(cod_fiscale),
             nome=nome,
             cognome=cognome,
             email=email,
@@ -40,12 +40,12 @@ class Referente(Volontario):
             telefono=telefono,
             ruolo="referente",
             curriculum=curriculum,
-            patenti=patenti,
-            formazione=formazione,
+            patenti=patenti if patenti is not None else [],
+            formazione=formazione if formazione is not None else [],
             compagnia_appartenenza=compagnia_appartenenza,
-            disponibilita=disponibilita,
+            disponibilita=disponibilita if disponibilita is not None else [],
             monteOreTotale=monteOreTotale,
-            qualifiche=qualifiche
+            qualifiche=qualifiche if qualifiche is not None else []
         )
         self.area_gestita = area_gestita
 

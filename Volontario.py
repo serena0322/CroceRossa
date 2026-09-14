@@ -28,7 +28,14 @@ class Volontario(Utente):
         data_nascita: str | None = None,
         curriculum: str = "",
         formazione: List[Corso] | None = None,
-        compagnia_appartenenza: str = ""
+        compagnia_appartenenza: str = "",
+        patenti_pdf: dict[str, str] | None = None,
+        patente_pdf_path: str = "",
+        app_io_verificato: bool = False,
+        numero_patente: str = "",
+        scadenza_patente: str = "",
+        app_io_certificato_id: str = "",
+        **kwargs
     ):
         cf = str(cod_fiscale) if cod_fiscale is not None else codFiscale
         dn = dataNascita if dataNascita else (data_nascita if data_nascita else (nascita if nascita else ""))
@@ -47,6 +54,13 @@ class Volontario(Utente):
         self.patenti = patenti if patenti is not None else []
         self.qualifiche = qualifiche if qualifiche is not None else []
         self.disponibilita = disponibilita if disponibilita is not None else []
+        self.patenti_pdf: dict[str, str] = patenti_pdf if patenti_pdf is not None else kwargs.get("patenti_pdf", {})
+        self.patente_pdf_path: str = patente_pdf_path if patente_pdf_path else kwargs.get("patente_pdf_path", "")
+        self.app_io_verificato: bool = app_io_verificato or kwargs.get("app_io_verificato", False)
+        self.numero_patente: str = numero_patente or kwargs.get("numero_patente", "")
+        self.scadenza_patente: str = scadenza_patente or kwargs.get("scadenza_patente", "")
+        self.app_io_certificato_id: str = app_io_certificato_id or kwargs.get("app_io_certificato_id", "")
+        self.punti_patente: int = int(kwargs.get("punti_patente", 30))
         
         # Compatibility properties:
         self.curriculum = curriculum
@@ -126,13 +140,52 @@ class Volontario(Utente):
             self.formazione.remove(corso)
             print(f"{self.nome} disiscritto dal corso {corso.nome}")
 
+    @property
+    def com_appartenenza(self) -> str:
+        return self.compagnia_appartenenza
+
+    @com_appartenenza.setter
+    def com_appartenenza(self, val: str):
+        self.compagnia_appartenenza = val
+
     def prenota_turno(self, turno: Turno, parent=None):
         if turno not in self.turni_assegnati:
             self.turni_assegnati.append(turno)
 
+    def prenotaTurno(self, turno: Turno | str) -> bool:
+        if isinstance(turno, str):
+            # Se viene passato l'ID del turno
+            found = False
+            for t in self.turni_assegnati:
+                if str(t.id) == str(turno):
+                    return True
+            from Turno import Turno
+            t_obj = Turno(id=str(turno))
+            self.turni_assegnati.append(t_obj)
+            return True
+        elif turno and turno not in self.turni_assegnati:
+            self.turni_assegnati.append(turno)
+            return True
+        return False
+
     def annulla_prenotazione(self, turno: Turno):
         if turno in self.turni_assegnati:
             self.turni_assegnati.remove(turno)
+
+    def annullaPrenotazione(self, turno: Turno | str) -> bool:
+        if isinstance(turno, str):
+            to_remove = [t for t in self.turni_assegnati if str(t.id) == str(turno)]
+            for t in to_remove:
+                self.turni_assegnati.remove(t)
+            return True
+        elif turno in self.turni_assegnati:
+            self.turni_assegnati.remove(turno)
+            return True
+        return False
+
+    def rimuovi_turno(self, turno: Turno):
+        """Alias compatibile per annulla_prenotazione."""
+        self.annulla_prenotazione(turno)
 
     def compila_report_turno(self, turno: Turno, ore_lavorate: float):
         self.ore_lavorate[turno.id_turno] = ore_lavorate
@@ -144,6 +197,9 @@ class Volontario(Utente):
 
     def has_disponibilita(self, giorno: str) -> bool:
         return giorno in self.disponibilita
+
+    def visualizzaTurniScelti(self) -> List[Turno]:
+        return list(self.turni_assegnati)
 
     def visualizza_turni_scelti(self):
         if not self.turni_assegnati:
@@ -174,6 +230,15 @@ class Volontario(Utente):
             "qualifiche": self.qualifiche,
             "disponibilita": self.disponibilita,
             "curriculum": self.curriculum,
-            "compagnia_appartenenza": self.compagnia_appartenenza
+            "compagnia_appartenenza": self.compagnia_appartenenza,
+            "patenti_pdf": getattr(self, "patenti_pdf", {}),
+            "patente_pdf_path": getattr(self, "patente_pdf_path", ""),
+            "app_io_verificato": getattr(self, "app_io_verificato", False),
+            "numero_patente": getattr(self, "numero_patente", ""),
+            "scadenza_patente": getattr(self, "scadenza_patente", ""),
+            "punti_patente": getattr(self, "punti_patente", 30),
+            "app_io_certificato_id": getattr(self, "app_io_certificato_id", ""),
+            "corsi_frequentati_ids": [str(c.id) for c in getattr(self, "corsi_frequentati", []) if getattr(c, "id", None)],
+            "formazione_ids": [str(c.id) for c in getattr(self, "formazione", []) if getattr(c, "id", None)]
         })
         return d

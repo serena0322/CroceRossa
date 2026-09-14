@@ -12,3 +12,10 @@ env/
 
 # Sicurezza e Chiavi del Database
 *firebase-adminsdk*.json
+
+# Sessione locale utente (Auto-login)
+.session.json
+
+# File e documenti caricati
+patenti_pdf/
+curricula_pdf/

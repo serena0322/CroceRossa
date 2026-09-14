@@ -90,8 +90,8 @@ class Mezzo:
         self._disponibile = False
         print(f"🔧 Mezzo {self.targa} inviato in officina.")
 
-    def isDismesso(self) -> bool:
-        return self.stato == "Dismesso"
+    def isDismesso(self, limite_km: int = 350000) -> bool:
+        return self.stato == "Dismesso" or self.chilometraggioTotale >= limite_km
 
     def radiazioneVeicolo(self) -> None:
         self.stato = "Dismesso"

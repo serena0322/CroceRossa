@@ -27,12 +27,31 @@ class GestioneFlottaController:
             print(f"⚠️ Errore aggiungiMezzo in Firebase: {e}")
             return False
 
-    def assegnaMezzoATurno(self, m: Mezzo, t: Turno) -> bool:
+    def assegnaMezzoATurno(self, m: Mezzo | None, t: Turno) -> bool:
         try:
             from FirebaseConfig import db
-            db.collection("turni").document(t.id).update({
-                "mezzo_targa": m.targa
-            })
+            if m:
+                t.assegna_mezzo(m)
+                db.collection("turni").document(t.id).set({
+                    "mezzo_targa": m.targa
+                }, merge=True)
+                db.collection("mezzi").document(m.targa).set({
+                    "stato": "Assegnato",
+                    "disponibile": False
+                }, merge=True)
+                print(f"[GestioneFlottaController] Mezzo {m.targa} assegnato al turno {t.id}.")
+            else:
+                old_mezzo = getattr(t, "mezzo", None)
+                t.rimuovi_mezzo()
+                db.collection("turni").document(t.id).set({
+                    "mezzo_targa": ""
+                }, merge=True)
+                if old_mezzo and len(old_mezzo.turni_assegnati) == 0:
+                    db.collection("mezzi").document(old_mezzo.targa).set({
+                        "stato": "Disponibile",
+                        "disponibile": True
+                    }, merge=True)
+                print(f"[GestioneFlottaController] Mezzo rimosso dal turno {t.id}.")
             return True
         except Exception as e:
             print(f"⚠️ Errore assegnaMezzoATurno in Firebase: {e}")
@@ -45,7 +64,10 @@ class GestioneFlottaController:
                 "id": c.id,
                 "controlliMeccanici": c.controlliMeccanici,
                 "dispositiviMediciRichiesti": c.dispositiviMediciRichiesti,
-                "dispositiviPresenti": c.dispositiviPresenti
+                "dispositiviPresenti": c.dispositiviPresenti,
+                "risposte": getattr(c, "risposte", {}),
+                "ruoloCompilatore": getattr(c, "ruoloCompilatore", ""),
+                "idoneo": c.verificaIdoneita()
             })
             print(f"[GestioneFlottaController] compilaChecklist {c.id} salvata su Firebase.")
             return True
@@ -53,20 +75,46 @@ class GestioneFlottaController:
             print(f"⚠️ Errore compilaChecklist in Firebase: {e}")
             return False
 
-    def creaResoconto(self) -> bool:
-        return True
+    def creaResoconto(self, targa: str = "", km: int = 0, note: str = "") -> bool:
+        """Crea un resoconto/report di stato o fine servizio per la flotta."""
+        import uuid
+        from datetime import datetime
+        rep_id = f"RES_{uuid.uuid4().hex[:8].upper()}"
+        try:
+            from FirebaseConfig import db
+            db.collection("resoconti_flotta").document(rep_id).set({
+                "id": rep_id,
+                "targa": targa,
+                "km": km,
+                "note": note,
+                "data": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            })
+            print(f"[GestioneFlottaController] creaResoconto {rep_id} salvato su Firebase.")
+            return True
+        except Exception as e:
+            print(f"⚠️ Errore creaResoconto in Firebase: {e}")
+            return False
 
     def richiediControlli(self, ruolo: str, c: Checklist | None = None) -> List[str]:
-        if c is not None:
-            if ruolo == "Autista A":
-                return c.getControlliMeccaniciEmergenza()
-            elif ruolo == "Soccorritore A":
-                return c.getDispositiviSanitariAvanzati()
-            elif ruolo == "Autista B":
-                return c.getControlliMeccaniciBase()
-            elif ruolo == "Soccorritore B":
-                return c.getDispositiviSanitariBase()
-        return []
+        from Checklist import Checklist
+        if c is None:
+            c = Checklist(id="TEMP_CL")
+        r_clean = Checklist.normalizzaRuolo(ruolo)
+        if r_clean == "Autista A":
+            return c.getControlliMeccaniciEmergenza()
+        elif r_clean == "Autista B":
+            return c.getControlliMeccaniciBase()
+        elif r_clean == "Soccorritore A":
+            return c.getDispositiviSanitariAvanzati()
+        elif r_clean == "Soccorritore B":
+            return c.getDispositiviSanitariBase()
+        return c.getControlliMeccaniciEmergenza()
+
+    def richiediControlliDettagliati(self, ruolo: str, c: Checklist | None = None) -> List[dict]:
+        from Checklist import Checklist
+        if c is None:
+            c = Checklist(id="TEMP_CL")
+        return c.getControlliPerRuolo(ruolo)
 
     def salvaReport(self, r: Report) -> bool:
         try:
@@ -83,5 +131,26 @@ class GestioneFlottaController:
             print(f"⚠️ Errore salvaReport in Firebase: {e}")
             return False
 
-    def visualizzaStatoMezzi(self) -> List[Mezzo]:
-        return []
+    def visualizzaStatoMezzi(self, sistema=None) -> List[Mezzo]:
+        """Restituisce l'elenco dei mezzi dal sistema o interrogando direttamente Firestore."""
+        if sistema and getattr(sistema, "mezzi", None):
+            return list(sistema.mezzi)
+        try:
+            from FirebaseConfig import db
+            from Mezzo import Mezzo
+            mezzi = []
+            docs = db.collection("mezzi").get()
+            for doc in docs:
+                dati = doc.to_dict() or {}
+                m = Mezzo(
+                    targa=doc.id,
+                    tipo=dati.get("tipo", "Ambulanza"),
+                    chilometraggioTotale=int(dati.get("chilometraggioTotale", 0) or dati.get("chilometraggio", 0)),
+                    stato=dati.get("stato", "Disponibile"),
+                    dataScadenzaAssicurazione=dati.get("dataScadenzaAssicurazione", "")
+                )
+                mezzi.append(m)
+            return mezzi
+        except Exception as e:
+            print(f"⚠️ Errore visualizzaStatoMezzi: {e}")
+            return []

@@ -9,12 +9,14 @@ class Utente:
         self.telefono = float(telefono) if isinstance(telefono, (int, float)) else telefono
         self.telefono = str(telefono)
         self.ruolo = ruolo
-        # Default fields for dialog compatibility across all user subclasses
         self.curriculum = ""
         self.patenti = []
+        self.qualifiche = []
         self.compagnia_appartenenza = ""
         self.disponibilita = []
         self.patente_pdf_path = ""
+        self.formazione = []
+        self.corsi_frequentati = []
 
     @property
     def nascita(self) -> str:

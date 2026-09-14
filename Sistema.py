@@ -70,8 +70,11 @@ class Sistema:
                     scadenza=str(dati.get("scadenza") or "")
                 )
                 
-                # Associa i partecipanti
-                partecipanti_ids = dati.get("partecipanti_ids", [])
+                # Associa partecipanti e certificati
+                partecipanti_ids = dati.get("partecipanti_ids", []) or []
+                certificati_ids = dati.get("certificati_ids", []) or dati.get("completati_ids", []) or []
+                c.certificati_ids = certificati_ids
+
                 for p_id in partecipanti_ids:
                     v = self.get_volontario(p_id)
                     if v:
@@ -79,10 +82,26 @@ class Sistema:
                             c.partecipanti.append(v)
                         if c not in v.formazione:
                             v.formazione.append(c)
-                        # Se il titolo del corso fa parte delle qualifiche attestate del volontario, aggiungilo ai completati
-                        if c.titolo in v.qualifiche or c.nome in v.qualifiche:
-                            if c not in v.corsi_frequentati:
-                                v.corsi_frequentati.append(c)
+
+                for cert_id in certificati_ids:
+                    v = self.get_volontario(cert_id)
+                    if v:
+                        if c not in v.corsi_frequentati:
+                            v.corsi_frequentati.append(c)
+                        if c in v.formazione:
+                            v.formazione.remove(c)
+
+                # Associa a tutti i volontari se presente nelle loro qualifiche o corsi frequentati salvati
+                for v in self.volontari:
+                    v_qualifiche = [str(q).strip().upper() for q in getattr(v, "qualifiche", [])]
+                    v_cf_ids = getattr(v, "corsi_frequentati_ids", [])
+                    if (c.titolo.strip().upper() in v_qualifiche or 
+                        c.nome.strip().upper() in v_qualifiche or
+                        c.id in v_cf_ids):
+                        if c not in v.corsi_frequentati:
+                            v.corsi_frequentati.append(c)
+                        if c in v.formazione:
+                            v.formazione.remove(c)
                 
                 self.corsi.append(c)
 
@@ -102,7 +121,9 @@ class Sistema:
                     paziente=str(dati.get("paziente") or ""),
                     personeRichieste=int(dati.get("personeRichieste", 1)),
                     stato=str(dati.get("stato") or "Proposto"),
-                    tipoServizio=str(dati.get("tipoServizio") or "")
+                    tipoServizio=str(dati.get("tipoServizio") or ""),
+                    mezzo_targa=str(dati.get("mezzo_targa") or ""),
+                    checklist=bool(dati.get("checklist", False))
                 )
                 t.persone_richieste = dati.get("persone_richieste") or {"volontario": t.personeRichieste}
                 
@@ -116,6 +137,15 @@ class Sistema:
                             t.volontari_assegnati.append(v)
                         if t not in v.turni_assegnati:
                             v.turni_assegnati.append(t)
+                
+                # Associa mezzo se presente
+                mezzo_targa = str(dati.get("mezzo_targa") or "").strip()
+                if mezzo_targa:
+                    mezzo_obj = next((m for m in self.mezzi if m.targa.strip().upper() == mezzo_targa.upper()), None)
+                    if mezzo_obj:
+                        t.mezzo = mezzo_obj
+                        if t not in mezzo_obj.turni_assegnati:
+                            mezzo_obj.turni_assegnati.append(t)
                         
                 self.turni.append(t)
                 
@@ -124,15 +154,14 @@ class Sistema:
             print(f"⚠️ Errore durante la sincronizzazione con Firebase: {e}")
 
     # --- Login / profilo ---
-    def login(self, cod_fiscale: int) -> bool:
+    def login(self, cod_fiscale: str) -> bool:
         volontario = self.get_volontario(cod_fiscale)
         if volontario:
             self.logged_user = volontario
             return True
         return False
 
-    # pyrefly: ignore [bad-function-definition]
-    def aggiorna_profilo(self, cod_fiscale: int, email: str = None, telefono: str = None, nome: str = None, cognome: str = None, nascita:str = None):
+    def aggiorna_profilo(self, cod_fiscale: str, email: str = None, telefono: str = None, nome: str = None, cognome: str = None, nascita: str = None):
         volontario = self.get_volontario(cod_fiscale)
         if volontario:
             if email:
@@ -155,19 +184,19 @@ class Sistema:
 
     def get_volontario(self, cod_fiscale) -> Optional[Volontario]:
         for v in self.volontari:
-            if str(v.cod_fiscale) == str(cod_fiscale):
+            if str(v.cod_fiscale).strip().upper() == str(cod_fiscale).strip().upper():
                 return v
         return None
 
-    def assegna_referente(self, cod_fiscale_volontario: int, cod_fiscale_referente: int):
+    def assegna_referente(self, cod_fiscale_volontario: str, cod_fiscale_referente: str):
         volontario = self.get_volontario(cod_fiscale_volontario)
         referente = self.get_volontario(cod_fiscale_referente)
         if volontario and isinstance(referente, Referente):
             volontario.referente = referente
 
-    def prenota_turno(self, cod_fiscale: int, id_turno: int):
+    def prenota_turno(self, cod_fiscale: str, id_turno: str | int):
         volontario = self.get_volontario(cod_fiscale)
-        turno = next((t for t in self.turni if t.id_turno == id_turno), None)
+        turno = next((t for t in self.turni if str(t.id) == str(id_turno) or getattr(t, "id_turno", None) == id_turno), None)
 
         if not volontario:
             print("⚠️ Volontario non trovato.")
@@ -182,37 +211,99 @@ class Sistema:
     def aggiungi_corso(self, corso: Corso):
         self.corsi.append(corso)
 
-    def carica_corso_al_volontario(self, cod_fiscale: int, corso: Corso):
+    def carica_corso_al_volontario(self, cod_fiscale: str, corso: Corso):
         volontario = self.get_volontario(cod_fiscale)
         if volontario and corso not in volontario.formazione:
             volontario.formazione.append(corso)
 
-    def notifica_corsi_in_scadenza(self):
+    def notifica_corsi_in_scadenza(self) -> list[dict]:
+        avvisi = []
         for corso in self.corsi:
-            if corso.sta_per_scadere():
-                print(f"⚠️ Corso '{corso.nome}' in scadenza!")
+            try:
+                if hasattr(corso, "sta_per_scadere") and corso.sta_per_scadere():
+                    avviso = {
+                        "tipo": "corso",
+                        "livello": "warning",
+                        "titolo": f"Corso in scadenza: {corso.titolo or corso.nome}",
+                        "dettaglio": f"Scadenza prevista: {getattr(corso, 'scadenza', 'N/D')}",
+                        "oggetto": corso
+                    }
+                    avvisi.append(avviso)
+                    print(f"⚠️ Corso '{corso.nome}' in scadenza!")
+            except Exception:
+                pass
+        return avvisi
 
     # --- Gestione turni ---
     def aggiungi_turno(self, turno: Turno):
         self.turni.append(turno)
 
-    def assegna_turno(self, cod_fiscale: int, turno: Turno):
+    def assegna_turno(self, cod_fiscale: str, turno: Turno):
         volontario = self.get_volontario(cod_fiscale)
         if volontario:
             volontario.prenota_turno(turno)
             turno.assegna_turno(volontario)
 
-    def annulla_turno(self, cod_fiscale: int, turno: Turno):
+    def annulla_turno(self, cod_fiscale: str, turno: Turno):
         volontario = self.get_volontario(cod_fiscale)
         if volontario:
-            # pyrefly: ignore [missing-attribute]
-            volontario.rimuovi_turno(turno)
+            volontario.annulla_prenotazione(turno)
             turno.rimuovi_volontario(volontario)
 
-    def notifica_turni_scoperti(self):
+    def notifica_turni_scoperti(self) -> list[dict]:
+        avvisi = []
         for turno in self.turni:
-            if not turno.volontari_assegnati:
-                print(f"⚠️ Turno {turno} ancora scoperto!")
+            persone_richieste = getattr(turno, "personeRichieste", 1)
+            iscritti = len(getattr(turno, "volontari_assegnati", []))
+            if iscritti == 0 or iscritti < persone_richieste:
+                mancanti = max(0, persone_richieste - iscritti)
+                avviso = {
+                    "tipo": "turno",
+                    "livello": "danger" if iscritti == 0 else "warning",
+                    "titolo": f"Turno scoperto: {turno.tipoServizio or 'Servizio'} ({turno.data})",
+                    "dettaglio": f"{turno.fascia_oraria} @ {turno.luogoDestinazione or turno.luogo} (Mancano {mancanti} volontari)",
+                    "oggetto": turno
+                }
+                avvisi.append(avviso)
+                print(f"⚠️ Turno {turno.id} ancora scoperto (iscritti: {iscritti}/{persone_richieste})")
+        return avvisi
+
+    def get_avvisi_sistema(self) -> list[dict]:
+        avvisi = []
+        avvisi.extend(self.notifica_turni_scoperti())
+        avvisi.extend(self.notifica_corsi_in_scadenza())
+        # Controllo scadenze mezzi
+        from datetime import datetime, timedelta
+        oggi = datetime.today()
+        for mezzo in self.mezzi:
+            scad = getattr(mezzo, "dataScadenzaAssicurazione", "")
+            if scad:
+                try:
+                    for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%Y/%m/%d"):
+                        try:
+                            dt = datetime.strptime(scad, fmt)
+                            if dt < oggi:
+                                avvisi.append({
+                                    "tipo": "mezzo",
+                                    "livello": "danger",
+                                    "titolo": f"Assicurazione scaduta: {mezzo.targa}",
+                                    "dettaglio": f"Scaduta il {scad} ({mezzo.tipo})",
+                                    "oggetto": mezzo
+                                })
+                            elif dt <= oggi + timedelta(days=30):
+                                avvisi.append({
+                                    "tipo": "mezzo",
+                                    "livello": "warning",
+                                    "titolo": f"Assicurazione in scadenza: {mezzo.targa}",
+                                    "dettaglio": f"Scade il {scad} ({mezzo.tipo})",
+                                    "oggetto": mezzo
+                                })
+                            break
+                        except ValueError:
+                            continue
+                except Exception:
+                    pass
+        return avvisi
 
     # --- Gestione mezzi ---
     def aggiungi_mezzo(self, mezzo: Mezzo):
@@ -231,18 +322,19 @@ class Sistema:
         self.checklist.append(item)
 
     def visualizza_turni_disponibili(self):
-        return [turno for turno in self.turni if turno.stato == "Proposto"]
+        return [turno for turno in self.turni if turno.stato in ["Proposto", "Aperto"]]
 
-    def visualizza_turni_di_volontario(self, cod_fiscale: int):
+    def visualizza_turni_di_volontario(self, cod_fiscale: str):
         volontario = self.get_volontario(cod_fiscale)
         if volontario:
             return volontario.turni_assegnati
+        return []
 
     def visualizza_rubrica(self):
         for v in self.volontari:
             print(f"{v.nome} {v.cognome} - {v.email} - {v.telefono}")
 
-    def stampa_report_volontario(self, cod_fiscale: int) -> str:
+    def stampa_report_volontario(self, cod_fiscale: str) -> str:
         volontario = self.get_volontario(cod_fiscale)
         if not volontario:
             return "⚠️ Volontario non trovato."

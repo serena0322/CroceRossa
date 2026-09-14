@@ -101,13 +101,84 @@ class GestioneTurniController:
             return False
 
     def validaDati(self, t: Turno | None = None) -> bool:
+        """Verifica la correttezza dei dati essenziali di un turno."""
+        if not t:
+            return False
+        if not t.data or not str(t.data).strip():
+            return False
+        if not t.oraInizio or not t.oraFine:
+            return False
+        if getattr(t, "personeRichieste", 1) < 1:
+            return False
         return True
 
-    def verificaCoperturaPatente(self, t: Turno) -> bool:
-        return True
+    def verificaCoperturaPatente(self, v: Volontario, t: Turno) -> bool:
+        """Verifica se il volontario possiede la patente o corso richiesto dal turno."""
+        if not t or not getattr(t, "patenteRichiesta", None):
+            return True
+        req = str(t.patenteRichiesta).strip().upper()
+        if not req or req in ["NESSUNA", "NON RICHIESTA", "TUTTI"]:
+            return True
+        if not v:
+            return False
+        patenti = [str(p).strip().upper() for p in getattr(v, "patenti", [])]
+        qualifiche = [str(q).strip().upper() for q in getattr(v, "qualifiche", [])]
+        return (req in patenti) or (req in qualifiche)
 
     def verificaTempoLimite(self, v: Volontario, t: Turno) -> bool:
+        """Verifica che il volontario non abbia sovrapposizioni orarie con altri turni nello stesso giorno."""
+        if not v or not t or not getattr(v, "turni_assegnati", None):
+            return True
+        for altro in v.turni_assegnati:
+            if altro.id == t.id:
+                continue
+            if str(altro.data).strip() == str(t.data).strip():
+                # Controllo sovrapposizione orari (formato HH:MM)
+                try:
+                    t_ini = t.oraInizio.strip()
+                    t_fin = t.oraFine.strip()
+                    a_ini = altro.oraInizio.strip()
+                    a_fin = altro.oraFine.strip()
+                    # Se intervalli si sovrappongono: max(t_ini, a_ini) < min(t_fin, a_fin)
+                    if max(t_ini, a_ini) < min(t_fin, a_fin):
+                        print(f"⚠️ Sovrapposizione oraria rilevata con turno {altro.id} ({altro.data} {altro.fascia_oraria})")
+                        return False
+                except Exception:
+                    pass
         return True
 
-    def visualizzaTurniDisponibili(self, s: str) -> List[Turno]:
-        return []
+    def visualizzaTurniDisponibili(self, sistema=None) -> List[Turno]:
+        """Restituisce i turni aperti e con posti disponibili."""
+        if sistema and getattr(sistema, "turni", None):
+            return [
+                t for t in sistema.turni
+                if t.stato in ["Proposto", "Aperto"]
+                and len(getattr(t, "volontari_assegnati", [])) < getattr(t, "personeRichieste", 1)
+            ]
+        try:
+            from FirebaseConfig import db
+            from Turno import Turno
+            turni = []
+            docs = db.collection("turni").get()
+            for doc in docs:
+                dati = doc.to_dict() or {}
+                stato = str(dati.get("stato") or "Proposto")
+                if stato in ["Proposto", "Aperto"]:
+                    t = Turno(
+                        id=doc.id,
+                        data=str(dati.get("data") or ""),
+                        luogoDestinazione=str(dati.get("luogoDestinazione") or dati.get("luogo") or ""),
+                        luogoPrelevamento=str(dati.get("luogoPrelevamento") or dati.get("luogo") or ""),
+                        oraInizio=str(dati.get("oraInizio") or ""),
+                        oraFine=str(dati.get("oraFine") or ""),
+                        patenteRichiesta=str(dati.get("patenteRichiesta") or dati.get("corso_richiesto") or ""),
+                        paziente=str(dati.get("paziente") or ""),
+                        personeRichieste=int(dati.get("personeRichieste", 1)),
+                        stato=stato,
+                        tipoServizio=str(dati.get("tipoServizio") or "")
+                    )
+                    turni.append(t)
+            return turni
+        except Exception as e:
+            print(f"⚠️ Errore visualizzaTurniDisponibili: {e}")
+            return []

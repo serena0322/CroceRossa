@@ -42,43 +42,42 @@ def registra_utente(cod_fiscale: str, email: str, password: str, nome: str, ruol
     }
 
     # 4. Determina la collezione corretta
-    ruolo = ruolo.lower()
-    if ruolo == "volontario":
-        collezione = "Volontario"
-    elif ruolo == "referente":
-        collezione = "Referente"
-    elif ruolo == "operatore sanitario":
-        collezione = "Operatore_Sanitario"
-    else:
-        print(f"❌ Ruolo non valido: {ruolo}")
-        return False
-
-    # 5. Salva in Firestore nella collezione corretta
+    # 4. Salva in Firestore nella collezione principale 'utenti'
     try:
-        db.collection(collezione).document(cod_fiscale).set(utente)
-        print("✅ Registrazione completata in Firestore.")
+        db.collection("utenti").document(cod_fiscale).set(utente)
+        print("✅ Registrazione completata in Firestore (collezione 'utenti').")
         return data  # restituisci i dati Firebase Auth se necessario
     except Exception as e:
         print(f"❌ Errore durante il salvataggio su Firestore: {e}")
         return False
 
 def utente_gia_registrato(email: str, cod_fiscale: str) -> bool:
-    """Controlla se esiste già un utente registrato con l'email o codice fiscale in una delle collezioni."""
-    collezioni = ["Volontario", "Referente", "Operatore_Sanitario"]
-
-    for collezione in collezioni:
-        ref = db.collection(collezione)
-
-        # Controllo codice fiscale come ID documento
-        if ref.document(cod_fiscale).get().exists:
-            print(f"❌ Codice fiscale già registrato in {collezione}.")
+    """Controlla se esiste già un utente registrato con l'email o codice fiscale."""
+    # Controllo collezione principale 'utenti'
+    try:
+        ref_utenti = db.collection("utenti")
+        if ref_utenti.document(cod_fiscale).get().exists:
+            print(f"❌ Codice fiscale già registrato in 'utenti'.")
             return True
-
-        # Controllo email duplicata
-        risultati = ref.where("email", "==", email).get()
-        if risultati:
-            print(f"❌ Email già utilizzata in {collezione}.")
+        if ref_utenti.where("email", "==", email).get():
+            print(f"❌ Email già utilizzata in 'utenti'.")
             return True
+    except Exception as e:
+        print(f"⚠️ Errore controllo utenti: {e}")
+
+    # Fallback su eventuali collezioni legacy
+    collezioni_legacy = ["Volontario", "Referente", "Operatore_Sanitario"]
+    for collezione in collezioni_legacy:
+        try:
+            ref = db.collection(collezione)
+            if ref.document(cod_fiscale).get().exists:
+                print(f"❌ Codice fiscale già registrato in {collezione}.")
+                return True
+            if ref.where("email", "==", email).get():
+                print(f"❌ Email già utilizzata in {collezione}.")
+                return True
+        except Exception:
+            pass
 
     return False
 

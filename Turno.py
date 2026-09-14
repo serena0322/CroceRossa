@@ -19,6 +19,7 @@ class Turno:
         personeRichieste: int = 1,
         stato: str = "Proposto",
         tipoServizio: str = "",
+        mezzo_targa: str = "",
         # Compatibility parameters:
         id_turno: int = None,
         fascia_oraria: str = None,
@@ -55,6 +56,7 @@ class Turno:
         # Compatibility attributes
         self.volontari_assegnati: List[Volontario] = []
         self.mezzo: Mezzo | None = None
+        self.mezzo_targa: str = mezzo_targa
         self.checklist = checklist
         self.tempoExtra = tempoExtra
         self.dispositivi_richiesti = dispositivi_richiesti if dispositivi_richiesti is not None else []
@@ -99,11 +101,13 @@ class Turno:
             if hasattr(self, key):
                 setattr(self, key, value)
 
-    def aggiungiVolontario(self, v: Volontario) -> bool:
+    def aggiungiVolontario(self, v: Volontario, ruolo: str = "") -> bool:
         if len(self.volontari_assegnati) < self.personeRichieste:
             if v not in self.volontari_assegnati:
                 self.volontari_assegnati.append(v)
                 self.persone_prenotate.setdefault(v.ruolo, []).append(v.cod_fiscale)
+                if ruolo:
+                    self.volontari_ruoli[str(v.cod_fiscale)] = ruolo
                 if self not in v.turni_assegnati:
                     v.turni_assegnati.append(self)
                 if len(self.volontari_assegnati) == self.personeRichieste:
@@ -120,11 +124,19 @@ class Turno:
     def isCompleto(self) -> bool:
         return len(self.volontari_assegnati) >= self.personeRichieste
 
+    @staticmethod
+    def getTurniDisponibili(servizio: str = "") -> List[Turno]:
+        from GestioneTurniController import GestioneTurniController
+        ctrl = GestioneTurniController()
+        return ctrl.visualizzaTurniDisponibili()
+
     def rimuoviVolontario(self, v: Volontario) -> None:
         if v in self.volontari_assegnati:
             self.volontari_assegnati.remove(v)
             if v.cod_fiscale in self.persone_prenotate.get(v.ruolo, []):
                 self.persone_prenotate[v.ruolo].remove(v.cod_fiscale)
+            if str(v.cod_fiscale) in self.volontari_ruoli:
+                del self.volontari_ruoli[str(v.cod_fiscale)]
             if self in v.turni_assegnati:
                 v.turni_assegnati.remove(self)
             self.stato = "Aperto"
@@ -134,8 +146,21 @@ class Turno:
 
     def assegna_mezzo(self, mezzo: Mezzo):
         self.mezzo = mezzo
-        if self not in mezzo.turni_assegnati:
-            mezzo.assegna_a_turno(self)
+        if mezzo:
+            self.mezzo_targa = getattr(mezzo, "targa", "")
+            if self not in mezzo.turni_assegnati:
+                mezzo.assegna_a_turno(self)
+        else:
+            self.mezzo_targa = ""
+
+    def rimuovi_mezzo(self):
+        if self.mezzo:
+            if self in self.mezzo.turni_assegnati:
+                self.mezzo.turni_assegnati.remove(self)
+            if len(self.mezzo.turni_assegnati) == 0:
+                self.mezzo.libera_mezzo()
+        self.mezzo = None
+        self.mezzo_targa = ""
 
     def completa_checklist(self):
         self.checklist = True
@@ -154,6 +179,7 @@ class Turno:
 
     def aggiorna_firestore(self):
         from FirebaseConfig import db
+        targa_val = self.mezzo_targa or (self.mezzo.targa if self.mezzo else "")
         db.collection("turni").document(self.id).set({
             "id": self.id,
             "data": self.data,
@@ -167,5 +193,8 @@ class Turno:
             "persone_richieste": self.persone_richieste,
             "stato": self.stato,
             "tipoServizio": self.tipoServizio,
+            "checklist": bool(self.checklist),
+            "mezzo_targa": targa_val,
+            "volontari_ids": [str(v.cod_fiscale) for v in self.volontari_assegnati],
             "volontari_ruoli": self.volontari_ruoli
         }, merge=True)

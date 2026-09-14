@@ -133,19 +133,75 @@ class GestioneUtenteController:
             print(f"❌ Errore durante la registrazione dell'account: {e}")
             return False
 
-    def recuperaCredenziali(self, email: str) -> bool:
+    def recuperaCredenziali(self, identificativo: str) -> tuple[bool, str]:
         """
         Avvia la procedura di recupero password inviando un'apposita email.
+        Supporta sia indirizzo email che Codice Fiscale.
+        Invia il link / istruzioni di reimpostazione tramite EmailService.
         """
-        if not email or "@" not in email:
-            return False
-            
+        if not identificativo or not str(identificativo).strip():
+            return False, "Inserisci un indirizzo email o Codice Fiscale valido."
+
+        target_str = str(identificativo).strip()
+        dest_email = ""
+        nome_utente = "Volontario"
+
+        # 1. Se è un'email
+        if "@" in target_str:
+            dest_email = target_str
+
+        # 2. Cerca l'utente nel database Firestore
         try:
-            # Genera il link di reset tramite l'SDK Admin (invio gestibile poi via email service)
-            link = auth.generate_password_reset_link(email)
-            print(f"✅ Link di reset generato correttamente.")
-            # Qui si integrerebbe la chiamata alla funzione per spedire la mail reale
-            return True
+            if not dest_email:
+                # Cerca per codice fiscale come document ID
+                doc = db.collection("utenti").document(target_str.upper()).get()
+                if doc.exists:
+                    dati = doc.to_dict() or {}
+                    dest_email = dati.get("email", "")
+                    nome_utente = f"{dati.get('nome', '')} {dati.get('cognome', '')}".strip() or "Volontario"
+            else:
+                # Trova per email
+                docs = db.collection("utenti").where("email", "==", dest_email).limit(1).get()
+                for doc in docs:
+                    dati = doc.to_dict() or {}
+                    nome_utente = f"{dati.get('nome', '')} {dati.get('cognome', '')}".strip() or "Volontario"
+                    break
         except Exception as e:
-            print(f"❌ Errore durante il recupero credenziali: {e}")
-            return False
+            print(f"⚠️ Ricerca utente per recupero credenziali: {e}")
+
+        if not dest_email or "@" not in dest_email:
+            return False, f"Nessun account trovato per '{target_str}'. Verifica i dati inseriti."
+
+        # 3. Genera link o codice di ripristino sicuro
+        link_reset = ""
+        try:
+            link_reset = auth.generate_password_reset_link(dest_email)
+        except Exception:
+            import secrets
+            token = secrets.token_urlsafe(16)
+            link_reset = f"https://crocerossa.it/reset-password?token={token}&email={dest_email}"
+
+        # 4. Spedizione email con EmailService
+        from EmailService import EmailService
+        messaggio = (
+            f"Gentile {nome_utente},\n\n"
+            f"abbiamo ricevuto una richiesta di reimpostazione credenziali per il tuo account Croce Rossa Italiana.\n\n"
+            f"Per reimpostare la tua password di accesso, utilizza il seguente collegamento sicuro:\n"
+            f"{link_reset}\n\n"
+            f"Se non hai richiesto tu il ripristino, puoi ignorare questo messaggio.\n"
+            f"La tua password attuale rimarrà invariata.\n\n"
+            f"Cordiali saluti,\n"
+            f"Croce Rossa Italiana — Servizio Gestione Utenze"
+        )
+
+        inviata = EmailService.inviaMail(
+            destinatario=dest_email,
+            messaggio=messaggio,
+            oggetto="🔐 Recupero Credenziali di Accesso — Croce Rossa Italiana"
+        )
+
+        if inviata:
+            print(f"✅ Email di recupero inviata a {dest_email}.")
+            return True, f"Istruzioni di ripristino inviate con successo all'indirizzo:\n{dest_email}"
+        else:
+            return False, "Impossibile inviare l'email di recupero in questo momento. Riprova più tardi."

@@ -1,7 +1,8 @@
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QPushButton,
     QMessageBox, QSizePolicy, QDialog, QLabel, QDateEdit,
-    QGraphicsDropShadowEffect, QFrame, QSpacerItem, QStackedWidget
+    QGraphicsDropShadowEffect, QFrame, QSpacerItem, QStackedWidget,
+    QComboBox
 )
 from PyQt5.QtCore import (
     QDate, Qt, QPropertyAnimation, QEasingCurve,
@@ -70,15 +71,38 @@ class GoogleOAuthWorker(QThread):
                     params = urllib.parse.parse_qs(parsed.query)
                     code   = params.get("code", [None])[0]
                     auth_code_holder["code"] = code
-                    # Risposta HTML di chiusura
+                    # Risposta HTML di chiusura con stile CRI e chiusura automatica
                     html = b"""<!DOCTYPE html><html><head><meta charset='utf-8'>
-                    <style>body{font-family:sans-serif;display:flex;align-items:center;
-                    justify-content:center;height:100vh;background:#1a1a1a;color:#fff;}
-                    .box{text-align:center;}.check{font-size:64px;}</style></head>
-                    <body><div class='box'><div class='check'>&#10003;</div>
-                    <h2>Autenticazione completata!</h2>
-                    <p>Puoi chiudere questa scheda e tornare all'applicazione.</p>
-                    </div></body></html>"""
+                    <title>Croce Rossa Italiana - Accesso Google</title>
+                    <style>
+                    body {
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                        display: flex; align-items: center; justify-content: center;
+                        height: 100vh; margin: 0; background: #121212; color: #ffffff;
+                    }
+                    .box {
+                        text-align: center; background: #1e1e1e; padding: 40px 48px;
+                        border-radius: 16px; border: 1px solid #333333;
+                        box-shadow: 0 14px 35px rgba(0,0,0,0.5); max-width: 380px;
+                    }
+                    .check { font-size: 54px; color: #00e676; margin-bottom: 12px; }
+                    h2 { margin: 0 0 8px 0; font-size: 21px; font-weight: 700; color: #ffffff; }
+                    p { color: #aaaaaa; font-size: 14px; line-height: 1.4; margin: 0; }
+                    .badge {
+                        display: inline-block; margin-top: 16px; padding: 6px 14px;
+                        background: #2b3548; color: #90caf9; border-radius: 16px;
+                        font-size: 12px; font-weight: 600;
+                    }
+                    </style></head>
+                    <body>
+                    <div class='box'>
+                        <div class='check'>&#10003;</div>
+                        <h2>Accesso Google Riuscito!</h2>
+                        <p>Autenticazione completata con successo. Torna all'applicazione Croce Rossa.</p>
+                        <div class='badge'>Accesso in corso...</div>
+                        <script>setTimeout(function(){ window.close(); }, 1200);</script>
+                    </div>
+                    </body></html>"""
                     self.send_response(200)
                     self.send_header("Content-Type", "text/html; charset=utf-8")
                     self.end_headers()
@@ -163,7 +187,7 @@ class ModernInput(QLineEdit):
                 padding: 0 16px;
                 color: #ffffff;
                 font-size: 14px;
-                font-family: 'Inter', 'SF Pro Display', Arial;
+                font-family: "Helvetica Neue", Arial;
             }
             QLineEdit:focus {
                 border: 1.5px solid #e53935;
@@ -171,6 +195,51 @@ class ModernInput(QLineEdit):
             }
             QLineEdit::placeholder {
                 color: rgba(255,255,255,0.4);
+            }
+        """)
+
+
+# ─────────────────────────────────────────────────────────────
+#  Widget menu a tendina moderno per selezione ruolo
+# ─────────────────────────────────────────────────────────────
+class ModernComboBox(QComboBox):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedHeight(48)
+        self.setStyleSheet("""
+            QComboBox {
+                background-color: rgba(255,255,255,0.08);
+                border: 1.5px solid rgba(255,255,255,0.15);
+                border-radius: 10px;
+                padding: 0 16px;
+                color: #ffffff;
+                font-size: 14px;
+                font-family: "Helvetica Neue", Arial;
+            }
+            QComboBox:focus {
+                border: 1.5px solid #e53935;
+                background-color: rgba(229,57,53,0.08);
+            }
+            QComboBox::drop-down {
+                border: none;
+                width: 32px;
+            }
+            QComboBox::down-arrow {
+                image: none;
+                border-left: 5px solid transparent;
+                border-right: 5px solid transparent;
+                border-top: 6px solid rgba(255,255,255,0.7);
+                margin-right: 12px;
+            }
+            QComboBox QAbstractItemView {
+                background-color: #1e1e1e;
+                color: #ffffff;
+                selection-background-color: #e53935;
+                selection-color: #ffffff;
+                border: 1px solid #333333;
+                border-radius: 8px;
+                outline: none;
+                padding: 4px;
             }
         """)
 
@@ -233,6 +302,237 @@ class SecondaryButton(QPushButton):
         """)
 
 
+class RecuperoCredenzialiDialog(QDialog):
+    """Finestra modale per la richiesta di recupero credenziali / reset password."""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("🔐 Recupero Credenziali — Croce Rossa Italiana")
+        self.setFixedWidth(460)
+        self.setStyleSheet("""
+            QDialog {
+                background-color: #1a1a1a;
+            }
+            QLabel {
+                color: #ffffff;
+                font-family: "Helvetica Neue", Arial;
+            }
+            QLineEdit {
+                background-color: #262626;
+                color: #ffffff;
+                border: 1px solid #444;
+                border-radius: 6px;
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+            QLineEdit:focus {
+                border: 1px solid #c62828;
+            }
+        """)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(24, 24, 24, 24)
+        layout.setSpacing(14)
+
+        lbl_titolo = QLabel("<h3 style='margin:0; color: white;'>🔐 Recupera Password / Account</h3>")
+        layout.addWidget(lbl_titolo)
+
+        lbl_desc = QLabel(
+            "Inserisci l'indirizzo <b>Email</b> o il <b>Codice Fiscale</b> associato al tuo profilo CRI.<br>"
+            "Riceverai un'email con le istruzioni e il collegamento per reimpostare la tua password."
+        )
+        lbl_desc.setStyleSheet("color: #b0bec5; font-size: 13px;")
+        lbl_desc.setWordWrap(True)
+        layout.addWidget(lbl_desc)
+
+        self.txt_identificativo = QLineEdit()
+        self.txt_identificativo.setPlaceholderText("Es. mario.rossi@cri.it oppure RSSMRA85M01H501Z")
+        layout.addWidget(self.txt_identificativo)
+
+        self.lbl_feedback = QLabel()
+        self.lbl_feedback.setWordWrap(True)
+        self.lbl_feedback.hide()
+        layout.addWidget(self.lbl_feedback)
+
+        btn_box = QHBoxLayout()
+        btn_invia = QPushButton("Invia Link di Ripristino")
+        btn_invia.setStyleSheet("""
+            QPushButton {
+                background-color: #c62828;
+                color: white;
+                font-weight: bold;
+                padding: 10px 18px;
+                border-radius: 6px;
+                font-size: 13px;
+                border: none;
+            }
+            QPushButton:hover {
+                background-color: #b71c1c;
+            }
+        """)
+        btn_invia.clicked.connect(self._invia_recupero)
+        btn_box.addWidget(btn_invia)
+
+        btn_annulla = QPushButton("Annulla")
+        btn_annulla.setStyleSheet("""
+            QPushButton {
+                background-color: #333333;
+                color: #ccc;
+                padding: 10px 16px;
+                border-radius: 6px;
+                border: 1px solid #555;
+            }
+            QPushButton:hover {
+                background-color: #444;
+                color: white;
+            }
+        """)
+        btn_annulla.clicked.connect(self.reject)
+        btn_box.addWidget(btn_annulla)
+
+        layout.addLayout(btn_box)
+
+    def _invia_recupero(self):
+        val = self.txt_identificativo.text().strip()
+        if not val:
+            self.lbl_feedback.setText("<span style='color: #ff5252;'>⚠️ Inserisci la tua email o codice fiscale.</span>")
+            self.lbl_feedback.show()
+            return
+
+        from GestioneUtenteController import GestioneUtenteController
+        ctrl = GestioneUtenteController()
+        successo, messaggio = ctrl.recuperaCredenziali(val)
+
+        if successo:
+            QMessageBox.information(self, "Email di Recupero Inviata", f"✅ {messaggio}")
+            self.accept()
+        else:
+            self.lbl_feedback.setText(f"<span style='color: #ff5252;'>❌ {messaggio}</span>")
+            self.lbl_feedback.show()
+
+
+# ─────────────────────────────────────────────────────────────
+#  Dialog di selezione ruolo al primo accesso Google
+# ─────────────────────────────────────────────────────────────
+class SelezioneRuoloGoogleDialog(QDialog):
+    def __init__(self, nome_utente: str, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Primo Accesso Google — Croce Rossa Italiana")
+        self.setFixedSize(500, 390)
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
+        self.setStyleSheet("""
+            QDialog {
+                background-color: #1a1a1a;
+                color: #ffffff;
+                font-family: "Helvetica Neue", Arial;
+            }
+            QLabel {
+                color: #ffffff;
+            }
+            QComboBox, QLineEdit {
+                background-color: #2a2a2a;
+                border: 1.5px solid #444444;
+                border-radius: 8px;
+                padding: 10px 14px;
+                color: #ffffff;
+                font-size: 13px;
+                font-weight: 500;
+            }
+            QComboBox:focus, QLineEdit:focus {
+                border-color: #e53935;
+            }
+            QComboBox QAbstractItemView {
+                background-color: #222222;
+                color: #ffffff;
+                selection-background-color: #e53935;
+                selection-color: #ffffff;
+                border: 1px solid #444;
+                outline: none;
+                padding: 4px;
+            }
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #e53935, stop:1 #c62828);
+                color: white;
+                font-weight: bold;
+                font-size: 14px;
+                border: none;
+                border-radius: 8px;
+                padding: 12px 20px;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #ef5350, stop:1 #d32f2f);
+            }
+        """)
+
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(32, 26, 32, 26)
+        lay.setSpacing(12)
+
+        t_lbl = QLabel(f"👋 Ciao {nome_utente}!")
+        t_lbl.setStyleSheet("font-size: 20px; font-weight: bold; color: #ffffff;")
+        lay.addWidget(t_lbl)
+
+        sub_lbl = QLabel(
+            "Questo account Google non è ancora registrato nel sistema CRI.\n"
+            "Dichiara con quale ruolo operativo desideri registrarti:"
+        )
+        sub_lbl.setStyleSheet("font-size: 13px; color: #b0bec5; line-height: 1.4;")
+        sub_lbl.setWordWrap(True)
+        lay.addWidget(sub_lbl)
+
+        self.combo_ruolo = QComboBox()
+        self.combo_ruolo.addItem("🚑 Volontario Operativo (Iscrizione ai Turni, Checklist)", "volontario")
+        self.combo_ruolo.addItem("📋 Referente / Coordinatore (Gestione Turni, Mezzi, Corsi e Rubrica)", "referente")
+        self.combo_ruolo.addItem("🩺 Operatore Sanitario (Personale Medico / Infermieristico)", "operatore_sanitario")
+        self.combo_ruolo.setFixedHeight(46)
+        lay.addWidget(self.combo_ruolo)
+
+        self.lbl_pin = QLabel("🔒 <b>PIN di Autorizzazione Comitato (Richiesto per Referente):</b>")
+        self.lbl_pin.setStyleSheet("font-size: 12px; color: #ffb74d;")
+        self.lbl_pin.hide()
+        lay.addWidget(self.lbl_pin)
+
+        self.txt_pin = QLineEdit()
+        self.txt_pin.setPlaceholderText("Inserisci PIN di sicurezza CRI...")
+        self.txt_pin.setEchoMode(QLineEdit.Password)
+        self.txt_pin.setFixedHeight(44)
+        self.txt_pin.hide()
+        lay.addWidget(self.txt_pin)
+
+        def _on_role_change():
+            is_ref = self.combo_ruolo.currentData() == "referente"
+            self.lbl_pin.setVisible(is_ref)
+            self.txt_pin.setVisible(is_ref)
+
+        self.combo_ruolo.currentIndexChanged.connect(lambda _: _on_role_change())
+
+        lay.addSpacing(6)
+
+        btn_conferma = QPushButton("Conferma e Accedi")
+        btn_conferma.setFixedHeight(46)
+        btn_conferma.setCursor(Qt.PointingHandCursor)
+        btn_conferma.clicked.connect(self._on_conferma_clicked)
+        lay.addWidget(btn_conferma)
+
+    def _on_conferma_clicked(self):
+        ruolo = self.get_ruolo_selezionato()
+        if ruolo == "referente":
+            from security_config import verifica_pin_referente
+            pin = self.txt_pin.text().strip()
+            if not verifica_pin_referente(pin):
+                QMessageBox.critical(
+                    self,
+                    "PIN Non Valido",
+                    "❌ Codice di Autorizzazione Referente errato o non inserito.\n\n"
+                    "Per registrarsi come Referente è necessario il PIN fornito dal Comitato CRI.\n"
+                    "Se non possiedi il codice, seleziona 'Volontario Operativo'."
+                )
+                return
+        self.accept()
+
+    def get_ruolo_selezionato(self) -> str:
+        return self.combo_ruolo.currentData() or "volontario"
+
+
 # ─────────────────────────────────────────────────────────────
 #  Finestra principale di Login
 # ─────────────────────────────────────────────────────────────
@@ -247,7 +547,7 @@ class LoginWindow(QWidget):
         self._google_worker = None
 
         self.setStyleSheet("""
-            QWidget { background: transparent; color: #ffffff; font-family: 'Inter', 'SF Pro Display', Arial; }
+            QWidget { background: transparent; color: #ffffff; font-family: "Helvetica Neue", Arial; }
             QLabel  { background: transparent; }
         """)
 
@@ -384,7 +684,31 @@ class LoginWindow(QWidget):
         layout.addWidget(self._login_email)
         layout.addSpacing(12)
         layout.addWidget(self._login_pwd)
-        layout.addSpacing(20)
+        layout.addSpacing(6)
+
+        # Link Password Dimenticata / Recupero Credenziali
+        box_forgot = QHBoxLayout()
+        box_forgot.addStretch()
+        btn_forgot = QPushButton("Hai dimenticato la password?")
+        btn_forgot.setCursor(Qt.PointingHandCursor)
+        btn_forgot.setStyleSheet("""
+            QPushButton {
+                background: transparent;
+                border: none;
+                color: #90caf9;
+                font-size: 12px;
+                font-weight: 500;
+                padding: 0;
+            }
+            QPushButton:hover {
+                color: #ffffff;
+                text-decoration: underline;
+            }
+        """)
+        btn_forgot.clicked.connect(self._apri_recupero_credenziali)
+        box_forgot.addWidget(btn_forgot)
+        layout.addLayout(box_forgot)
+        layout.addSpacing(14)
 
         # Bottone accedi
         btn_login = PrimaryButton("Accedi")
@@ -463,7 +787,7 @@ class LoginWindow(QWidget):
         h_label.setStyleSheet("font-size: 24px; font-weight: 700; color: #fff;")
         layout.addWidget(h_label)
         layout.addSpacing(4)
-        sub = QLabel("Compila i campi per registrarti come volontario")
+        sub = QLabel("Compila i campi per registrarti (Volontario, Referente o Operatore)")
         sub.setStyleSheet("font-size: 12px; color: rgba(255,255,255,0.4);")
         layout.addWidget(sub)
         layout.addSpacing(20)
@@ -474,11 +798,25 @@ class LoginWindow(QWidget):
         self._reg_cf     = ModernInput("Codice Fiscale (16 caratteri)", parent=self)
         self._reg_dob    = ModernInput("Data di nascita (GG/MM/AAAA)", parent=self)
         self._reg_tel    = ModernInput("Telefono", parent=self)
-        self._reg_ruolo  = ModernInput("Ruolo (volontario / referente)", parent=self)
+        
+        self._reg_ruolo  = ModernComboBox(parent=self)
+        self._reg_ruolo.addItem("🚑 Ruolo: Volontario Operativo", "volontario")
+        self._reg_ruolo.addItem("📋 Ruolo: Referente / Coordinatore", "referente")
+        self._reg_ruolo.addItem("🩺 Ruolo: Operatore Sanitario", "operatore_sanitario")
+
+        self._reg_pin = ModernInput("PIN Autorizzazione Referente (CRI)", is_password=True, parent=self)
+        self._reg_pin.hide()
+
+        def _on_reg_ruolo_changed():
+            is_ref = (self._reg_ruolo.currentData() == "referente")
+            self._reg_pin.setVisible(is_ref)
+
+        self._reg_ruolo.currentIndexChanged.connect(lambda _: _on_reg_ruolo_changed())
+
         self._reg_pwd    = ModernInput("Password (min. 6 caratteri)", is_password=True, parent=self)
 
         fields = [self._reg_email, self._reg_nome, self._reg_cognome,
-                  self._reg_cf, self._reg_dob, self._reg_tel, self._reg_ruolo, self._reg_pwd]
+                  self._reg_cf, self._reg_dob, self._reg_tel, self._reg_ruolo, self._reg_pin, self._reg_pwd]
 
         for i, f in enumerate(fields):
             layout.addWidget(f)
@@ -517,6 +855,10 @@ class LoginWindow(QWidget):
         self._anim.setEasingCurve(QEasingCurve.OutCubic)
         self._anim.start()
 
+    def _apri_recupero_credenziali(self):
+        dlg = RecuperoCredenzialiDialog(self)
+        dlg.exec_()
+
     # ── LOGIN EMAIL/PASSWORD ──────────────────────────────────
     def _do_login(self):
         email = self._login_email.text().strip()
@@ -525,6 +867,8 @@ class LoginWindow(QWidget):
             self._shake(self._login_email)
             return
         if self.controller.effettuaLogin(email, pwd, self.sistema):
+            from session_manager import save_session
+            save_session(self.sistema.logged_user)
             self.callback_login_success()
             self.close()
         else:
@@ -541,20 +885,49 @@ class LoginWindow(QWidget):
         cf      = self._reg_cf.text().strip()
         dob     = self._reg_dob.text().strip()
         tel     = self._reg_tel.text().strip()
-        ruolo   = self._reg_ruolo.text().strip().lower() or "volontario"
+        if hasattr(self._reg_ruolo, "currentData"):
+            ruolo = str(self._reg_ruolo.currentData() or "volontario").lower()
+        else:
+            ruolo = self._reg_ruolo.text().strip().lower() or "volontario"
         pwd     = self._reg_pwd.text().strip()
 
         if not all([email, nome, cognome, cf, dob, tel, pwd]):
             QMessageBox.warning(self, "Campi Mancanti", "⚠️ Compila tutti i campi obbligatori.")
             return
 
-        nuovo = Utente(
-            cod_fiscale=cf, nome=nome, cognome=cognome,
-            email=email, data_nascita=dob, ruolo=ruolo, telefono=tel
-        )
+        if ruolo == "referente":
+            from security_config import verifica_pin_referente
+            pin_val = self._reg_pin.text().strip() if hasattr(self, "_reg_pin") else ""
+            if not verifica_pin_referente(pin_val):
+                QMessageBox.critical(
+                    self,
+                    "Accesso Negato — PIN Referente Richiesto",
+                    "❌ Codice di Autorizzazione Referente non valido o mancante.\n\n"
+                    "Per registrarsi come Referente è obbligatorio inserire il PIN di sicurezza CRI.\n"
+                    "Se non possiedi il codice, seleziona 'Volontario Operativo'."
+                )
+                if hasattr(self, "_reg_pin"):
+                    self._shake(self._reg_pin)
+                return
+
+        from UtenteFactory import costruisci_utente
+        nuovo = costruisci_utente({
+            "cod_fiscale": cf,
+            "nome": nome,
+            "cognome": cognome,
+            "email": email,
+            "nascita": dob,
+            "telefono": tel,
+            "ruolo": ruolo
+        })
         if self.controller.registraAccount(nuovo, pwd):
+            if nuovo not in self.sistema.volontari:
+                self.sistema.aggiungi_volontario(nuovo)
             self.sistema.logged_user = nuovo
-            QMessageBox.information(self, "Benvenuto!", "✅ Account creato con successo. Benvenuto!")
+            from session_manager import save_session
+            save_session(nuovo)
+            titolo_ruolo = "Referente / Coordinatore" if ruolo == "referente" else ("Operatore Sanitario" if ruolo == "operatore_sanitario" else "Volontario")
+            QMessageBox.information(self, "Benvenuto!", f"✅ Account ({titolo_ruolo}) creato con successo. Benvenuto!")
             self.callback_login_success()
             self.close()
         else:
@@ -577,6 +950,8 @@ class LoginWindow(QWidget):
             btn.setEnabled(False)  # type: ignore[attr-defined]
             self._google_btn_ref = btn
 
+        self.mostra_toast("🌐 Apertura browser per accesso Google...", tipo="info", durata_ms=3000)
+
         self._google_worker = GoogleOAuthWorker()
         self._google_worker.auth_success.connect(self._on_google_auth_success)  # pyrefly: ignore [missing-attribute]
         self._google_worker.auth_failed.connect(self._on_google_auth_failed)  # pyrefly: ignore [missing-attribute]
@@ -585,60 +960,136 @@ class LoginWindow(QWidget):
 
     def _on_google_auth_success(self, email: str, nome: str, id_token: str):
         """Chiamato dal worker thread dopo autenticazione Google riuscita."""
-        # Cerca volontario esistente nel sistema
         self.sistema.sincronizza_con_firebase()
+        email_clean = email.strip().lower()
         esistente = next(
-            (v for v in self.sistema.volontari if v.email.lower() == email.lower()),
+            (v for v in self.sistema.volontari if str(getattr(v, "email", "")).strip().lower() == email_clean),
             None
         )
+
+        # Se non trovato per email, controlla se c'è un utente associato alla sessione su questo dispositivo
+        if not esistente:
+            from session_manager import load_session
+            s = load_session()
+            if s and s.get("cod_fiscale"):
+                cf_sess = str(s.get("cod_fiscale")).strip().upper()
+                candidato = self.sistema.get_volontario(cf_sess)
+                if candidato:
+                    esistente = candidato
+                    esistente.email = email
+                    try:
+                        esistente.aggiorna_firestore()
+                    except Exception:
+                        pass
+
         if esistente:
             self.sistema.logged_user = esistente
-            QMessageBox.information(self, "Google Sign-In",
-                f"✅ Bentornato, {esistente.nome}!\nAccesso eseguito con Google.")
-            self.callback_login_success()
+            from session_manager import save_session
+            save_session(esistente)
+            nome_disp = esistente.nome or nome or "Volontario"
             self.close()
+            self.callback_login_success(f"🌐 Accesso eseguito con Google! Bentornato/a, {nome_disp}.")
         else:
-            # Nuovo utente Google: chiedi CF per completare profilo
-            from PyQt5.QtWidgets import QInputDialog
-            cf, ok = QInputDialog.getText(
-                self, "Completa Registrazione",
-                f"Accesso Google per: {email}\n\nInserisci il tuo Codice Fiscale (16 caratteri):"
-            )
-            if not ok or len(cf.strip()) != 16:
-                QMessageBox.warning(self, "Registrazione Incompleta",
-                    "Il Codice Fiscale è obbligatorio (16 caratteri).\nRegistrazione annullata.")
-                return
-            cf = cf.strip().upper()
+            # Primo accesso con questo account Google: chiedi esplicitamente con quale ruolo registrarsi!
+            dlg_ruolo = SelezioneRuoloGoogleDialog(nome_val if 'nome_val' in locals() else (nome or "Volontario"), self)
+            dlg_ruolo.exec_()
+            ruolo_scelto = dlg_ruolo.get_ruolo_selezionato()
 
-            nuovo = Volontario(
-                codFiscale=cf,
-                nome=nome,
-                cognome="",
-                email=email,
-                nascita="01/01/1990",
-                telefono="",
-                ruolo="volontario"
-            )
-            if self.controller.registraAccount(nuovo, f"Google_{cf}"):
-                self.sistema.logged_user = nuovo
-                QMessageBox.information(self, "Google Sign-Up",
-                    f"✅ Account Google registrato con successo!\nBenvenuto, {nome}!")
-                self.callback_login_success()
-                self.close()
-            else:
-                QMessageBox.warning(self, "Errore",
-                    "❌ Impossibile registrare l'account Google.\n"
-                    "Potrebbe già esistere un account con questo Codice Fiscale.")
+            import hashlib
+            email_hash = hashlib.sha256(email_clean.encode("utf-8")).hexdigest().upper()
+            auto_cf = f"GGL{email_hash[:13]}"  # Esattamente 16 caratteri alfanumerici
+            
+            nome_parts = (nome or "").strip().split(maxsplit=1)
+            nome_val = nome_parts[0] if nome_parts else "Volontario"
+            cognome_val = nome_parts[1] if len(nome_parts) > 1 else ""
+
+            from UtenteFactory import costruisci_utente
+            nuovo = costruisci_utente({
+                "cod_fiscale": auto_cf,
+                "nome": nome_val,
+                "cognome": cognome_val,
+                "email": email,
+                "nascita": "01/01/1995",
+                "telefono": "",
+                "ruolo": ruolo_scelto
+            })
+            
+            # Registra su database e memoria di sistema
+            try:
+                self.controller.registraAccount(nuovo, f"Google_{auto_cf}")
+            except Exception as e:
+                print(f"⚠️ Errore registraAccount Google: {e}")
+                
+            if nuovo not in self.sistema.volontari:
+                self.sistema.aggiungi_volontario(nuovo)
+                
+            self.sistema.logged_user = nuovo
+            from session_manager import save_session
+            save_session(nuovo)
+            self.close()
+            titolo_ruolo = "Referente / Coordinatore" if ruolo_scelto == "referente" else ("Operatore Sanitario" if ruolo_scelto == "operatore_sanitario" else "Volontario")
+            self.callback_login_success(f"🎉 Accesso eseguito con Google ({titolo_ruolo})! Benvenuto/a, {nome_val}.")
 
     def _on_google_auth_failed(self, error_msg: str):
-        QMessageBox.warning(self, "Google Sign-In Fallito",
-            f"⚠️ Impossibile completare l'accesso con Google.\n\n{error_msg}")
+        if "annullata" in error_msg.lower() or "scaduta" in error_msg.lower():
+            self.mostra_toast("⚠️ Accesso Google annullato.", tipo="warning")
+        else:
+            self.mostra_toast(f"❌ {error_msg}", tipo="error", durata_ms=4500)
 
     def _on_google_worker_done(self):
         btn = getattr(self, "_google_btn_ref", None)
         if btn:
             btn.setText("  🌐  Continua con Google")  # type: ignore[attr-defined]
             btn.setEnabled(True)  # type: ignore[attr-defined]
+
+    # ── TOAST NOTIFICATION ────────────────────────────────────
+    def mostra_toast(self, messaggio: str, tipo: str = "success", durata_ms: int = 3000):
+        if not hasattr(self, "_toast_frame"):
+            self._toast_timer = QTimer(self)
+            self._toast_timer.setSingleShot(True)
+            self._toast_timer.timeout.connect(self._nascondi_toast)
+
+            self._toast_frame = QFrame(self)
+            self._toast_layout = QHBoxLayout(self._toast_frame)
+            self._toast_layout.setContentsMargins(14, 8, 14, 8)
+            self._toast_label = QLabel(self._toast_frame)
+            self._toast_layout.addWidget(self._toast_label)
+            self._toast_frame.hide()
+
+        color_bg = "#2e7d32" if tipo == "success" else ("#c62828" if tipo == "error" else ("#ef6c00" if tipo == "warning" else "#1565c0"))
+        self._toast_frame.setStyleSheet(f"""
+            QFrame {{
+                background-color: {color_bg};
+                color: white;
+                border-radius: 8px;
+                border: 1px solid rgba(255,255,255,0.25);
+            }}
+            QLabel {{
+                color: white;
+                font-weight: bold;
+                font-size: 13px;
+                background: transparent;
+            }}
+        """)
+        self._toast_label.setText(messaggio)
+        self._toast_frame.adjustSize()
+        w = self._toast_frame.width()
+        h = self._toast_frame.height()
+        self._toast_frame.move((self.width() - w) // 2, self.height() - h - 25)
+        self._toast_frame.show()
+        self._toast_frame.raise_()
+        self._toast_timer.start(durata_ms)
+
+    def _nascondi_toast(self):
+        if hasattr(self, "_toast_frame"):
+            self._toast_frame.hide()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if hasattr(self, "_toast_frame") and self._toast_frame.isVisible():
+            w = self._toast_frame.width()
+            h = self._toast_frame.height()
+            self._toast_frame.move((self.width() - w) // 2, self.height() - h - 25)
 
     # ── SHAKE ANIMATION (errore) ──────────────────────────────
     def _shake(self, widget: QWidget):
