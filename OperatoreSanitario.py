@@ -17,7 +17,7 @@ class OperatoreSanitario(Utente):
         **kwargs
     ):
         super().__init__(
-            cod_fiscale=str(cod_fiscale),
+            cod_fiscale=cod_fiscale,
             nome=nome,
             cognome=cognome,
             email=email,
@@ -27,6 +27,8 @@ class OperatoreSanitario(Utente):
         )
         self.specializzazioni = specializzazioni if specializzazioni is not None else []
         self.disponibilita = disponibilita if disponibilita is not None else []
+        self.turni_assegnati: list = []
+        self.corsi: list = []
 
     def aggiungi_specializzazione(self, specializzazione: str):
         if specializzazione not in self.specializzazioni:

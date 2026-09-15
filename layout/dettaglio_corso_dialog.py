@@ -173,12 +173,12 @@ class DettaglioCorsoDialog(QDialog):
                     background-color: #1565c0;
                 }
             """)
-            btn_attestato.clicked.connect(self.scarica_attestato_pdf)
+            btn_attestato.clicked.connect(self.scarica_attestato_pdf)  # pyrefly: ignore [missing-attribute]
             btn_bar.addWidget(btn_attestato)
 
             btn_txt = QPushButton("📄 Esporta Scheda TXT")
             btn_txt.setStyleSheet("background-color: #37474f; color: white; padding: 8px 14px; border-radius: 6px;")
-            btn_txt.clicked.connect(self.scarica_scheda_txt)
+            btn_txt.clicked.connect(self.scarica_scheda_txt)  # pyrefly: ignore [missing-attribute]
             btn_bar.addWidget(btn_txt)
 
         elif self.stato_tipo == "in_corso":
@@ -195,7 +195,7 @@ class DettaglioCorsoDialog(QDialog):
                     background-color: #b71c1c;
                 }
             """)
-            btn_disiscrivi.clicked.connect(self.azione_disiscrivi)
+            btn_disiscrivi.clicked.connect(self.azione_disiscrivi)  # pyrefly: ignore [missing-attribute]
             btn_bar.addWidget(btn_disiscrivi)
 
         else:  # Disponibile
@@ -212,13 +212,13 @@ class DettaglioCorsoDialog(QDialog):
                     background-color: #1b5e20;
                 }
             """)
-            btn_iscrivi.clicked.connect(self.azione_iscrivi)
+            btn_iscrivi.clicked.connect(self.azione_iscrivi)  # pyrefly: ignore [missing-attribute]
             btn_bar.addWidget(btn_iscrivi)
 
         btn_bar.addStretch()
         btn_chiudi = QPushButton("Chiudi")
         btn_chiudi.setStyleSheet("background-color: #333333; color: white; padding: 8px 14px; border-radius: 6px;")
-        btn_chiudi.clicked.connect(self.accept)
+        btn_chiudi.clicked.connect(self.accept)  # pyrefly: ignore [missing-attribute]
         btn_bar.addWidget(btn_chiudi)
 
         layout.addLayout(btn_bar)

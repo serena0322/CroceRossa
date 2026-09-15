@@ -369,7 +369,7 @@ class RecuperoCredenzialiDialog(QDialog):
                 background-color: #b71c1c;
             }
         """)
-        btn_invia.clicked.connect(self._invia_recupero)
+        btn_invia.clicked.connect(self._invia_recupero)  # pyrefly: ignore [missing-attribute]
         btn_box.addWidget(btn_invia)
 
         btn_annulla = QPushButton("Annulla")
@@ -386,7 +386,7 @@ class RecuperoCredenzialiDialog(QDialog):
                 color: white;
             }
         """)
-        btn_annulla.clicked.connect(self.reject)
+        btn_annulla.clicked.connect(self.reject)  # pyrefly: ignore [missing-attribute]
         btn_box.addWidget(btn_annulla)
 
         layout.addLayout(btn_box)
@@ -418,7 +418,7 @@ class SelezioneRuoloGoogleDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("Primo Accesso Google — Croce Rossa Italiana")
         self.setFixedSize(500, 390)
-        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)  # type: ignore[attr-defined]
         self.setStyleSheet("""
             QDialog {
                 background-color: #1a1a1a;
@@ -503,14 +503,14 @@ class SelezioneRuoloGoogleDialog(QDialog):
             self.lbl_pin.setVisible(is_ref)
             self.txt_pin.setVisible(is_ref)
 
-        self.combo_ruolo.currentIndexChanged.connect(lambda _: _on_role_change())
+        self.combo_ruolo.currentIndexChanged.connect(lambda _: _on_role_change())  # pyrefly: ignore [missing-attribute]
 
         lay.addSpacing(6)
 
         btn_conferma = QPushButton("Conferma e Accedi")
         btn_conferma.setFixedHeight(46)
-        btn_conferma.setCursor(Qt.PointingHandCursor)
-        btn_conferma.clicked.connect(self._on_conferma_clicked)
+        btn_conferma.setCursor(Qt.PointingHandCursor)  # type: ignore[attr-defined]
+        btn_conferma.clicked.connect(self._on_conferma_clicked)  # pyrefly: ignore [missing-attribute]
         lay.addWidget(btn_conferma)
 
     def _on_conferma_clicked(self):
@@ -690,7 +690,7 @@ class LoginWindow(QWidget):
         box_forgot = QHBoxLayout()
         box_forgot.addStretch()
         btn_forgot = QPushButton("Hai dimenticato la password?")
-        btn_forgot.setCursor(Qt.PointingHandCursor)
+        btn_forgot.setCursor(Qt.PointingHandCursor)  # type: ignore[attr-defined]
         btn_forgot.setStyleSheet("""
             QPushButton {
                 background: transparent;
@@ -705,7 +705,7 @@ class LoginWindow(QWidget):
                 text-decoration: underline;
             }
         """)
-        btn_forgot.clicked.connect(self._apri_recupero_credenziali)
+        btn_forgot.clicked.connect(self._apri_recupero_credenziali)  # pyrefly: ignore [missing-attribute]
         box_forgot.addWidget(btn_forgot)
         layout.addLayout(box_forgot)
         layout.addSpacing(14)
@@ -811,7 +811,7 @@ class LoginWindow(QWidget):
             is_ref = (self._reg_ruolo.currentData() == "referente")
             self._reg_pin.setVisible(is_ref)
 
-        self._reg_ruolo.currentIndexChanged.connect(lambda _: _on_reg_ruolo_changed())
+        self._reg_ruolo.currentIndexChanged.connect(lambda _: _on_reg_ruolo_changed())  # pyrefly: ignore [missing-attribute]
 
         self._reg_pwd    = ModernInput("Password (min. 6 caratteri)", is_password=True, parent=self)
 
@@ -991,17 +991,17 @@ class LoginWindow(QWidget):
             self.callback_login_success(f"🌐 Accesso eseguito con Google! Bentornato/a, {nome_disp}.")
         else:
             # Primo accesso con questo account Google: chiedi esplicitamente con quale ruolo registrarsi!
-            dlg_ruolo = SelezioneRuoloGoogleDialog(nome_val if 'nome_val' in locals() else (nome or "Volontario"), self)
+            nome_parts = (nome or "").strip().split(maxsplit=1)
+            nome_val = nome_parts[0] if nome_parts else "Volontario"
+            cognome_val = nome_parts[1] if len(nome_parts) > 1 else ""
+
+            dlg_ruolo = SelezioneRuoloGoogleDialog(nome_val, self)
             dlg_ruolo.exec_()
             ruolo_scelto = dlg_ruolo.get_ruolo_selezionato()
 
             import hashlib
             email_hash = hashlib.sha256(email_clean.encode("utf-8")).hexdigest().upper()
             auto_cf = f"GGL{email_hash[:13]}"  # Esattamente 16 caratteri alfanumerici
-            
-            nome_parts = (nome or "").strip().split(maxsplit=1)
-            nome_val = nome_parts[0] if nome_parts else "Volontario"
-            cognome_val = nome_parts[1] if len(nome_parts) > 1 else ""
 
             from UtenteFactory import costruisci_utente
             nuovo = costruisci_utente({
@@ -1084,8 +1084,8 @@ class LoginWindow(QWidget):
         if hasattr(self, "_toast_frame"):
             self._toast_frame.hide()
 
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
+    def resizeEvent(self, a0):
+        super().resizeEvent(a0)
         if hasattr(self, "_toast_frame") and self._toast_frame.isVisible():
             w = self._toast_frame.width()
             h = self._toast_frame.height()

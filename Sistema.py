@@ -135,7 +135,7 @@ class Sistema:
                     if v:
                         if v not in t.volontari_assegnati:
                             t.volontari_assegnati.append(v)
-                        if t not in v.turni_assegnati:
+                        if hasattr(v, "turni_assegnati") and t not in v.turni_assegnati:
                             v.turni_assegnati.append(t)
                 
                 # Associa mezzo se presente
@@ -161,7 +161,7 @@ class Sistema:
             return True
         return False
 
-    def aggiorna_profilo(self, cod_fiscale: str, email: str = None, telefono: str = None, nome: str = None, cognome: str = None, nascita: str = None):
+    def aggiorna_profilo(self, cod_fiscale: str, email: str | None = None, telefono: str | None = None, nome: str | None = None, cognome: str | None = None, nascita: str | None = None):
         volontario = self.get_volontario(cod_fiscale)
         if volontario:
             if email:
@@ -182,7 +182,7 @@ class Sistema:
     def rimuovi_volontario(self, cod_fiscale):
         self.volontari = [v for v in self.volontari if str(v.cod_fiscale) != str(cod_fiscale)]
 
-    def get_volontario(self, cod_fiscale) -> Optional[Volontario]:
+    def get_volontario(self, cod_fiscale) -> Optional[Utente]:
         for v in self.volontari:
             if str(v.cod_fiscale).strip().upper() == str(cod_fiscale).strip().upper():
                 return v
@@ -196,7 +196,7 @@ class Sistema:
 
     def prenota_turno(self, cod_fiscale: str, id_turno: str | int):
         volontario = self.get_volontario(cod_fiscale)
-        turno = next((t for t in self.turni if str(t.id) == str(id_turno) or getattr(t, "id_turno", None) == id_turno), None)
+        turno = next((t for t in self.turni if t.id == str(id_turno) or getattr(t, "id_turno", None) == id_turno), None)
 
         if not volontario:
             print("⚠️ Volontario non trovato.")

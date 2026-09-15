@@ -36,6 +36,7 @@ class Corso:
         self.scadenza = scadenza
         self.referente: Referente | None = None
         self.partecipanti: List[Volontario] = []
+        self.certificati_ids: List[str] = []
 
     def aggiornaDati(self, c: Corso) -> None:
         self.id = c.id
