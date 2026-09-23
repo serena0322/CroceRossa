@@ -16,6 +16,9 @@ class Turno:
         oraFine: str = "",
         patenteRichiesta: str = "",
         paziente: str = "",
+        paziente_nome: str = "",
+        paziente_cognome: str = "",
+        paziente_cf: str = "",
         personeRichieste: int = 1,
         stato: str = "Proposto",
         tipoServizio: str = "",
@@ -27,12 +30,21 @@ class Turno:
         corso_richiesto: str = None,
         checklist: bool = False,
         tempoExtra: str = "",
-        dispositivi_richiesti: List[str] = None
+        dispositivi_richiesti: List[str] = None,
+        **kwargs
     ):
         self.id = str(id_turno) if id_turno is not None else id
         self.data = data
         self.luogoDestinazione = luogoDestinazione if luogoDestinazione else (luogo if luogo else "")
         self.luogoPrelevamento = luogoPrelevamento if luogoPrelevamento else (luogo if luogo else "")
+        
+        # Gestione campi separati paziente
+        self.paziente_nome = paziente_nome or kwargs.get("paziente_nome_cognome", "")
+        self.paziente_cognome = paziente_cognome
+        self.paziente_cf = paziente_cf or kwargs.get("codice_fiscale_paziente", "")
+        self._paziente_raw = paziente
+        if not self.paziente_nome and paziente and paziente != "Nessuno":
+            self.paziente_nome = paziente
         
         if fascia_oraria and " - " in fascia_oraria:
             parts = fascia_oraria.split(" - ")
@@ -43,7 +55,6 @@ class Turno:
             self.oraFine = oraFine
 
         self.patenteRichiesta = patenteRichiesta if patenteRichiesta else (corso_richiesto if corso_richiesto else "")
-        self.paziente = paziente
         
         try:
             self.personeRichieste = int(personeRichieste)
@@ -77,13 +88,78 @@ class Turno:
         self.id = str(val)
 
     @property
+    def paziente(self) -> str:
+        nome_completo = f"{self.paziente_nome} {self.paziente_cognome}".strip()
+        if nome_completo and self.paziente_cf:
+            return f"{nome_completo} (CF: {self.paziente_cf})"
+        return nome_completo or self.paziente_cf or self._paziente_raw or ""
+
+    @paziente.setter
+    def paziente(self, val: str):
+        self._paziente_raw = val
+        if " (CF: " in val:
+            parts = val.split(" (CF: ")
+            self.paziente_nome = parts[0].strip()
+            self.paziente_cf = parts[1].replace(")", "").strip()
+        elif val and val != "Nessuno":
+            self.paziente_nome = val
+
+    @property
     def luogo(self) -> str:
-        return self.luogoDestinazione
+        if self.luogoPrelevamento and self.luogoDestinazione and self.luogoPrelevamento != self.luogoDestinazione:
+            return f"{self.luogoPrelevamento} ➔ {self.luogoDestinazione}"
+        return self.luogoDestinazione or self.luogoPrelevamento or ""
         
     @luogo.setter
     def luogo(self, val: str):
-        self.luogoDestinazione = val
-        self.luogoPrelevamento = val
+        if " ➔ " in val:
+            parts = val.split(" ➔ ")
+            self.luogoPrelevamento = parts[0].strip()
+            self.luogoDestinazione = parts[1].strip()
+        elif " -> " in val:
+            parts = val.split(" -> ")
+            self.luogoPrelevamento = parts[0].strip()
+            self.luogoDestinazione = parts[1].strip()
+        else:
+            self.luogoDestinazione = val
+            self.luogoPrelevamento = val
+
+    def calcola_durata_ore(self) -> float:
+        """Calcola la durata in ore del turno per la verifica dei limiti operativi."""
+        from datetime import datetime
+        try:
+            fmt = "%H:%M"
+            t_ini = datetime.strptime(self.oraInizio.strip(), fmt)
+            t_fin = datetime.strptime(self.oraFine.strip(), fmt)
+            diff = (t_fin - t_ini).total_seconds() / 3600.0
+            if diff < 0:
+                diff += 24.0
+            return max(0.5, round(diff, 2))
+        except Exception:
+            return 4.0
+
+    def to_dict(self) -> dict:
+        """Serializza il turno in formato dizionario."""
+        return {
+            "id": self.id,
+            "data": self.data,
+            "oraInizio": self.oraInizio,
+            "oraFine": self.oraFine,
+            "fascia_oraria": self.fascia_oraria,
+            "luogoPrelevamento": self.luogoPrelevamento,
+            "luogoDestinazione": self.luogoDestinazione,
+            "luogo": self.luogo,
+            "tipoServizio": self.tipoServizio,
+            "paziente_nome": self.paziente_nome,
+            "paziente_cognome": self.paziente_cognome,
+            "paziente_cf": self.paziente_cf,
+            "patenteRichiesta": self.patenteRichiesta,
+            "personeRichieste": self.personeRichieste,
+            "mezzo_targa": self.mezzo_targa,
+            "stato": self.stato,
+            "volontari_ids": [getattr(v, "cod_fiscale", str(v)) for v in self.volontari_assegnati],
+            "volontari_ruoli": getattr(self, "volontari_ruoli", {})
+        }
 
     @property
     def fascia_oraria(self) -> str:
@@ -189,6 +265,9 @@ class Turno:
             "oraFine": self.oraFine,
             "patenteRichiesta": self.patenteRichiesta,
             "paziente": self.paziente,
+            "paziente_nome": self.paziente_nome,
+            "paziente_cognome": self.paziente_cognome,
+            "paziente_cf": self.paziente_cf,
             "personeRichieste": self.personeRichieste,
             "persone_richieste": self.persone_richieste,
             "stato": self.stato,

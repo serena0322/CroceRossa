@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from Sistema import Sistema
 from Volontario import Volontario
 from Referente import Referente
-from OperatoreSanitario import OperatoreSanitario
+from UtenteFactory import costruisci_utente
 from Turno import Turno
 from Mezzo import Mezzo
 from Corso import Corso
@@ -40,21 +40,20 @@ class TestModelli(unittest.TestCase):
         self.assertEqual(v.getMonteOre(), 12)
         self.assertEqual(v.calcola_ore_totali(), 12.0)
 
-    def test_operatore_sanitario(self):
-        op = OperatoreSanitario(
-            cod_fiscale="BNCLRA90A41H501A",
-            nome="Laura",
-            cognome="Bianchi",
-            email="laura.bianchi@cri.it",
-            specializzazioni=["Infermiere d'emergenza", "Triage"]
-        )
-        self.assertEqual(op.ruolo, "operatore_sanitario")
-        self.assertIn("Triage", op.specializzazioni)
-        op.aggiungi_specializzazione("BLSD Avanzato")
-        self.assertIn("BLSD Avanzato", op.specializzazioni)
-        d = op.to_dict()
-        self.assertIn("specializzazioni", d)
-        self.assertEqual(len(d["specializzazioni"]), 3)
+    def test_ruoli_ammessi_solo_volontario_e_referente(self):
+        # Verifica che il sistema ammetta solo Volontario e Referente e che OperatoreSanitario sia rimosso
+        u_vol = costruisci_utente({"cod_fiscale": "RSSMRA85M01H501Z", "nome": "Mario", "cognome": "Rossi", "email": "mario@cri.it", "ruolo": "volontario"})
+        self.assertIsInstance(u_vol, Volontario)
+        self.assertEqual(u_vol.ruolo, "volontario")
+
+        u_ref = costruisci_utente({"cod_fiscale": "VRDGPP75C10H501K", "nome": "Giuseppe", "cognome": "Verdi", "email": "giuseppe@cri.it", "ruolo": "referente"})
+        self.assertIsInstance(u_ref, Referente)
+        self.assertEqual(u_ref.ruolo, "referente")
+
+        # Qualsiasi tentativo di richiedere operatore_sanitario deve essere ricondotto in fallback pulito a Volontario
+        u_op = costruisci_utente({"cod_fiscale": "BNCLRA90A41H501A", "nome": "Laura", "cognome": "Bianchi", "email": "laura@cri.it", "ruolo": "operatore_sanitario"})
+        self.assertIsInstance(u_op, Volontario)
+        self.assertEqual(u_op.ruolo, "volontario")
 
     def test_referente(self):
         ref = Referente(
@@ -776,7 +775,9 @@ class TestGestioneUtenteController(unittest.TestCase):
         self.assertFalse(dlg.lbl_feedback.isHidden())
 
         dlg.txt_identificativo.setText("mario.rossi@cri.it")
-        dlg._invia_recupero()
+        from unittest.mock import patch
+        with patch("PyQt5.QtWidgets.QMessageBox.information"):
+            dlg._invia_recupero()
         # Con email valida, il dialog accetta e invia l'email
         from EmailService import EmailService
         self.assertTrue(any(e["destinatario"] == "mario.rossi@cri.it" for e in EmailService.get_sent_emails()))
@@ -1322,6 +1323,172 @@ class TestGestioneUtenteController(unittest.TestCase):
             dlg.salva_dati()
             self.assertEqual(v.ruolo, "referente")
             self.assertIsInstance(v, Referente)
+
+    def test_soglia_km_mezzo_400k_rf16(self):
+        """RF16 - Verifica che la soglia massima del ciclo vita dei mezzi sia 400.000 km."""
+        m = Mezzo(targa="CRI 400 AA", tipo="Ambulanza", chilometraggioTotale=399000)
+        self.assertFalse(m.isDismesso())
+        m.chilometraggioTotale = 400000
+        self.assertTrue(m.isDismesso())
+        m.chilometraggioTotale = 450000
+        self.assertTrue(m.isDismesso())
+
+    def test_turno_luoghi_separati_e_dati_paziente_uc7(self):
+        """UC 7 - Verifica separazione luogo prelevamento/destinazione e dati paziente/CF."""
+        t = Turno(
+            id="T_UC7_1",
+            data="2026-11-20",
+            oraInizio="08:00",
+            oraFine="12:00",
+            luogoPrelevamento="Ospedale San Camillo",
+            luogoDestinazione="Clinica Villa Pia",
+            paziente_nome="Mario",
+            paziente_cognome="Verdi",
+            paziente_cf="VRDMRA80A01H501Z"
+        )
+        self.assertEqual(t.luogoPrelevamento, "Ospedale San Camillo")
+        self.assertEqual(t.luogoDestinazione, "Clinica Villa Pia")
+        self.assertIn("Ospedale San Camillo", t.luogo)
+        self.assertIn("Clinica Villa Pia", t.luogo)
+        self.assertEqual(t.paziente_nome, "Mario")
+        self.assertEqual(t.paziente_cognome, "Verdi")
+        self.assertEqual(t.paziente_cf, "VRDMRA80A01H501Z")
+        self.assertEqual(t.calcola_durata_ore(), 4.0)
+        
+        d = t.to_dict()
+        self.assertEqual(d["luogoPrelevamento"], "Ospedale San Camillo")
+        self.assertEqual(d["paziente_cf"], "VRDMRA80A01H501Z")
+
+    def test_limite_ore_giornaliere_12h(self):
+        """Regola di Business: Impedire a un volontario/referente turni che superino le 12 ore giornaliere."""
+        ctrl = GestioneTurniController()
+        v = Volontario(cod_fiscale="RSSMRA85M01H501Z", nome="Mario", cognome="Rossi")
+        
+        # Turno 1: 8 ore (08:00 - 16:00)
+        t1 = Turno(id="T_12H_1", data="2026-11-25", oraInizio="08:00", oraFine="16:00", personeRichieste=2)
+        # Turno 2: 5 ore (17:00 - 22:00) nella stessa data (8 + 5 = 13 > 12)
+        t2 = Turno(id="T_12H_2", data="2026-11-25", oraInizio="17:00", oraFine="22:00", personeRichieste=2)
+        # Turno 3: 3 ore (18:00 - 21:00) nella stessa data (8 + 3 = 11 <= 12)
+        t3 = Turno(id="T_12H_3", data="2026-11-25", oraInizio="18:00", oraFine="21:00", personeRichieste=2)
+
+        # Assegniamo turno 1 al volontario
+        v.turni_assegnati.append(t1)
+        t1.volontari_assegnati.append(v)
+
+        # Verifica limite
+        self.assertFalse(ctrl.verificaLimiteOreGiornaliere(v, t2))
+        self.assertTrue(ctrl.verificaLimiteOreGiornaliere(v, t3))
+
+        # Tentativo di prenotazione t2 deve essere bloccato
+        sistema = Sistema()
+        sistema.turni = [t1, t2]
+        sistema.volontari = [v]
+        ok_p = ctrl.prenotaTurno(t2.id, v.cod_fiscale, sistema=sistema)
+        self.assertFalse(ok_p)
+        self.assertNotIn(v, t2.volontari_assegnati)
+
+    def test_capacita_massima_corso_uc10(self):
+        """UC 10 - Verifica dati estesi del corso e blocco iscrizione al raggiungimento di maxPartecipanti."""
+        ctrl = GestioneFormazioneController()
+        corso = Corso(
+            id="C_CAP_1",
+            titolo="Corso Trauma e Maxiemergenze",
+            direttore="Dott.ssa Laura Galli",
+            luogo="Aula Magna CRI Roma",
+            orari="Sabato e Domenica 09:00 - 18:00",
+            requisitiIscrizione="BLSD Base attivo",
+            maxPartecipanti=2
+        )
+        self.assertEqual(corso.direttore, "Dott.ssa Laura Galli")
+        self.assertEqual(corso.maxPartecipanti, 2)
+        self.assertFalse(corso.is_completo())
+
+        v1 = Volontario(cod_fiscale="CF001", nome="V1", cognome="Uno")
+        v2 = Volontario(cod_fiscale="CF002", nome="V2", cognome="Due")
+        v3 = Volontario(cod_fiscale="CF003", nome="V3", cognome="Tre")
+
+        self.assertTrue(ctrl.iscriviVolontario(v1, corso))
+        self.assertTrue(ctrl.iscriviVolontario(v2, corso))
+        self.assertTrue(corso.is_completo())
+
+        # Il 3° volontario non può iscriversi perché il corso è completo
+        self.assertFalse(ctrl.iscriviVolontario(v3, corso))
+        self.assertEqual(len(corso.partecipanti), 2)
+        self.assertNotIn(v3, corso.partecipanti)
+
+    def test_backup_periodico_rf23(self):
+        """RF23 - Procedura di backup periodico del sistema e serializzazione stato."""
+        from BackupService import BackupService
+        import tempfile
+        import shutil
+
+        temp_backup_dir = tempfile.mkdtemp()
+        try:
+            service = BackupService(backup_dir=temp_backup_dir, max_backups=3)
+            sistema = Sistema()
+            success, filepath = service.crea_backup(sistema)
+            self.assertTrue(success)
+            self.assertTrue(os.path.isfile(filepath))
+            self.assertTrue(os.path.getsize(filepath) > 0)
+
+            # Test backup delegato da Sistema
+            sistema.backup_service = service
+            s_ok, s_path = sistema.esegui_backup()
+            self.assertTrue(s_ok)
+            self.assertTrue(os.path.exists(s_path))
+        finally:
+            shutil.rmtree(temp_backup_dir, ignore_errors=True)
+
+    def test_promemoria_servizio_24h_rnf4(self):
+        """RNF4 - Notifica Promemoria Servizio inviata 24 ore prima dell'inizio del turno."""
+        from datetime import datetime, timedelta
+        sistema = Sistema()
+        v = Volontario(cod_fiscale="RSSMRA85M01H501Z", nome="Mario", cognome="Rossi", email="mario.rossi@cri.it")
+        sistema.volontari = [v]
+
+        domani = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+        t_domani = Turno(
+            id="T_NOTIF_24H",
+            data=domani,
+            oraInizio="10:00",
+            oraFine="16:00",
+            luogoPrelevamento="Sede Centrale",
+            luogoDestinazione="Presidio Ospedaliero"
+        )
+        t_domani.aggiungiVolontario(v, "Soccorritore")
+        sistema.turni = [t_domani]
+
+        # Esecuzione invio promemoria
+        notificati = sistema.invia_promemoria_servizi_24h()
+        self.assertEqual(len(notificati), 1)
+        self.assertEqual(notificati[0]["id_turno"], "T_NOTIF_24H")
+        self.assertEqual(notificati[0]["volontario_cf"], "RSSMRA85M01H501Z")
+        self.assertTrue(any("T_NOTIF_24H_RSSMRA85M01H501Z" in k for k in sistema.promemoria_inviati))
+
+        # Chiamate successive non devono re-inviare notifiche duplicate
+        duplicati = sistema.invia_promemoria_servizi_24h()
+        self.assertEqual(len(duplicati), 0)
+
+    def test_permessi_referente_turni_e_flotta(self):
+        """Verifica che la creazione/eliminazione turni e l'aggiunta mezzi siano permesse solo ai referenti."""
+        turni_ctrl = GestioneTurniController()
+        flotta_ctrl = GestioneFlottaController()
+
+        volontario = Volontario(cod_fiscale="CF_VOL_TEST", nome="Vol", cognome="Semplice")
+        referente = Referente(cod_fiscale="CF_REF_TEST", nome="Ref", cognome="Coordinatore")
+
+        t = Turno(id="T_PERM_1", data="2026-11-20")
+        m = Mezzo(targa="CRI 777 XY", tipo="Ambulanza Tipo A")
+
+        # Volontario semplice deve fallire
+        self.assertFalse(turni_ctrl.creaTurno(t, utente=volontario))
+        self.assertFalse(turni_ctrl.eliminaTurno(t.id, utente=volontario))
+        self.assertFalse(flotta_ctrl.aggiungiMezzo(m, utente=volontario))
+
+        # Referente deve avere successo
+        self.assertTrue(turni_ctrl.creaTurno(t, utente=referente))
+        self.assertTrue(flotta_ctrl.aggiungiMezzo(m, utente=referente))
+        self.assertTrue(turni_ctrl.eliminaTurno(t.id, utente=referente))
 
 
 if __name__ == "__main__":

@@ -39,7 +39,18 @@ class GestioneTurniController:
         # Static calculation or count from database
         return v.monteOreTotale
 
-    def creaTurno(self, t: Turno) -> bool:
+    def _verifica_permessi_referente(self, utente) -> bool:
+        if utente is None:
+            return True  # Fallback per chiamate di sistema/test senza utente esplicito
+        ruolo = str(getattr(utente, "ruolo", "")).strip().lower()
+        if ruolo == "referente" or hasattr(utente, "area_gestita"):
+            return True
+        print("❌ Operazione negata: solo gli utenti con ruolo 'Referente' possono gestire i turni.")
+        return False
+
+    def creaTurno(self, t: Turno, utente=None) -> bool:
+        if not self._verifica_permessi_referente(utente):
+            return False
         if not t.id:
             import uuid
             t.id = str(uuid.uuid4())[:8].upper()
@@ -54,22 +65,46 @@ class GestioneTurniController:
                 "oraFine": t.oraFine,
                 "patenteRichiesta": t.patenteRichiesta,
                 "paziente": t.paziente,
+                "paziente_nome": getattr(t, "paziente_nome", ""),
+                "paziente_cognome": getattr(t, "paziente_cognome", ""),
+                "paziente_cf": getattr(t, "paziente_cf", ""),
                 "personeRichieste": t.personeRichieste,
                 "persone_richieste": t.persone_richieste,
                 "stato": t.stato,
                 "tipoServizio": t.tipoServizio,
                 "volontari_ids": [str(v.cod_fiscale) for v in t.volontari_assegnati]
-            })
+            }, merge=True)
             print(f"[GestioneTurniController] creaTurno {t.id} salvato su Firebase.")
             return True
         except Exception as e:
             print(f"⚠️ Errore creaTurno in Firebase: {e}")
             return False
 
-    def modificaTurno(self, idTurno: str, t: Turno) -> bool:
-        return self.creaTurno(t)
+    def modificaTurno(self, idTurno: str, t: Turno, utente=None) -> bool:
+        if not self._verifica_permessi_referente(utente):
+            return False
+        t.id = idTurno
+        return self.creaTurno(t, utente=utente)
 
-    def prenotaTurno(self, idTurno: str, idVolontario: str, ruolo: str = "Soccorritore") -> bool:
+    def eliminaTurno(self, idTurno: str, utente=None) -> bool:
+        if not self._verifica_permessi_referente(utente):
+            return False
+        try:
+            from FirebaseConfig import db
+            db.collection("turni").document(idTurno).delete()
+            print(f"[GestioneTurniController] eliminaTurno {idTurno} rimosso da Firebase.")
+            return True
+        except Exception as e:
+            print(f"⚠️ Errore eliminaTurno in Firebase: {e}")
+            return False
+
+    def prenotaTurno(self, idTurno: str, idVolontario: str, ruolo: str = "Soccorritore", sistema: Any = None) -> bool:
+        if sistema:
+            turno_obj = next((t for t in getattr(sistema, "turni", []) if str(t.id) == str(idTurno)), None)
+            vol_obj = next((v for v in getattr(sistema, "volontari", []) if str(v.cod_fiscale).upper() == str(idVolontario).upper()), None)
+            if turno_obj and vol_obj:
+                if not self.verificaLimiteOreGiornaliere(vol_obj, turno_obj):
+                    return False
         try:
             from FirebaseConfig import db
             turno_ref = db.collection("turni").document(idTurno)
@@ -145,6 +180,27 @@ class GestioneTurniController:
                         return False
                 except Exception:
                     pass
+        return True
+
+    def verificaLimiteOreGiornaliere(self, v: Volontario, t: Turno, max_ore: float = 12.0) -> bool:
+        """
+        Verifica che il volontario non superi il tetto massimo di 12 ore di servizio giornaliere (RF19).
+        Ritorna True se consentito, False se l'iscrizione porterebbe a superare le 12 ore.
+        """
+        if not v or not t:
+            return True
+        durata_nuovo = t.calcola_durata_ore() if hasattr(t, "calcola_durata_ore") else 4.0
+        ore_giornaliere = 0.0
+        for altro in getattr(v, "turni_assegnati", []):
+            if altro.id == t.id:
+                continue
+            if str(altro.data).strip() == str(t.data).strip():
+                ore_giornaliere += altro.calcola_durata_ore() if hasattr(altro, "calcola_durata_ore") else 4.0
+        
+        totale = ore_giornaliere + durata_nuovo
+        if totale > max_ore:
+            print(f"⚠️ Limite ore giornaliere superato: {totale:.1f}h richieste > {max_ore}h massime consentite per il giorno {t.data}")
+            return False
         return True
 
     def visualizzaTurniDisponibili(self, sistema=None) -> List[Turno]:

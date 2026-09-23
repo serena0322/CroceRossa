@@ -75,9 +75,19 @@ class DettaglioCorsoDialog(QDialog):
         qualifica = getattr(corso, "qualificaRilasciata", "") or corso.titolo
         validita_mesi = getattr(corso, "mesiValidita", 12)
         scadenza = getattr(corso, "scadenza", "") or "Illimitata / Non specificata"
+        direttore = getattr(corso, "direttore", "") or "Direzione Sanitaria / Formazione CRI"
+        luogo = getattr(corso, "luogo", "") or "Sede Operativa Comitato Locale"
+        orari = getattr(corso, "orari", "") or "09:00 - 13:00 / 14:00 - 18:00"
+        requisiti = getattr(corso, "requisitiIscrizione", "") or "Volontario attivo CRI"
+        iscritti_n = len(getattr(corso, "partecipanti", []))
+        max_p = getattr(corso, "maxPartecipanti", 20)
 
         lbl_info = QLabel(
             f"🗓️ <b>Periodo di Svolgimento:</b> dal {corso.dataInizio or 'N/D'} al {corso.dataFine or 'N/D'}<br>"
+            f"🕒 <b>Orari e Luogo:</b> {orari} &nbsp;&nbsp;|&nbsp;&nbsp; 📍 {luogo}<br>"
+            f"👤 <b>Direttore del Corso:</b> {direttore}<br>"
+            f"📋 <b>Requisiti di Iscrizione:</b> {requisiti}<br>"
+            f"👥 <b>Capienza / Posti Disponibili:</b> <b>{iscritti_n} / {max_p}</b> partecipanti<br>"
             f"🏆 <b>Qualifica / Brevetto:</b> <b style='color: #4fc3f7;'>{qualifica}</b><br>"
             f"⏱️ <b>Validità formativa:</b> {validita_mesi} mesi &nbsp;&nbsp;|&nbsp;&nbsp; "
             f"📅 <b>Scadenza:</b> {scadenza}"
@@ -199,7 +209,12 @@ class DettaglioCorsoDialog(QDialog):
             btn_bar.addWidget(btn_disiscrivi)
 
         else:  # Disponibile
-            btn_iscrivi = QPushButton("📝 Iscriviti a questo Corso")
+            iscritti_n = len(getattr(corso, "partecipanti", []))
+            max_p = getattr(corso, "maxPartecipanti", 20)
+            al_completo = (iscritti_n >= max_p)
+
+            btn_iscrivi = QPushButton("🔴 Corso al Completo" if al_completo else "📝 Iscriviti a questo Corso")
+            btn_iscrivi.setEnabled(not al_completo)
             btn_iscrivi.setStyleSheet("""
                 QPushButton {
                     background-color: #2e7d32;
@@ -210,6 +225,10 @@ class DettaglioCorsoDialog(QDialog):
                 }
                 QPushButton:hover {
                     background-color: #1b5e20;
+                }
+                QPushButton:disabled {
+                    background-color: #555555;
+                    color: #aaaaaa;
                 }
             """)
             btn_iscrivi.clicked.connect(self.azione_iscrivi)  # pyrefly: ignore [missing-attribute]
@@ -355,8 +374,14 @@ class DettaglioCorsoDialog(QDialog):
         self.accept()
 
     def azione_iscrivi(self):
+        if hasattr(self.corso, "is_completo") and self.corso.is_completo():
+            QMessageBox.critical(self, "Corso al Completo", f"❌ Impossibile iscriversi: il corso ha raggiunto la capienza massima consentita ({getattr(self.corso, 'maxPartecipanti', 20)} partecipanti).")
+            return
         if self.controller:
-            self.controller.iscriviVolontario(self.utente, self.corso.id)
+            ok = self.controller.iscriviVolontario(self.utente, self.corso.id)
+            if not ok:
+                QMessageBox.critical(self, "Iscrizione Fallita", "❌ Impossibile completare l'iscrizione (corso al completo o errore).")
+                return
         if hasattr(self.utente, "iscriviti_al_corso"):
             self.utente.iscriviti_al_corso(self.corso)
         if hasattr(self.utente, "aggiorna_firestore"):

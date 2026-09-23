@@ -15,11 +15,18 @@ class Corso:
         qualificaRilasciata: str = "",
         stato: str = "Programmato",
         titolo: str = "",
+        # Specifiche PDF UC 10:
+        direttore: str = "",
+        luogo: str = "",
+        orari: str = "",
+        requisitiIscrizione: str = "",
+        maxPartecipanti: int = 20,
         # Compatibility arguments:
         nome: str = "",
         esito: bool = False,
         checklist: List[dict] = None,
-        scadenza: str = ""
+        scadenza: str = "",
+        **kwargs
     ):
         self.id = id
         self.dataFine = dataFine
@@ -28,6 +35,14 @@ class Corso:
         self.qualificaRilasciata = qualificaRilasciata if qualificaRilasciata else (titolo if titolo else "")
         self.stato = stato
         self.titolo = titolo
+        self.direttore = direttore or kwargs.get("direttore_corso", "")
+        self.luogo = luogo or kwargs.get("luogo_corso", "")
+        self.orari = orari or kwargs.get("orari_corso", "")
+        self.requisitiIscrizione = requisitiIscrizione or kwargs.get("requisiti_iscrizione", "")
+        try:
+            self.maxPartecipanti = int(maxPartecipanti or kwargs.get("numero_massimo_partecipanti", 20))
+        except (ValueError, TypeError):
+            self.maxPartecipanti = 20
         
         # Compatibility properties:
         self.nome = nome if nome else (titolo if titolo else "")
@@ -46,17 +61,30 @@ class Corso:
         self.qualificaRilasciata = c.qualificaRilasciata
         self.stato = c.stato
         self.titolo = c.titolo
+        self.direttore = c.direttore
+        self.luogo = c.luogo
+        self.orari = c.orari
+        self.requisitiIscrizione = c.requisitiIscrizione
+        self.maxPartecipanti = c.maxPartecipanti
+
+    def is_completo(self) -> bool:
+        return len(self.partecipanti) >= self.maxPartecipanti
 
     def aggiungiIscritto(self, dati: Volontario) -> bool:
-        if dati not in self.partecipanti:
-            self.partecipanti.append(dati)
-            if self not in dati.formazione:
-                dati.formazione.append(self)
+        if dati in self.partecipanti:
             return True
-        return False
+        # Verifica capienza massima partecipanti come da requisiti
+        if len(self.partecipanti) >= self.maxPartecipanti:
+            print(f"⚠️ Impossibile iscrivere {dati.nome}: corso '{self.titolo}' ha raggiunto la capienza massima ({self.maxPartecipanti} posti).")
+            return False
+            
+        self.partecipanti.append(dati)
+        if self not in dati.formazione:
+            dati.formazione.append(self)
+        return True
 
     def aggiungi_partecipante(self, volontario: Volontario):
-        self.aggiungiIscritto(volontario)
+        return self.aggiungiIscritto(volontario)
 
     def getIscritti(self) -> List[Volontario]:
         return self.partecipanti
@@ -102,5 +130,11 @@ class Corso:
             "mesiValidita": self.mesiValidita,
             "qualificaRilasciata": self.qualificaRilasciata,
             "stato": self.stato,
-            "titolo": self.titolo
+            "titolo": self.titolo,
+            "direttore": self.direttore,
+            "luogo": self.luogo,
+            "orari": self.orari,
+            "requisitiIscrizione": self.requisitiIscrizione,
+            "maxPartecipanti": self.maxPartecipanti,
+            "partecipanti_ids": [str(p.cod_fiscale) for p in self.partecipanti]
         }, merge=True)

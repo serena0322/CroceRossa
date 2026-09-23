@@ -13,9 +13,9 @@ class Mezzo:
         stato: str = "Disponibile",
         dataScadenzaAssicurazione: str = "",
         # Compatibility arguments:
-        chilometraggio: int = None,
-        dispositivi_richiesti: List[str] = None,
-        checklist: List[str] = None,
+        chilometraggio: int | None = None,
+        dispositivi_richiesti: List[str] | None = None,
+        checklist: List[str] | None = None,
         disponibile: bool = True
     ):
         self.targa = targa
@@ -90,7 +90,7 @@ class Mezzo:
         self._disponibile = False
         print(f"🔧 Mezzo {self.targa} inviato in officina.")
 
-    def isDismesso(self, limite_km: int = 350000) -> bool:
+    def isDismesso(self, limite_km: int = 400000) -> bool:
         return self.stato == "Dismesso" or self.chilometraggioTotale >= limite_km
 
     def radiazioneVeicolo(self) -> None:

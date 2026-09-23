@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from Volontario import Volontario
@@ -19,7 +19,8 @@ class GestioneFormazioneController:
             corso_ref = db.collection("corsi").document(s)
             doc = corso_ref.get()
             if doc.exists:
-                vids = doc.to_dict().get("partecipanti_ids", [])
+                dati = doc.to_dict() or {}
+                vids = dati.get("partecipanti_ids", [])
                 for v in volontari:
                     if str(v.cod_fiscale) not in vids:
                         vids.append(str(v.cod_fiscale))
@@ -44,8 +45,13 @@ class GestioneFormazioneController:
                 "esito": c.esito,
                 "checklist": c.checklist,
                 "scadenza": c.scadenza,
+                "direttore": getattr(c, "direttore", ""),
+                "luogo": getattr(c, "luogo", ""),
+                "orari": getattr(c, "orari", ""),
+                "requisitiIscrizione": getattr(c, "requisitiIscrizione", ""),
+                "maxPartecipanti": getattr(c, "maxPartecipanti", 20),
                 "partecipanti_ids": [str(p.cod_fiscale) for p in c.partecipanti]
-            })
+            }, merge=True)
             print(f"[GestioneFormazioneController] creaCorso {c.id} salvato su Firebase.")
             return True
         except Exception as e:
@@ -62,15 +68,48 @@ class GestioneFormazioneController:
             print(f"⚠️ Errore eliminaCorso in Firebase: {e}")
             return False
 
-    def iscriviVolontario(self, v: Volontario, s: str) -> bool:
+    def iscriviVolontario(self, v: Volontario, s: Any, sistema=None) -> bool:
+        c_obj = s if hasattr(s, "id") and hasattr(s, "maxPartecipanti") else None
+        s_id = str(getattr(s, "id", s))
+
+        # 1. Verifica capienza su oggetto corso diretto
+        if c_obj is not None:
+            if c_obj.is_completo() and v not in c_obj.partecipanti:
+                print(f"⚠️ Impossibile iscriversi: corso '{c_obj.titolo or c_obj.nome}' al completo ({c_obj.maxPartecipanti} posti).")
+                return False
+            try:
+                c_obj.aggiungiIscritto(v)
+            except ValueError as e:
+                print(f"⚠️ {e}")
+                return False
+
+        # 2. Verifica capienza su oggetto in memoria se presente in sistema
+        elif sistema and getattr(sistema, "corsi", None):
+            c_mem = next((c for c in sistema.corsi if str(c.id) == s_id), None)
+            if c_mem:
+                if c_mem.is_completo() and v not in c_mem.partecipanti:
+                    print(f"⚠️ Impossibile iscriversi: corso '{c_mem.titolo or c_mem.nome}' al completo ({c_mem.maxPartecipanti} posti).")
+                    return False
+                try:
+                    c_mem.aggiungiIscritto(v)
+                except ValueError as e:
+                    print(f"⚠️ {e}")
+                    return False
+
         try:
             from FirebaseConfig import db
-            corso_ref = db.collection("corsi").document(s)
+            corso_ref = db.collection("corsi").document(s_id)
             doc = corso_ref.get()
             if doc.exists:
-                vids = doc.to_dict().get("partecipanti_ids", [])
-                if str(v.cod_fiscale) not in vids:
-                    vids.append(str(v.cod_fiscale))
+                dati = doc.to_dict() or {}
+                vids = dati.get("partecipanti_ids", [])
+                max_p = int(dati.get("maxPartecipanti", 20) or 20)
+                cf_str = str(v.cod_fiscale)
+                if cf_str not in vids:
+                    if len(vids) >= max_p:
+                        print(f"⚠️ Impossibile iscrivere volontario: capienza massima raggiunta ({max_p} posti).")
+                        return False
+                    vids.append(cf_str)
                     corso_ref.update({"partecipanti_ids": vids})
             return True
         except Exception as e:
@@ -86,7 +125,8 @@ class GestioneFormazioneController:
             corso_ref = db.collection("corsi").document(s)
             doc = corso_ref.get()
             if doc.exists:
-                vids = doc.to_dict().get("partecipanti_ids", [])
+                dati = doc.to_dict() or {}
+                vids = dati.get("partecipanti_ids", [])
                 cf_str = str(v.cod_fiscale)
                 if cf_str in vids:
                     vids.remove(cf_str)
@@ -95,7 +135,7 @@ class GestioneFormazioneController:
             print(f"⚠️ Errore disiscriviVolontario su Firebase: {e}")
 
         # Aggiornamento locale
-        c_obj = next((c for c in getattr(v, "formazione", []) if str(c.id) == str(s)), None)
+        c_obj = next((c for c in getattr(v, "formazione", []) if str(c.id) == s), None)
         if c_obj:
             v.disiscriviti_dal_corso(c_obj)
         if hasattr(v, "aggiorna_firestore"):
@@ -127,7 +167,12 @@ class GestioneFormazioneController:
                     dataFine=str(dati.get("dataFine") or ""),
                     esito=bool(dati.get("esito", False)),
                     checklist=dati.get("checklist", []),
-                    scadenza=str(dati.get("scadenza") or "")
+                    scadenza=str(dati.get("scadenza") or ""),
+                    direttore=str(dati.get("direttore") or ""),
+                    luogo=str(dati.get("luogo") or ""),
+                    orari=str(dati.get("orari") or ""),
+                    requisitiIscrizione=str(dati.get("requisitiIscrizione") or ""),
+                    maxPartecipanti=int(dati.get("maxPartecipanti", 20) or 20)
                 )
                 c.certificati_ids = dati.get("certificati_ids", []) or []
                 corsi.append(c)
@@ -161,8 +206,8 @@ class GestioneFormazioneController:
         disponibili = []
 
         for c in tutti_corsi:
-            cid = str(c.id)
-            ctitolo = str(c.titolo or c.nome or "").strip().upper()
+            cid = c.id or ""
+            ctitolo = (c.titolo or c.nome or "").strip().upper()
             cqualifica = str(getattr(c, "qualificaRilasciata", "")).strip().upper()
             
             # Partecipanti e certificati

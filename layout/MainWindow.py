@@ -11,7 +11,6 @@ from PyQt5.QtGui import QColor, QFont
 from Sistema import Sistema
 from Referente import Referente
 from Volontario import Volontario
-from OperatoreSanitario import OperatoreSanitario
 from Mezzo import Mezzo
 from Turno import Turno
 from Corso import Corso
@@ -40,13 +39,15 @@ class CreaTurnoDialog(QDialog):
         self.id_edit = QLineEdit(self.generated_id)
         self.id_edit.setReadOnly(True)
         self.data_edit = QLineEdit("2026-07-15")
-        self.luogo_edit = QLineEdit("Sede Centrale")
+        self.luogo_prelevamento_edit = QLineEdit("Sede Centrale CRI")
+        self.luogo_destinazione_edit = QLineEdit("Ospedale Regionale")
         self.ora_inizio_edit = QLineEdit("08:00")
         self.ora_fine_edit = QLineEdit("14:00")
         self.patente_combo = QComboBox()
         self.patente_combo.addItems(["Nessuna", "B", "C", "D", "E"])
         self.patente_combo.setCurrentText("B")
-        self.paziente_edit = QLineEdit("Nessuno")
+        self.paziente_nome_edit = QLineEdit("")
+        self.paziente_cf_edit = QLineEdit("")
 
         # Mezzo selection combo
         self.mezzo_combo = QComboBox()
@@ -76,12 +77,14 @@ class CreaTurnoDialog(QDialog):
         
         layout.addRow("ID Turno (Generato):", self.id_edit)
         layout.addRow("Data (YYYY-MM-DD):", self.data_edit)
-        layout.addRow("Luogo:", self.luogo_edit)
+        layout.addRow("Luogo Prelevamento:", self.luogo_prelevamento_edit)
+        layout.addRow("Luogo Destinazione:", self.luogo_destinazione_edit)
         layout.addRow("Ora Inizio:", self.ora_inizio_edit)
         layout.addRow("Ora Fine:", self.ora_fine_edit)
         layout.addRow("Veicolo Assegnato:", self.mezzo_combo)
         layout.addRow("Patente Richiesta:", self.patente_combo)
-        layout.addRow("Paziente (opzionale):", self.paziente_edit)
+        layout.addRow("Nome/Cognome Paziente:", self.paziente_nome_edit)
+        layout.addRow("Codice Fiscale Paziente:", self.paziente_cf_edit)
         
         # Row layout for roles
         layout.addRow("Fabbisogno Ruoli:", QLabel("<i>Imposta il numero di persone richieste per ruolo:</i>"))
@@ -115,11 +118,13 @@ class CreaTurnoDialog(QDialog):
         t = Turno(
             id=self.generated_id,
             data=self.data_edit.text().strip(),
-            luogo=self.luogo_edit.text().strip(),
+            luogoPrelevamento=self.luogo_prelevamento_edit.text().strip(),
+            luogoDestinazione=self.luogo_destinazione_edit.text().strip(),
             oraInizio=self.ora_inizio_edit.text().strip(),
             oraFine=self.ora_fine_edit.text().strip(),
             patenteRichiesta=pat_val,
-            paziente=self.paziente_edit.text().strip(),
+            paziente_nome=self.paziente_nome_edit.text().strip(),
+            paziente_cf=self.paziente_cf_edit.text().strip(),
             personeRichieste=tot_persone,
             tipoServizio=self.servizio_edit.text().strip(),
             mezzo_targa=self.get_selected_targa()
@@ -164,6 +169,7 @@ class CreaMezzoDialog(QDialog):
 class CreaCorsoDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
+        from PyQt5.QtWidgets import QSpinBox
         self.setWindowTitle("🎓 Crea Nuovo Corso Formativo")
         layout = QFormLayout()
         
@@ -172,17 +178,29 @@ class CreaCorsoDialog(QDialog):
         self.id_edit = QLineEdit(self.generated_id)
         self.id_edit.setReadOnly(True)
         self.titolo_edit = QLineEdit("Corso BLSD")
+        self.direttore_edit = QLineEdit("Dott. M. Rossi")
+        self.luogo_edit = QLineEdit("Sede Centrale CRI")
+        self.orari_edit = QLineEdit("Sabato 09:00 - 18:00")
         self.inizio_edit = QLineEdit("2026-10-01")
         self.fine_edit = QLineEdit("2026-10-15")
         self.mesi_edit = QLineEdit("24")
         self.qualifica_edit = QLineEdit("Certificazione BLSD")
+        self.requisiti_edit = QLineEdit("Volontario attivo CRI")
+        self.max_spin = QSpinBox()
+        self.max_spin.setRange(1, 100)
+        self.max_spin.setValue(20)
         
         layout.addRow("ID Corso (Generato):", self.id_edit)
         layout.addRow("Titolo Corso:", self.titolo_edit)
+        layout.addRow("Direttore del Corso:", self.direttore_edit)
+        layout.addRow("Luogo di Svolgimento:", self.luogo_edit)
+        layout.addRow("Orari del Corso:", self.orari_edit)
         layout.addRow("Data Inizio:", self.inizio_edit)
         layout.addRow("Data Fine:", self.fine_edit)
         layout.addRow("Mesi Validità:", self.mesi_edit)
         layout.addRow("Qualifica Rilasciata:", self.qualifica_edit)
+        layout.addRow("Requisiti Iscrizione:", self.requisiti_edit)
+        layout.addRow("Capienza Massima (Posti):", self.max_spin)
         
         self.btn = QPushButton("Crea")
         self.btn.clicked.connect(self.accept)
@@ -193,10 +211,15 @@ class CreaCorsoDialog(QDialog):
         return Corso(
             id=self.generated_id,
             titolo=self.titolo_edit.text().strip(),
+            direttore=self.direttore_edit.text().strip(),
+            luogo=self.luogo_edit.text().strip(),
+            orari=self.orari_edit.text().strip(),
             dataInizio=self.inizio_edit.text().strip(),
             dataFine=self.fine_edit.text().strip(),
             mesiValidita=int(self.mesi_edit.text().strip() or 12),
-            qualificaRilasciata=self.qualifica_edit.text().strip()
+            qualificaRilasciata=self.qualifica_edit.text().strip(),
+            requisitiIscrizione=self.requisiti_edit.text().strip(),
+            maxPartecipanti=self.max_spin.value()
         )
 
 class ModificaTurnoDialog(QDialog):
@@ -210,11 +233,13 @@ class ModificaTurnoDialog(QDialog):
         layout = QFormLayout()
 
         self.data_edit = QLineEdit(turno.data)
-        self.luogo_edit = QLineEdit(turno.luogo)
+        self.luogo_prelevamento_edit = QLineEdit(getattr(turno, "luogoPrelevamento", "") or turno.luogo)
+        self.luogo_destinazione_edit = QLineEdit(getattr(turno, "luogoDestinazione", "") or turno.luogo)
         self.ora_inizio_edit = QLineEdit(turno.oraInizio)
         self.ora_fine_edit = QLineEdit(turno.oraFine)
         self.servizio_edit = QLineEdit(turno.tipoServizio)
-        self.paziente_edit = QLineEdit(turno.paziente)
+        self.paziente_nome_edit = QLineEdit(getattr(turno, "paziente_nome", "") or getattr(turno, "paziente", ""))
+        self.paziente_cf_edit = QLineEdit(getattr(turno, "paziente_cf", ""))
 
         # Mezzo selection
         self.mezzo_combo = QComboBox()
@@ -245,12 +270,14 @@ class ModificaTurnoDialog(QDialog):
         self.stato_combo.setCurrentText(turno.stato or "Proposto")
 
         layout.addRow("Data (YYYY-MM-DD):", self.data_edit)
-        layout.addRow("Luogo:", self.luogo_edit)
+        layout.addRow("Luogo Prelevamento:", self.luogo_prelevamento_edit)
+        layout.addRow("Luogo Destinazione:", self.luogo_destinazione_edit)
         layout.addRow("Ora Inizio:", self.ora_inizio_edit)
         layout.addRow("Ora Fine:", self.ora_fine_edit)
         layout.addRow("Veicolo Assegnato:", self.mezzo_combo)
         layout.addRow("Tipo Servizio:", self.servizio_edit)
-        layout.addRow("Paziente:", self.paziente_edit)
+        layout.addRow("Nome/Cognome Paziente:", self.paziente_nome_edit)
+        layout.addRow("Codice Fiscale Paziente:", self.paziente_cf_edit)
         layout.addRow("Patente Richiesta:", self.patente_combo)
         layout.addRow("Stato:", self.stato_combo)
         layout.addRow(QLabel("<i>Fabbisogno per ruolo:</i>"))
@@ -284,11 +311,12 @@ class ModificaTurnoDialog(QDialog):
 
     def apply_to(self, turno, flotta_controller=None, mezzi=None):
         turno.data = self.data_edit.text().strip()
-        turno.luogoDestinazione = self.luogo_edit.text().strip()
-        turno.luogoPrelevamento = self.luogo_edit.text().strip()
+        turno.luogoPrelevamento = self.luogo_prelevamento_edit.text().strip()
+        turno.luogoDestinazione = self.luogo_destinazione_edit.text().strip()
         pat = self.patente_combo.currentText()
         turno.patenteRichiesta = "" if pat == "Nessuna" else pat
-        turno.paziente = self.paziente_edit.text().strip()
+        turno.paziente_nome = self.paziente_nome_edit.text().strip()
+        turno.paziente_cf = self.paziente_cf_edit.text().strip()
         turno.oraInizio = self.ora_inizio_edit.text().strip()
         turno.oraFine = self.ora_fine_edit.text().strip()
         turno.tipoServizio = self.servizio_edit.text().strip()
@@ -414,25 +442,38 @@ class ModificaMezzoDialog(QDialog):
 class ModificaCorsoDialog(QDialog):
     def __init__(self, corso, parent=None):
         super().__init__(parent)
+        from PyQt5.QtWidgets import QSpinBox
         self.setWindowTitle(f"✏️ Modifica Corso — {corso.titolo}")
         self.setMinimumWidth(400)
         layout = QFormLayout()
 
         self.titolo_edit = QLineEdit(corso.titolo)
+        self.direttore_edit = QLineEdit(getattr(corso, "direttore", ""))
+        self.luogo_edit = QLineEdit(getattr(corso, "luogo", ""))
+        self.orari_edit = QLineEdit(getattr(corso, "orari", ""))
         self.inizio_edit = QLineEdit(corso.dataInizio)
         self.fine_edit = QLineEdit(corso.dataFine)
         self.mesi_edit = QLineEdit(str(getattr(corso, "mesiValidita", 24)))
         self.qualifica_edit = QLineEdit(getattr(corso, "qualificaRilasciata", ""))
+        self.requisiti_edit = QLineEdit(getattr(corso, "requisitiIscrizione", ""))
+        self.max_spin = QSpinBox()
+        self.max_spin.setRange(1, 100)
+        self.max_spin.setValue(int(getattr(corso, "maxPartecipanti", 20) or 20))
 
         self.stato_combo = QComboBox()
         self.stato_combo.addItems(["Pianificato", "Aperto", "In Corso", "Concluso", "Annullato"])
         self.stato_combo.setCurrentText(corso.stato or "Pianificato")
 
         layout.addRow("Titolo Corso:", self.titolo_edit)
+        layout.addRow("Direttore del Corso:", self.direttore_edit)
+        layout.addRow("Luogo di Svolgimento:", self.luogo_edit)
+        layout.addRow("Orari del Corso:", self.orari_edit)
         layout.addRow("Data Inizio:", self.inizio_edit)
         layout.addRow("Data Fine:", self.fine_edit)
         layout.addRow("Mesi Validità:", self.mesi_edit)
         layout.addRow("Qualifica Rilasciata:", self.qualifica_edit)
+        layout.addRow("Requisiti Iscrizione:", self.requisiti_edit)
+        layout.addRow("Capienza Massima (Posti):", self.max_spin)
         layout.addRow("Stato:", self.stato_combo)
 
         btn = QPushButton("💾 Salva Modifiche")
@@ -442,6 +483,9 @@ class ModificaCorsoDialog(QDialog):
 
     def apply_to(self, corso):
         corso.titolo = self.titolo_edit.text().strip()
+        corso.direttore = self.direttore_edit.text().strip()
+        corso.luogo = self.luogo_edit.text().strip()
+        corso.orari = self.orari_edit.text().strip()
         corso.dataInizio = self.inizio_edit.text().strip()
         corso.dataFine = self.fine_edit.text().strip()
         try:
@@ -449,6 +493,8 @@ class ModificaCorsoDialog(QDialog):
         except ValueError:
             pass
         corso.qualificaRilasciata = self.qualifica_edit.text().strip()
+        corso.requisitiIscrizione = self.requisiti_edit.text().strip()
+        corso.maxPartecipanti = self.max_spin.value()
         corso.stato = self.stato_combo.currentText()
 
 
@@ -1286,15 +1332,12 @@ class SchedaVolontarioDialog(QDialog):
         dlg.exec_()
 
     def cambia_ruolo(self):
-        opzioni = ["volontario", "referente", "operatore_sanitario"]
+        opzioni = ["volontario", "referente"]
         ruolo_attuale = str(getattr(self.volontario, "ruolo", "volontario")).lower()
         idx_default = opzioni.index(ruolo_attuale) if ruolo_attuale in opzioni else 0
         nuovo, ok = QInputDialog.getItem(self, "Modifica Ruolo Membro", f"Seleziona il nuovo ruolo per {self.volontario.get_nome_completo()}:", opzioni, idx_default, False)
         if ok and nuovo:
             self.volontario.ruolo = nuovo
-            # Se promosso a referente o operatore, assicurati che abbia i campi
-            if nuovo == "operatore_sanitario" and not hasattr(self.volontario, "specializzazioni"):
-                self.volontario.specializzazioni = []
             try:
                 self.volontario.aggiorna_firestore()
                 QMessageBox.information(self, "Ruolo Aggiornato", f"✅ Ruolo di {self.volontario.get_nome_completo()} aggiornato a '{nuovo}'.")
@@ -1422,6 +1465,14 @@ class MainWindow(QWidget):
         self.flotta_controller = GestioneFlottaController()
         self.turni_controller = GestioneTurniController()
         self.formazione_controller = GestioneFormazioneController()
+
+        # RNF4 - Invio promemoria automatici 24 ore prima dell'inizio dei turni di servizio
+        try:
+            notificati = self.sistema.invia_promemoria_servizi_24h()
+            if notificati:
+                print(f"[RNF4] Inviati {len(notificati)} promemoria di turno per i servizi delle prossime 24h.")
+        except Exception as e:
+            print(f"[RNF4 Warning] Impossibile verificare promemoria turni 24h: {e}")
 
         # Window configuration
         self.setWindowTitle("🚑 Gestione Volontari - Croce Rossa Italiana")
@@ -1999,6 +2050,26 @@ class MainWindow(QWidget):
             lbl_desc.setWordWrap(True)
             ac_layout.addWidget(lbl_title)
             ac_layout.addWidget(lbl_desc)
+
+            # RF23 - Azione Backup Periodico
+            btn_backup = QPushButton("💾 Esegui Backup Periodico del Sistema (RF23)")
+            btn_backup.setStyleSheet("""
+                QPushButton {
+                    background-color: #2e7d32;
+                    color: white;
+                    font-weight: bold;
+                    padding: 8px 14px;
+                    border-radius: 6px;
+                    border: none;
+                    margin-top: 6px;
+                }
+                QPushButton:hover {
+                    background-color: #388e3c;
+                }
+            """)
+            btn_backup.clicked.connect(self.azione_esegui_backup)
+            ac_layout.addWidget(btn_backup)
+
             scroll_layout.addWidget(admin_card)
             
             # Quick stats for coordinator
@@ -2421,7 +2492,10 @@ class MainWindow(QWidget):
             self.tbl_turni_disp.setItem(row, 0, QTableWidgetItem(str(t.id)))
             self.tbl_turni_disp.setItem(row, 1, QTableWidgetItem(t.data))
             self.tbl_turni_disp.setItem(row, 2, QTableWidgetItem(t.fascia_oraria))
-            self.tbl_turni_disp.setItem(row, 3, QTableWidgetItem(t.luogo))
+            item_luogo = QTableWidgetItem(t.luogo)
+            if getattr(t, "luogoPrelevamento", None) or getattr(t, "luogoDestinazione", None):
+                item_luogo.setToolTip(f"📍 Prelevamento: {t.luogoPrelevamento}\n🏁 Destinazione: {t.luogoDestinazione}")
+            self.tbl_turni_disp.setItem(row, 3, item_luogo)
             self.tbl_turni_disp.setItem(row, 4, QTableWidgetItem(t.tipoServizio))
             
             # Veicolo assegnato
@@ -2507,7 +2581,13 @@ class MainWindow(QWidget):
             self.tbl_tutti_turni.setItem(row, 0, QTableWidgetItem(str(t.id)))
             self.tbl_tutti_turni.setItem(row, 1, QTableWidgetItem(t.data))
             self.tbl_tutti_turni.setItem(row, 2, QTableWidgetItem(t.fascia_oraria))
-            self.tbl_tutti_turni.setItem(row, 3, QTableWidgetItem(t.luogo))
+            item_luogo = QTableWidgetItem(t.luogo)
+            tip_parts = [f"📍 Prelevamento: {t.luogoPrelevamento}", f"🏁 Destinazione: {t.luogoDestinazione}"]
+            paz_full = f"{getattr(t, 'paziente_nome', '')} {getattr(t, 'paziente_cognome', '')}".strip()
+            if paz_full or getattr(t, "paziente_cf", ""):
+                tip_parts.append(f"👤 Paziente: {paz_full} (CF: {getattr(t, 'paziente_cf', 'N/D')})")
+            item_luogo.setToolTip("\n".join(tip_parts))
+            self.tbl_tutti_turni.setItem(row, 3, item_luogo)
             self.tbl_tutti_turni.setItem(row, 4, QTableWidgetItem(t.tipoServizio))
             
             # Veicolo assegnato
@@ -2830,6 +2910,23 @@ class MainWindow(QWidget):
                 )
                 self.update_ui()
 
+    def azione_esegui_backup(self):
+        """RF23 - Esegue manualmente o on-demand un backup periodico dello stato del sistema."""
+        success, msg = self.sistema.esegui_backup()
+        if success:
+            QMessageBox.information(
+                self,
+                "Backup Periodico Eseguito (RF23)",
+                f"✅ Backup di sicurezza completato con successo!\n\nI dati correnti sono stati serializzati e archiviati in:\n{msg}"
+            )
+            self.mostra_toast("Backup periodico del sistema completato con successo!", "success")
+        else:
+            QMessageBox.critical(
+                self,
+                "Errore Backup (RF23)",
+                f"❌ Errore durante l'esecuzione del backup:\n{msg}"
+            )
+
     def azione_crea_turno(self):
         if not self.sistema.logged_user or self.sistema.logged_user.ruolo != "referente":
             QMessageBox.critical(self, "Accesso Negato", "❌ Operazione consentita solo ai referenti.")
@@ -2837,13 +2934,13 @@ class MainWindow(QWidget):
         dialog = CreaTurnoDialog(self.sistema.mezzi, self)
         if dialog.exec_():
             t = dialog.get_turno()
-            self.turni_controller.creaTurno(t)
+            self.turni_controller.creaTurno(t, utente=self.sistema.logged_user)
             self.sistema.aggiungi_turno(t)
             sel_targa = dialog.get_selected_targa()
             if sel_targa:
                 mezzo_obj = next((m for m in self.sistema.mezzi if m.targa == sel_targa), None)
                 if mezzo_obj:
-                    self.flotta_controller.assegnaMezzoATurno(mezzo_obj, t)
+                    self.flotta_controller.assegnaMezzoATurno(mezzo_obj, t, utente=self.sistema.logged_user)
             QMessageBox.information(self, "Successo", "✅ Nuovo turno creato e pubblicato nel catalogo.")
             self.update_ui()
 
@@ -2859,7 +2956,7 @@ class MainWindow(QWidget):
         turno = next((t for t in self.sistema.turni if str(t.id) == id_turno), None)
         
         if turno:
-            self.turni_controller.annullaPrenotazione(turno)
+            self.turni_controller.eliminaTurno(turno, utente=self.sistema.logged_user)
             self.sistema.turni.remove(turno)
             QMessageBox.information(self, "Successo", "🗑️ Turno rimosso.")
             self.update_ui()
@@ -2974,7 +3071,7 @@ class MainWindow(QWidget):
         dialog = CreaMezzoDialog()
         if dialog.exec_():
             m = dialog.get_mezzo()
-            self.flotta_controller.aggiungiMezzo(m)
+            self.flotta_controller.aggiungiMezzo(m, utente=self.sistema.logged_user)
             self.sistema.aggiungi_mezzo(m)
             QMessageBox.information(self, "Successo", "✅ Nuovo veicolo aggiunto alla flotta.")
             self.update_ui()
@@ -3196,17 +3293,17 @@ class MainWindow(QWidget):
         layout.addLayout(search_bar)
 
         # Tabella Catalogo Corsi
-        self.tbl_corsi = QTableWidget(0, 6)
+        self.tbl_corsi = QTableWidget(0, 7)
         if is_referente:
             self.tbl_corsi.setEditTriggers(QAbstractItemView.DoubleClicked)
             # pyrefly: ignore [missing-attribute]
             self.tbl_corsi.itemChanged.connect(self.on_corso_cell_changed)
         else:
             self.tbl_corsi.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.tbl_corsi.setHorizontalHeaderLabels(["ID", "Titolo Corso", "Data Inizio", "Data Fine", "Stato Corso", "Il Tuo Stato"])
+        self.tbl_corsi.setHorizontalHeaderLabels(["ID", "Titolo Corso", "Data Inizio", "Data Fine", "Posti", "Stato Corso", "Il Tuo Stato"])
         self.configura_tabella_responsive(
             self.tbl_corsi,
-            col_widths={0: 75, 1: 200, 2: 100, 3: 100, 4: 110, 5: 160},
+            col_widths={0: 75, 1: 190, 2: 95, 3: 95, 4: 85, 5: 105, 6: 150},
             stretch_cols=[1],
             min_section_size=75
         )
@@ -3343,7 +3440,17 @@ class MainWindow(QWidget):
             self.tbl_corsi.setItem(row, 1, QTableWidgetItem(titolo))
             self.tbl_corsi.setItem(row, 2, QTableWidgetItem(str(c.dataInizio or "N/D")))
             self.tbl_corsi.setItem(row, 3, QTableWidgetItem(str(c.dataFine or "N/D")))
-            self.tbl_corsi.setItem(row, 4, QTableWidgetItem(str(c.stato or "Programmato")))
+
+            # Posti
+            max_p = getattr(c, "maxPartecipanti", 20)
+            iscr_str = f"{len(c.partecipanti)} / {max_p}"
+            item_posti = QTableWidgetItem(iscr_str)
+            item_posti.setTextAlignment(Qt.AlignCenter)
+            if c.is_completo():
+                item_posti.setForeground(Qt.red)
+            self.tbl_corsi.setItem(row, 4, item_posti)
+
+            self.tbl_corsi.setItem(row, 5, QTableWidgetItem(str(c.stato or "Programmato")))
 
             # Il Tuo Stato
             cid = str(c.id)
@@ -3353,9 +3460,12 @@ class MainWindow(QWidget):
             elif cid in inc_ids:
                 item_st = QTableWidgetItem("🟡 ⏳ Iscritto")
                 item_st.setForeground(Qt.yellow)
+            elif c.is_completo():
+                item_st = QTableWidgetItem("🔴 Completo")
+                item_st.setForeground(Qt.red)
             else:
                 item_st = QTableWidgetItem("⚪ Disponibile")
-            self.tbl_corsi.setItem(row, 5, item_st)
+            self.tbl_corsi.setItem(row, 6, item_st)
 
         self.tbl_corsi.blockSignals(False)
 
@@ -3687,6 +3797,12 @@ class MainWindow(QWidget):
         elif col == 3:
             corso.dataFine = new_val
         elif col == 4:
+            try:
+                num = int(new_val.split("/")[1] if "/" in new_val else new_val)
+                corso.maxPartecipanti = max(1, num)
+            except Exception:
+                pass
+        elif col == 5:
             corso.stato = new_val
             
         try:
@@ -3844,14 +3960,12 @@ class MainWindow(QWidget):
         v = self.get_volontario_selezionato()
         if not v:
             return
-        opzioni = ["volontario", "referente", "operatore_sanitario"]
+        opzioni = ["volontario", "referente"]
         ruolo_attuale = str(getattr(v, "ruolo", "volontario")).lower()
         idx_default = opzioni.index(ruolo_attuale) if ruolo_attuale in opzioni else 0
         nuovo, ok = QInputDialog.getItem(self, "Modifica Ruolo Membro", f"Nuovo ruolo per {v.get_nome_completo()}:", opzioni, idx_default, False)
         if ok and nuovo:
             v.ruolo = nuovo
-            if nuovo == "operatore_sanitario" and not hasattr(v, "specializzazioni"):
-                v.specializzazioni = []
             try:
                 v.aggiorna_firestore()
                 QMessageBox.information(self, "Successo", f"✅ Ruolo aggiornato a '{nuovo}'.")

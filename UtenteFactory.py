@@ -3,11 +3,10 @@
 def costruisci_utente(data: dict):
     from Volontario import Volontario
     from Referente import Referente
-    from OperatoreSanitario import OperatoreSanitario
     ruolo_raw = str(data.get("ruolo") or "volontario").strip().lower()
     ruolo = ruolo_raw.replace(" ", "_")
 
-    if ruolo == "volontario":
+    if ruolo == "volontario" or ruolo in ["operatore_sanitario", "operatore", "sanitario"]:
         u = Volontario(
             cod_fiscale=data["cod_fiscale"],
             nome=data["nome"],
@@ -44,16 +43,5 @@ def costruisci_utente(data: dict):
         )
         r.patente_pdf_path = data.get("patente_pdf_path", "")
         return r
-    elif ruolo in ["operatore_sanitario", "operatore", "sanitario"]:
-        return OperatoreSanitario(
-            cod_fiscale=data["cod_fiscale"],
-            nome=data["nome"],
-            cognome=data.get("cognome", ""),
-            email=data["email"],
-            nascita=data.get("nascita", ""),
-            telefono=data.get("telefono", ""),
-            specializzazioni=data.get("specializzazioni", []),
-            disponibilita=data.get("disponibilita", [])
-        )
     else:
         raise ValueError(f"Ruolo sconosciuto: {ruolo}")

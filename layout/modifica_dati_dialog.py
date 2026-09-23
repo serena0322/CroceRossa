@@ -189,7 +189,6 @@ class ModificaDatiDialog(QDialog):
         self.ruolo_combo = QComboBox()
         self.ruolo_combo.addItem("🚑 Volontario Operativo", "volontario")
         self.ruolo_combo.addItem("📋 Referente / Coordinatore", "referente")
-        self.ruolo_combo.addItem("🩺 Operatore Sanitario", "operatore_sanitario")
 
         ruolo_attuale = str(getattr(volontario, "ruolo", "volontario") or "volontario").lower()
         idx_r = self.ruolo_combo.findData(ruolo_attuale)
@@ -754,9 +753,6 @@ class ModificaDatiDialog(QDialog):
                 if nuovo_ruolo == "referente":
                     from Referente import Referente
                     self.volontario.__class__ = Referente
-                elif nuovo_ruolo == "operatore_sanitario":
-                    from OperatoreSanitario import OperatoreSanitario
-                    self.volontario.__class__ = OperatoreSanitario
                 elif nuovo_ruolo == "volontario":
                     from Volontario import Volontario
                     self.volontario.__class__ = Volontario

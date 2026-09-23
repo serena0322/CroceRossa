@@ -11,7 +11,18 @@ class GestioneFlottaController:
     def __init__(self):
         pass
 
-    def aggiungiMezzo(self, m: Mezzo) -> bool:
+    def _verifica_permessi_referente(self, utente) -> bool:
+        if utente is None:
+            return True  # Fallback per chiamate interne o test
+        ruolo = str(getattr(utente, "ruolo", "")).strip().lower()
+        if ruolo == "referente" or hasattr(utente, "area_gestita"):
+            return True
+        print("❌ Operazione negata: solo gli utenti con ruolo 'Referente' possono gestire la flotta.")
+        return False
+
+    def aggiungiMezzo(self, m: Mezzo, utente=None) -> bool:
+        if not self._verifica_permessi_referente(utente):
+            return False
         try:
             from FirebaseConfig import db
             db.collection("mezzi").document(m.targa).set({
@@ -27,7 +38,9 @@ class GestioneFlottaController:
             print(f"⚠️ Errore aggiungiMezzo in Firebase: {e}")
             return False
 
-    def assegnaMezzoATurno(self, m: Mezzo | None, t: Turno) -> bool:
+    def assegnaMezzoATurno(self, m: Mezzo | None, t: Turno, utente=None) -> bool:
+        if not self._verifica_permessi_referente(utente):
+            return False
         try:
             from FirebaseConfig import db
             if m:

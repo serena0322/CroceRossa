@@ -112,6 +112,16 @@ class PrenotazioneTurnoDialog(QDialog):
             lbl_check_ora.setStyleSheet("color: #00e676;")
         regole_lay.addWidget(lbl_check_ora)
 
+        # Controllo Limite 12 Ore Giornaliere (RF19)
+        self.ha_superamento_12_ore = not self.turni_controller.verificaLimiteOreGiornaliere(self.volontario, self.turno, 12.0)
+        if self.ha_superamento_12_ore:
+            lbl_check_12h = QLabel("❌ <b>Limite 12h Giornaliere:</b> Questo turno ti farebbe superare il limite di 12 ore quotidiane (RF19).")
+            lbl_check_12h.setStyleSheet("color: #ff5252;")
+        else:
+            lbl_check_12h = QLabel("✅ <b>Limite Giornaliero:</b> Il monte ore per questa data rispetta il vincolo delle 12h massime.")
+            lbl_check_12h.setStyleSheet("color: #00e676;")
+        regole_lay.addWidget(lbl_check_12h)
+
         # Patenti Possedute
         user_patenti = [str(p).strip().upper() for p in getattr(self.volontario, "patenti", [])]
         pat_txt = ", ".join(user_patenti) if user_patenti else "Nessuna registrata"
@@ -291,6 +301,12 @@ class PrenotazioneTurnoDialog(QDialog):
             self.lbl_stato_iscrizione.setStyleSheet("background-color: rgba(198, 40, 40, 0.2); color: #ff5252; padding: 8px; border-radius: 6px;")
             return
 
+        if self.ha_superamento_12_ore:
+            self.btn_conferma.setEnabled(False)
+            self.lbl_stato_iscrizione.setText("❌ Impossibile procedere: superamento del vincolo di 12 ore quotidiane (RF19).")
+            self.lbl_stato_iscrizione.setStyleSheet("background-color: rgba(198, 40, 40, 0.2); color: #ff5252; padding: 8px; border-radius: 6px;")
+            return
+
         for rb, r_info in self.radio_buttons.values():
             if r_info["posti_liberi"] > 0 and r_info["ha_patente"]:
                 rb.setChecked(True)
@@ -310,6 +326,12 @@ class PrenotazioneTurnoDialog(QDialog):
                 if self.ha_sovrapposizione:
                     self.btn_conferma.setEnabled(False)
                     self.lbl_stato_iscrizione.setText("❌ Impossibile procedere a causa della sovrapposizione oraria.")
+                    self.lbl_stato_iscrizione.setStyleSheet("background-color: rgba(198, 40, 40, 0.2); color: #ff5252; padding: 8px; border-radius: 6px;")
+                    return
+
+                if self.ha_superamento_12_ore:
+                    self.btn_conferma.setEnabled(False)
+                    self.lbl_stato_iscrizione.setText("❌ Impossibile procedere: superamento del limite di 12 ore giornaliere (RF19).")
                     self.lbl_stato_iscrizione.setStyleSheet("background-color: rgba(198, 40, 40, 0.2); color: #ff5252; padding: 8px; border-radius: 6px;")
                     return
 
@@ -341,6 +363,10 @@ class PrenotazioneTurnoDialog(QDialog):
 
         if self.ha_sovrapposizione:
             QMessageBox.critical(self, "Sovrapposizione Rilevata", "Impossibile iscriversi: conflitto di orario con un altro turno già assegnato.")
+            return
+
+        if self.ha_superamento_12_ore:
+            QMessageBox.critical(self, "Limite Ore Superato", "Impossibile iscriversi: superamento del vincolo massimo di 12 ore giornaliere (RF19).")
             return
 
         self.accept()

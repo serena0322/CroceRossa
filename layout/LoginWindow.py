@@ -482,7 +482,6 @@ class SelezioneRuoloGoogleDialog(QDialog):
         self.combo_ruolo = QComboBox()
         self.combo_ruolo.addItem("🚑 Volontario Operativo (Iscrizione ai Turni, Checklist)", "volontario")
         self.combo_ruolo.addItem("📋 Referente / Coordinatore (Gestione Turni, Mezzi, Corsi e Rubrica)", "referente")
-        self.combo_ruolo.addItem("🩺 Operatore Sanitario (Personale Medico / Infermieristico)", "operatore_sanitario")
         self.combo_ruolo.setFixedHeight(46)
         lay.addWidget(self.combo_ruolo)
 
@@ -787,7 +786,7 @@ class LoginWindow(QWidget):
         h_label.setStyleSheet("font-size: 24px; font-weight: 700; color: #fff;")
         layout.addWidget(h_label)
         layout.addSpacing(4)
-        sub = QLabel("Compila i campi per registrarti (Volontario, Referente o Operatore)")
+        sub = QLabel("Compila i campi per registrarti (Volontario o Referente)")
         sub.setStyleSheet("font-size: 12px; color: rgba(255,255,255,0.4);")
         layout.addWidget(sub)
         layout.addSpacing(20)
@@ -802,7 +801,6 @@ class LoginWindow(QWidget):
         self._reg_ruolo  = ModernComboBox(parent=self)
         self._reg_ruolo.addItem("🚑 Ruolo: Volontario Operativo", "volontario")
         self._reg_ruolo.addItem("📋 Ruolo: Referente / Coordinatore", "referente")
-        self._reg_ruolo.addItem("🩺 Ruolo: Operatore Sanitario", "operatore_sanitario")
 
         self._reg_pin = ModernInput("PIN Autorizzazione Referente (CRI)", is_password=True, parent=self)
         self._reg_pin.hide()
@@ -926,7 +924,7 @@ class LoginWindow(QWidget):
             self.sistema.logged_user = nuovo
             from session_manager import save_session
             save_session(nuovo)
-            titolo_ruolo = "Referente / Coordinatore" if ruolo == "referente" else ("Operatore Sanitario" if ruolo == "operatore_sanitario" else "Volontario")
+            titolo_ruolo = "Referente / Coordinatore" if ruolo == "referente" else "Volontario"
             QMessageBox.information(self, "Benvenuto!", f"✅ Account ({titolo_ruolo}) creato con successo. Benvenuto!")
             self.callback_login_success()
             self.close()
@@ -1027,7 +1025,7 @@ class LoginWindow(QWidget):
             from session_manager import save_session
             save_session(nuovo)
             self.close()
-            titolo_ruolo = "Referente / Coordinatore" if ruolo_scelto == "referente" else ("Operatore Sanitario" if ruolo_scelto == "operatore_sanitario" else "Volontario")
+            titolo_ruolo = "Referente / Coordinatore" if ruolo_scelto == "referente" else "Volontario"
             self.callback_login_success(f"🎉 Accesso eseguito con Google ({titolo_ruolo})! Benvenuto/a, {nome_val}.")
 
     def _on_google_auth_failed(self, error_msg: str):

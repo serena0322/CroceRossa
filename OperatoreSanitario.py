@@ -1,3 +1,8 @@
+"""
+DEPRECATED: Il ruolo OperatoreSanitario è stato rimosso dai requisiti di sistema.
+L'architettura adotta ora esclusivamente i due ruoli: Volontario e Referente.
+Questo modulo è mantenuto esclusivamente per retrocompatibilità.
+"""
 from __future__ import annotations
 from Utente import Utente
 from typing import List

@@ -19,6 +19,7 @@ class Sistema:
         self.mezzi: list[Mezzo] = []
         self.checklist: list[Checklist] = []
         self.logged_user: Optional[Utente] = None
+        self.promemoria_inviati: set[str] = set()
 
     def sincronizza_con_firebase(self):
         try:
@@ -67,7 +68,12 @@ class Sistema:
                     dataFine=str(dati.get("dataFine") or ""),
                     esito=bool(dati.get("esito", False)),
                     checklist=dati.get("checklist", []),
-                    scadenza=str(dati.get("scadenza") or "")
+                    scadenza=str(dati.get("scadenza") or ""),
+                    direttore=str(dati.get("direttore") or ""),
+                    luogo=str(dati.get("luogo") or ""),
+                    orari=str(dati.get("orari") or ""),
+                    requisitiIscrizione=str(dati.get("requisitiIscrizione") or ""),
+                    maxPartecipanti=int(dati.get("maxPartecipanti", 20) or 20)
                 )
                 
                 # Associa partecipanti e certificati
@@ -119,6 +125,9 @@ class Sistema:
                     oraFine=str(dati.get("oraFine") or ""),
                     patenteRichiesta=str(dati.get("patenteRichiesta") or dati.get("corso_richiesto") or ""),
                     paziente=str(dati.get("paziente") or ""),
+                    paziente_nome=str(dati.get("paziente_nome") or ""),
+                    paziente_cognome=str(dati.get("paziente_cognome") or ""),
+                    paziente_cf=str(dati.get("paziente_cf") or ""),
                     personeRichieste=int(dati.get("personeRichieste", 1)),
                     stato=str(dati.get("stato") or "Proposto"),
                     tipoServizio=str(dati.get("tipoServizio") or ""),
@@ -267,6 +276,65 @@ class Sistema:
                 avvisi.append(avviso)
                 print(f"⚠️ Turno {turno.id} ancora scoperto (iscritti: {iscritti}/{persone_richieste})")
         return avvisi
+
+    def invia_promemoria_servizi_24h(self) -> list[dict]:
+        """
+        Requisito RNF4: Notifica promemoria servizio 24 ore prima dell'inizio del servizio.
+        Invia un'email di promemoria ai volontari iscritti ai turni previsti entro le 24h.
+        """
+        from datetime import datetime, timedelta
+        from EmailService import EmailService
+        
+        notifiche = []
+        oggi = datetime.now()
+        domani_str = (oggi + timedelta(days=1)).strftime("%Y-%m-%d")
+        oggi_str = oggi.strftime("%Y-%m-%d")
+        
+        for turno in self.turni:
+            data_t = str(getattr(turno, "data", "")).strip()
+            if data_t in [domani_str, oggi_str]:
+                for v in getattr(turno, "volontari_assegnati", []):
+                    email = getattr(v, "email", "")
+                    chiave_notifica = f"{turno.id}_{v.cod_fiscale}_{data_t}"
+                    if email and "@" in email and chiave_notifica not in self.promemoria_inviati:
+                        nome_vol = v.get_nome_completo() if hasattr(v, "get_nome_completo") else v.nome
+                        servizio = turno.tipoServizio or "Servizio Operativo"
+                        orario = turno.fascia_oraria or f"{turno.oraInizio} - {turno.oraFine}"
+                        luogo = turno.luogo
+                        
+                        testo = (
+                            f"Gentile {nome_vol},\n\n"
+                            f"ti ricordiamo che nelle prossime 24 ore hai in programma il seguente servizio CRI:\n\n"
+                            f"📌 Tipologia: {servizio}\n"
+                            f"📅 Data: {turno.data}\n"
+                            f"⏰ Orario: {orario}\n"
+                            f"📍 Tratta / Luogo: {luogo}\n"
+                            f"🚑 Mezzo assegnato: {turno.mezzo_targa or 'Da definire'}\n\n"
+                            f"Ricordati di verificare la checklist del mezzo e i presidi sanitari prima della partenza.\n\n"
+                            f"Comitato Croce Rossa Italiana"
+                        )
+                        
+                        EmailService.inviaMail(
+                            destinatario=email,
+                            messaggio=testo,
+                            oggetto=f"⏰ Promemoria Servizio CRI: {servizio} del {turno.data}"
+                        )
+                        self.promemoria_inviati.add(chiave_notifica)
+                        notifiche.append({
+                            "volontario": v,
+                            "volontario_cf": getattr(v, "cod_fiscale", ""),
+                            "turno": turno,
+                            "id_turno": getattr(turno, "id", ""),
+                            "email": email,
+                            "data": data_t
+                        })
+                        print(f"📧 [RNF4 Promemoria] Inviato promemoria turno a {email} per il {data_t}")
+        return notifiche
+
+    def esegui_backup(self, base_dir: str = "backups") -> tuple[bool, str]:
+        """Esegue il backup periodico automatico di sistema (RF23)."""
+        from BackupService import BackupService
+        return BackupService.esegui_backup(self, base_dir=base_dir)
 
     def get_avvisi_sistema(self) -> list[dict]:
         avvisi = []
