@@ -147,8 +147,23 @@ class GestioneTurniController:
             return False
         return True
 
-    def verificaCoperturaPatente(self, v: Volontario, t: Turno) -> bool:
-        """Verifica se il volontario possiede la patente o corso richiesto dal turno."""
+    def verificaCoperturaPatente(self, v: Any, t: Optional[Turno] = None) -> bool:
+        """Verifica se il volontario possiede la patente o qualifica richiesta dal turno (accetta sia (v, t) che (t) da UML)."""
+        if t is None:
+            # Chiamata del diagramma UML: verificaCoperturaPatente(Turno)
+            turno = v
+            if not turno or not getattr(turno, "patenteRichiesta", None):
+                return True
+            req = str(turno.patenteRichiesta).strip().upper()
+            if not req or req in ["NESSUNA", "NON RICHIESTA", "TUTTI"]:
+                return True
+            for vol in getattr(turno, "volontari_assegnati", []):
+                patenti = [str(p).strip().upper() for p in getattr(vol, "patenti", [])]
+                qualifiche = [str(q).strip().upper() for q in getattr(vol, "qualifiche", [])]
+                if (req in patenti) or (req in qualifiche):
+                    return True
+            return False
+
         if not t or not getattr(t, "patenteRichiesta", None):
             return True
         req = str(t.patenteRichiesta).strip().upper()

@@ -181,6 +181,10 @@ class GestioneFormazioneController:
             print(f"⚠️ Errore visualizzaCatalog: {e}")
             return []
 
+    def visualizzaCatalogo(self, sistema=None) -> List[Corso]:
+        """Restituisce l'elenco dei corsi dal catalogo (UML)."""
+        return self.visualizzaCatalog(sistema)
+
     def ottieniCorsiSuddivisi(self, utente, sistema=None) -> dict:
         """
         Restituisce i corsi categorizzati in modo trasparente per l'utente:

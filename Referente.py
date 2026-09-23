@@ -61,6 +61,10 @@ class Referente(Volontario):
         """Alias UML per attesta_partecipazione."""
         self.attesta_partecipazione(volontario, corso)
 
+    def creaCorso(self, titolo: str, ore: int = 10) -> Corso:
+        """Crea un nuovo corso formativo con titolo e monte ore (UML)."""
+        return self.crea_corso(nome=titolo, titolo=titolo, durata_ore=ore, checklist=[])
+
     def crea_corso(
             self,
             nome: str,
