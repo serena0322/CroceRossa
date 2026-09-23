@@ -70,6 +70,19 @@ class Corso:
     def is_completo(self) -> bool:
         return len(self.partecipanti) >= self.maxPartecipanti
 
+    def isCompleto(self) -> bool:
+        """Alias UML per is_completo."""
+        return self.is_completo()
+
+    @property
+    def iscritti(self) -> List[Volontario]:
+        """Restituisce l'elenco degli iscritti al corso (UML)."""
+        return self.partecipanti
+
+    @iscritti.setter
+    def iscritti(self, val: List[Volontario]):
+        self.partecipanti = val
+
     def aggiungiIscritto(self, dati: Volontario) -> bool:
         if dati in self.partecipanti:
             return True

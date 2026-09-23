@@ -201,6 +201,10 @@ class Volontario(Utente):
     def visualizzaTurniScelti(self) -> List[Turno]:
         return list(self.turni_assegnati)
 
+    def getTurniAssegnati(self) -> List[Turno]:
+        """Restituisce l'elenco dei turni di servizio assegnati al volontario (UML)."""
+        return list(self.turni_assegnati)
+
     def visualizza_turni_scelti(self):
         if not self.turni_assegnati:
             print(f"{self.nome} non ha turni assegnati.")

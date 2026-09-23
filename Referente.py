@@ -48,6 +48,18 @@ class Referente(Volontario):
             qualifiche=qualifiche if qualifiche is not None else []
         )
         self.area_gestita = area_gestita
+        self.codice_autorizzazione = kwargs.get("codice_autorizzazione", "CRI2026")
+
+    def getAreaGestita(self) -> str:
+        return self.area_gestita
+
+    def assegnaTurno(self, volontario: Volontario, turno: Turno) -> bool:
+        """Assegna il turno al volontario (UML)."""
+        return turno.aggiungiVolontario(volontario)
+
+    def attestaPartecipazione(self, volontario: Volontario, corso: Corso):
+        """Alias UML per attesta_partecipazione."""
+        self.attesta_partecipazione(volontario, corso)
 
     def crea_corso(
             self,
