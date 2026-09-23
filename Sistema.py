@@ -189,10 +189,10 @@ class Sistema:
         self.volontari.append(volontario)
 
     def rimuovi_volontario(self, cod_fiscale: str):
-        self.volontari = [v for v in self.volontari if v.cod_fiscale != str(cod_fiscale)]
+        self.volontari = [v for v in self.volontari if v.cod_fiscale != cod_fiscale]
 
     def get_volontario(self, cod_fiscale: str) -> Optional[Volontario]:
-        cf_target = str(cod_fiscale).strip().upper()
+        cf_target = cod_fiscale.strip().upper()
         for v in self.volontari:
             if v.cod_fiscale.strip().upper() == cf_target:
                 return v
