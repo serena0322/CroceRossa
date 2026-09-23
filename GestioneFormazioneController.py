@@ -27,8 +27,8 @@ class GestioneFormazioneController:
                 dati = doc.to_dict() or {}
                 vids = dati.get("partecipanti_ids", [])
                 for v in volontari:
-                    if str(v.cod_fiscale) not in vids:
-                        vids.append(str(v.cod_fiscale))
+                    if v.cod_fiscale not in vids:
+                        vids.append(v.cod_fiscale)
                 corso_ref.update({"partecipanti_ids": vids})
             print(f"[GestioneFormazioneController] attestaPartecipazione per corso {s} completato.")
         except Exception as e:
@@ -55,7 +55,7 @@ class GestioneFormazioneController:
                 "orari": getattr(c, "orari", ""),
                 "requisitiIscrizione": getattr(c, "requisitiIscrizione", ""),
                 "maxPartecipanti": getattr(c, "maxPartecipanti", 20),
-                "partecipanti_ids": [str(p.cod_fiscale) for p in c.partecipanti]
+                "partecipanti_ids": [p.cod_fiscale for p in c.partecipanti]
             }, merge=True)
             print(f"[GestioneFormazioneController] creaCorso {c.id} salvato su Firebase.")
             return True
@@ -109,7 +109,7 @@ class GestioneFormazioneController:
                 dati = doc.to_dict() or {}
                 vids = dati.get("partecipanti_ids", [])
                 max_p = int(dati.get("maxPartecipanti", 20) or 20)
-                cf_str = str(v.cod_fiscale)
+                cf_str = v.cod_fiscale
                 if cf_str not in vids:
                     if len(vids) >= max_p:
                         print(f"⚠️ Impossibile iscrivere volontario: capienza massima raggiunta ({max_p} posti).")
@@ -132,7 +132,7 @@ class GestioneFormazioneController:
             if doc.exists:
                 dati = doc.to_dict() or {}
                 vids = dati.get("partecipanti_ids", [])
-                cf_str = str(v.cod_fiscale)
+                cf_str = v.cod_fiscale
                 if cf_str in vids:
                     vids.remove(cf_str)
                     corso_ref.update({"partecipanti_ids": vids})

@@ -80,7 +80,7 @@ class Utente:
 
     def ha_ruolo(self, ruolo: str) -> bool:
         """Verifica se l'utente possiede un determinato ruolo nel sistema."""
-        return self.ruolo == str(ruolo).strip().lower()
+        return self.ruolo == (ruolo.strip().lower() if ruolo else "")
 
     def haRuolo(self, ruolo: str) -> bool:
         """Alias camelCase conforme al diagramma delle classi UML."""

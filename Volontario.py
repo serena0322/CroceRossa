@@ -28,7 +28,7 @@ class Volontario(Utente):
         qualifiche: List[str] | None = None,
         disponibilita: List[str] | None = None,
         # compatibility arguments:
-        cod_fiscale: int | None = None,
+        cod_fiscale: str | None = None,
         nascita: str | None = None,
         data_nascita: str | None = None,
         curriculum: str = "",
@@ -42,7 +42,7 @@ class Volontario(Utente):
         app_io_certificato_id: str = "",
         **kwargs
     ):
-        cf = str(cod_fiscale) if cod_fiscale is not None else codFiscale
+        cf = cod_fiscale if cod_fiscale is not None else codFiscale
         dn = dataNascita if dataNascita else (data_nascita if data_nascita else (nascita if nascita else ""))
         super().__init__(
             cod_fiscale=cf,
@@ -168,12 +168,11 @@ class Volontario(Utente):
     def prenotaTurno(self, turno: Turno | str) -> bool:
         if isinstance(turno, str):
             # Se viene passato l'ID del turno
-            found = False
             for t in self.turni_assegnati:
-                if str(t.id) == str(turno):
+                if t.id == turno:
                     return True
             from Turno import Turno
-            t_obj = Turno(id=str(turno))
+            t_obj = Turno(id=turno)
             self.turni_assegnati.append(t_obj)
             return True
         elif turno and turno not in self.turni_assegnati:
@@ -187,7 +186,7 @@ class Volontario(Utente):
 
     def annullaPrenotazione(self, turno: Turno | str) -> bool:
         if isinstance(turno, str):
-            to_remove = [t for t in self.turni_assegnati if str(t.id) == str(turno)]
+            to_remove = [t for t in self.turni_assegnati if t.id == turno]
             for t in to_remove:
                 self.turni_assegnati.remove(t)
             return True

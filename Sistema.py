@@ -13,12 +13,12 @@ if TYPE_CHECKING:
 
 class Sistema:
     def __init__(self):
-        self.volontari: list[Utente] = []
+        self.volontari: list[Volontario] = []
         self.corsi: list[Corso] = []
         self.turni: list[Turno] = []
         self.mezzi: list[Mezzo] = []
         self.checklist: list[Checklist] = []
-        self.logged_user: Optional[Utente] = None
+        self.logged_user: Optional[Volontario] = None
         self.promemoria_inviati: set[str] = set()
 
     def sincronizza_con_firebase(self):
@@ -185,15 +185,16 @@ class Sistema:
                 volontario.nascita = nascita
 
     # --- Gestione volontari ---
-    def aggiungi_volontario(self, volontario: Utente):
+    def aggiungi_volontario(self, volontario: Volontario):
         self.volontari.append(volontario)
 
-    def rimuovi_volontario(self, cod_fiscale):
-        self.volontari = [v for v in self.volontari if str(v.cod_fiscale) != str(cod_fiscale)]
+    def rimuovi_volontario(self, cod_fiscale: str):
+        self.volontari = [v for v in self.volontari if v.cod_fiscale != str(cod_fiscale)]
 
-    def get_volontario(self, cod_fiscale) -> Optional[Utente]:
+    def get_volontario(self, cod_fiscale: str) -> Optional[Volontario]:
+        cf_target = str(cod_fiscale).strip().upper()
         for v in self.volontari:
-            if str(v.cod_fiscale).strip().upper() == str(cod_fiscale).strip().upper():
+            if v.cod_fiscale.strip().upper() == cf_target:
                 return v
         return None
 

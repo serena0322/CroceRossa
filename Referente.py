@@ -36,7 +36,7 @@ class Referente(Volontario):
         **kwargs
     ):
         super().__init__(
-            cod_fiscale=str(cod_fiscale),
+            cod_fiscale=cod_fiscale,
             nome=nome,
             cognome=cognome,
             email=email,

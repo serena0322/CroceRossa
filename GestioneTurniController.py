@@ -27,10 +27,10 @@ class GestioneTurniController:
                 dati = doc.to_dict() or {}
                 vids = dati.get("volontari_ids", [])
                 vruoli = dati.get("volontari_ruoli", {})
-                vids = [str(vid) for vid in vids if str(vid) not in [str(v.cod_fiscale) for v in t.volontari_assegnati]]
+                vids = [str(vid) for vid in vids if str(vid) not in [v.cod_fiscale for v in t.volontari_assegnati]]
                 for v in t.volontari_assegnati:
-                    if str(v.cod_fiscale) in vruoli:
-                        del vruoli[str(v.cod_fiscale)]
+                    if v.cod_fiscale in vruoli:
+                        del vruoli[v.cod_fiscale]
                 turno_ref.update({
                     "volontari_ids": vids,
                     "volontari_ruoli": vruoli
@@ -90,7 +90,7 @@ class GestioneTurniController:
                 "persone_richieste": t.persone_richieste,
                 "stato": t.stato,
                 "tipoServizio": t.tipoServizio,
-                "volontari_ids": [str(v.cod_fiscale) for v in t.volontari_assegnati]
+                "volontari_ids": [v.cod_fiscale for v in t.volontari_assegnati]
             }, merge=True)
             print(f"[GestioneTurniController] creaTurno {t.id} salvato su Firebase.")
             return True
@@ -124,8 +124,8 @@ class GestioneTurniController:
         Verifica preventivamente il limite delle 12 ore massime giornaliere se l'istanza sistema è disponibile.
         """
         if sistema:
-            turno_obj = next((t for t in getattr(sistema, "turni", []) if str(t.id) == str(idTurno)), None)
-            vol_obj = next((v for v in getattr(sistema, "volontari", []) if str(v.cod_fiscale).upper() == str(idVolontario).upper()), None)
+            turno_obj = next((t for t in getattr(sistema, "turni", []) if t.id == idTurno), None)
+            vol_obj = next((v for v in getattr(sistema, "volontari", []) if v.cod_fiscale.upper() == idVolontario.upper()), None)
             if turno_obj and vol_obj:
                 if not self.verificaLimiteOreGiornaliere(vol_obj, turno_obj):
                     return False
@@ -166,7 +166,7 @@ class GestioneTurniController:
         """
         if not t:
             return False
-        if not t.data or not str(t.data).strip():
+        if not t.data or not t.data.strip():
             return False
         if not t.oraInizio or not t.oraFine:
             return False
@@ -181,7 +181,7 @@ class GestioneTurniController:
         """
         if not t or not getattr(t, "patenteRichiesta", None):
             return True
-        req = str(t.patenteRichiesta).strip().upper()
+        req = t.patenteRichiesta.strip().upper()
         if not req or req in ["NESSUNA", "NON RICHIESTA", "TUTTI"]:
             return True
         if not v:
@@ -209,7 +209,7 @@ class GestioneTurniController:
         for altro in v.turni_assegnati:
             if altro.id == t.id:
                 continue
-            if str(altro.data).strip() == str(t.data).strip():
+            if altro.data.strip() == t.data.strip():
                 try:
                     t_ini = t.oraInizio.strip()
                     t_fin = t.oraFine.strip()
@@ -238,7 +238,7 @@ class GestioneTurniController:
         for altro in getattr(v, "turni_assegnati", []):
             if altro.id == t.id:
                 continue
-            if str(altro.data).strip() == str(t.data).strip():
+            if altro.data.strip() == t.data.strip():
                 ore_giornaliere += altro.calcola_durata_ore() if hasattr(altro, "calcola_durata_ore") else 4.0
         
         totale = ore_giornaliere + durata_nuovo
