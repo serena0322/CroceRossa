@@ -19,3 +19,4 @@ env/
 # File e documenti caricati
 patenti_pdf/
 curricula_pdf/
+backups/*.json

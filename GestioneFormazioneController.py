@@ -6,6 +6,11 @@ if TYPE_CHECKING:
     from Corso import Corso
 
 class GestioneFormazioneController:
+    """
+    Controller applicativo per i percorsi formativi e brevetti CRI (GRASP Controller).
+    Coordina l'iscrizione dei volontari con controllo di capienza massima (maxPartecipanti),
+    la registrazione delle presenze e attestazioni, e la suddivisione del catalogo corsi.
+    """
     def __init__(self):
         pass
 
@@ -182,8 +187,8 @@ class GestioneFormazioneController:
             return []
 
     def visualizzaCatalogo(self, sistema=None) -> List[Corso]:
-        """Restituisce l'elenco dei corsi dal catalogo (UML)."""
-        return self.visualizzaCatalog(sistema)
+        """Alias in italiano per visualizzaCatalog (UML)."""
+        return self.visualizzaCatalog(sistema=sistema)
 
     def ottieniCorsiSuddivisi(self, utente, sistema=None) -> dict:
         """

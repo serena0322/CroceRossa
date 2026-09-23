@@ -8,6 +8,11 @@ if TYPE_CHECKING:
     from Turno import Turno
 
 class Volontario(Utente):
+    """
+    Rappresenta il profilo del Soccorritore / Volontario della Croce Rossa Italiana.
+    Incapsula le qualifiche operative conseguite, i turni di servizio svolti, il monte ore
+    totale accumulato e le disponibilità fornite.
+    """
     def __init__(
         self,
         codFiscale: str = "",
@@ -73,6 +78,7 @@ class Volontario(Utente):
 
     @property
     def codFiscale(self) -> str:
+        """Alias camelCase conforme al diagramma UML."""
         return self.cod_fiscale
         
     @codFiscale.setter
@@ -81,6 +87,7 @@ class Volontario(Utente):
 
     @property
     def dataNascita(self) -> str:
+        """Alias camelCase conforme al diagramma UML."""
         return self.data_nascita
         
     @dataNascita.setter
@@ -88,6 +95,7 @@ class Volontario(Utente):
         self.data_nascita = val
 
     def aggiornaProfilo(self, v: Volontario) -> bool:
+        """Sincronizza le informazioni del profilo a partire da un'altra istanza Volontario (UML)."""
         self.nome = v.nome
         self.cognome = v.cognome
         self.email = v.email
@@ -102,20 +110,25 @@ class Volontario(Utente):
         return True
 
     def aggiungiOreServizio(self, ore: int) -> None:
+        """Incrementa il monte ore di servizio certificato svolto dal volontario (UML)."""
         self.monteOreTotale += ore
 
     def aggiungiPatente(self, patente: str) -> None:
+        """Registra una patente di guida nell'elenco del soccorritore (UML)."""
         if patente not in self.patenti:
             self.patenti.append(patente)
 
     def aggiungiQualifica(self, qualifica: str) -> None:
+        """Aggiunge una certificazione o brevetto sanitario al profilo del volontario (UML)."""
         if qualifica not in self.qualifiche:
             self.qualifiche.append(qualifica)
 
     def getMonteOre(self) -> int:
+        """Restituisce il totale cumulato delle ore di volontariato prestate (UML)."""
         return self.monteOreTotale
 
     def verificaCredenziali(self, email: str, password: str) -> bool:
+        """Verifica la corrispondenza delle credenziali di accesso (UML)."""
         return self.email == email and self.password == password
 
     # Compatibility methods:

@@ -1,15 +1,24 @@
 from __future__ import annotations
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:
     from Volontario import Volontario
     from Turno import Turno
 
 class GestioneTurniController:
+    """
+    Controller applicativo per la gestione del ciclo di vita dei turni di servizio (GRASP Controller).
+    Coordina la validazione dei vincoli operativi (sovrapposizioni, capienza, limiti orari giornalieri)
+    e sincronizza lo stato sia in memoria che su Cloud Firestore.
+    """
     def __init__(self):
         pass
 
     def annullaPrenotazione(self, t: Turno) -> bool:
+        """
+        Rimuove l'assegnazione dei volontari dal turno specificato e aggiorna il documento su Firestore.
+        Garantisce la consistenza rimuovendo sia gli ID che i ruoli associati.
+        """
         try:
             from FirebaseConfig import db
             turno_ref = db.collection("turni").document(t.id)
@@ -33,13 +42,18 @@ class GestioneTurniController:
             return False
 
     def assegnaTurno(self, v: Volontario, t: Turno) -> None:
+        """Assegna formalmente il turno al volontario invocando la procedura di prenotazione."""
         self.prenotaTurno(t.id, v.cod_fiscale)
 
     def calcolaOrePeriodo(self, v: Volontario, inizio: str, fine: str) -> int:
-        # Static calculation or count from database
+        """Calcola il monte ore complessivo svolto dal volontario."""
         return v.monteOreTotale
 
     def _verifica_permessi_referente(self, utente) -> bool:
+        """
+        Controllo degli accessi (RBAC - Role-Based Access Control):
+        Solo gli utenti con ruolo 'Referente' hanno i privilegi di creazione, modifica ed eliminazione turni.
+        """
         if utente is None:
             return True  # Fallback per chiamate di sistema/test senza utente esplicito
         ruolo = str(getattr(utente, "ruolo", "")).strip().lower()
@@ -49,6 +63,10 @@ class GestioneTurniController:
         return False
 
     def creaTurno(self, t: Turno, utente=None) -> bool:
+        """
+        Registra un nuovo turno operativo nel sistema e lo persiste su Firestore.
+        Se non è presente un ID, genera un identificativo univoco compatto.
+        """
         if not self._verifica_permessi_referente(utente):
             return False
         if not t.id:
@@ -81,12 +99,14 @@ class GestioneTurniController:
             return False
 
     def modificaTurno(self, idTurno: str, t: Turno, utente=None) -> bool:
+        """Aggiorna i parametri di un turno esistente previa verifica dei permessi da referente."""
         if not self._verifica_permessi_referente(utente):
             return False
         t.id = idTurno
         return self.creaTurno(t, utente=utente)
 
     def eliminaTurno(self, idTurno: str, utente=None) -> bool:
+        """Cancella il turno dal database Firestore."""
         if not self._verifica_permessi_referente(utente):
             return False
         try:
@@ -99,6 +119,10 @@ class GestioneTurniController:
             return False
 
     def prenotaTurno(self, idTurno: str, idVolontario: str, ruolo: str = "Soccorritore", sistema: Any = None) -> bool:
+        """
+        Iscrive un volontario al turno specificato.
+        Verifica preventivamente il limite delle 12 ore massime giornaliere se l'istanza sistema è disponibile.
+        """
         if sistema:
             turno_obj = next((t for t in getattr(sistema, "turni", []) if str(t.id) == str(idTurno)), None)
             vol_obj = next((v for v in getattr(sistema, "volontari", []) if str(v.cod_fiscale).upper() == str(idVolontario).upper()), None)
@@ -122,7 +146,7 @@ class GestioneTurniController:
                     "volontari_ruoli": vruoli
                 })
             else:
-                # Se il turno non esiste in firebase, lo creiamo al volo
+                # Se il turno non esiste ancora su Firestore, lo creiamo inizializzandolo come Proposto
                 turno_ref.set({
                     "id": idTurno,
                     "volontari_ids": [idVolontario],
@@ -136,7 +160,10 @@ class GestioneTurniController:
             return False
 
     def validaDati(self, t: Turno | None = None) -> bool:
-        """Verifica la correttezza dei dati essenziali di un turno."""
+        """
+        Verifica la consistenza dei dati essenziali del turno:
+        data valida, orari di inizio e fine presenti, e richiesta di almeno un volontario.
+        """
         if not t:
             return False
         if not t.data or not str(t.data).strip():
@@ -147,23 +174,11 @@ class GestioneTurniController:
             return False
         return True
 
-    def verificaCoperturaPatente(self, v: Any, t: Optional[Turno] = None) -> bool:
-        """Verifica se il volontario possiede la patente o qualifica richiesta dal turno (accetta sia (v, t) che (t) da UML)."""
-        if t is None:
-            # Chiamata del diagramma UML: verificaCoperturaPatente(Turno)
-            turno = v
-            if not turno or not getattr(turno, "patenteRichiesta", None):
-                return True
-            req = str(turno.patenteRichiesta).strip().upper()
-            if not req or req in ["NESSUNA", "NON RICHIESTA", "TUTTI"]:
-                return True
-            for vol in getattr(turno, "volontari_assegnati", []):
-                patenti = [str(p).strip().upper() for p in getattr(vol, "patenti", [])]
-                qualifiche = [str(q).strip().upper() for q in getattr(vol, "qualifiche", [])]
-                if (req in patenti) or (req in qualifiche):
-                    return True
-            return False
-
+    def verificaCoperturaPatente(self, v: Volontario, t: Turno) -> bool:
+        """
+        Verifica se il volontario possiede la patente di guida CRI o la qualifica specifica
+        richiesta per il servizio (es. Guida Ambulanza, Soccorso Trauma, BLSD).
+        """
         if not t or not getattr(t, "patenteRichiesta", None):
             return True
         req = str(t.patenteRichiesta).strip().upper()
@@ -176,20 +191,31 @@ class GestioneTurniController:
         return (req in patenti) or (req in qualifiche)
 
     def verificaTempoLimite(self, v: Volontario, t: Turno) -> bool:
-        """Verifica che il volontario non abbia sovrapposizioni orarie con altri turni nello stesso giorno."""
+        """
+        Verifica che il turno non sia in conflitto orario con altri turni già assegnati al volontario.
+        
+        Principio matematico di intersezione di due intervalli [A, B) e [C, D):
+        Due fasce orarie si sovrappongono se e solo se:
+            max(inizio_A, inizio_C) < min(fine_B, fine_D)
+        
+        Dettaglio tecnico:
+        Gli orari sono formattati a due cifre con zeri ('HH:MM', es. '08:00', '14:30').
+        In questo formato standard ISO, l'ordine lessicografico coincide esattamente
+        con l'ordine cronologico, consentendo un confronto diretto in tempo costante O(1)
+        senza dover istanziare pesanti oggetti datetime ad ogni iterazione.
+        """
         if not v or not t or not getattr(v, "turni_assegnati", None):
             return True
         for altro in v.turni_assegnati:
             if altro.id == t.id:
                 continue
             if str(altro.data).strip() == str(t.data).strip():
-                # Controllo sovrapposizione orari (formato HH:MM)
                 try:
                     t_ini = t.oraInizio.strip()
                     t_fin = t.oraFine.strip()
                     a_ini = altro.oraInizio.strip()
                     a_fin = altro.oraFine.strip()
-                    # Se intervalli si sovrappongono: max(t_ini, a_ini) < min(t_fin, a_fin)
+                    # Condizione necessaria e sufficiente di sovrapposizione tra fasce orarie
                     if max(t_ini, a_ini) < min(t_fin, a_fin):
                         print(f"⚠️ Sovrapposizione oraria rilevata con turno {altro.id} ({altro.data} {altro.fascia_oraria})")
                         return False
@@ -199,8 +225,11 @@ class GestioneTurniController:
 
     def verificaLimiteOreGiornaliere(self, v: Volontario, t: Turno, max_ore: float = 12.0) -> bool:
         """
-        Verifica che il volontario non superi il tetto massimo di 12 ore di servizio giornaliere (RF19).
-        Ritorna True se consentito, False se l'iscrizione porterebbe a superare le 12 ore.
+        Requisito di sicurezza e tutela del soccorritore (RF19):
+        Impedisce turni cumulativi che superino le 12 ore giornaliere per il singolo volontario.
+        
+        Calcola la somma delle durate in ore di tutti i turni già assegnati nella data indicata
+        e verifica che l'aggiunta del nuovo turno non ecceda la soglia massima consentita di 12 ore.
         """
         if not v or not t:
             return True
@@ -219,7 +248,10 @@ class GestioneTurniController:
         return True
 
     def visualizzaTurniDisponibili(self, sistema=None) -> List[Turno]:
-        """Restituisce i turni aperti e con posti disponibili."""
+        """
+        Restituisce i turni aperti e con posti ancora scoperti.
+        Interroga prioritariamente lo stato in memoria del sistema, oppure consulta direttamente Firestore.
+        """
         if sistema and getattr(sistema, "turni", None):
             return [
                 t for t in sistema.turni

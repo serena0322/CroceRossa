@@ -6,6 +6,11 @@ if TYPE_CHECKING:
     from Volontario import Volontario
 
 class Report:
+    """
+    Rappresenta il resoconto di missione / fine turno redatto dal caposquadra o soccorritore.
+    Registra i chilometri percorsi dall'automezzo, il monte ore effettivo di servizio
+    e le note operative dell'intervento.
+    """
     def __init__(
         self,
         id: str,
@@ -27,20 +32,28 @@ class Report:
         self.compilatoDa = compilatoDa
 
     def calcolaKmPercorsi(self) -> int:
-        """Calcola la differenza tra chilometri finali e chilometri iniziali."""
+        """
+        Calcola la distanza percorsa come differenza tra chilometraggio finale e iniziale (UML).
+        Garantisce la non-negatività del valore calcolato.
+        """
         if self.kmFinali and self.kmFinali >= self.kmIniziali:
             return self.kmFinali - self.kmIniziali
         return self.kmPercorsi
 
     def creaResoconto(self) -> bool:
-        """Valida la consistenza del resoconto operativo."""
+        """
+        Valida la coerenza metrica del resoconto operativo (UML):
+        Verifica che i chilometri finali non siano inferiori a quelli rilevati ad inizio servizio.
+        """
         if self.kmFinali and self.kmFinali < self.kmIniziali:
             return False
         return True
 
     def getKmPercorsi(self) -> int:
+        """Restituisce i chilometri percorsi calcolati (UML)."""
         return self.calcolaKmPercorsi()
 
     def getOreEffettive(self) -> int:
+        """Restituisce le ore di servizio effettivamente prestate dal soccorritore (UML)."""
         return self.oreEffettive
 

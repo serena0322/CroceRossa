@@ -121,7 +121,13 @@ class BackupService:
 
     @classmethod
     def _ruota_backup(cls, cartella: str, max_file: int = 15):
-        """Elimina i backup più vecchi se superano la soglia specificata."""
+        """
+        Politica di retention FIFO (First-In, First-Out):
+        Mantiene un massimo di N file di backup (default 15).
+        Ordina i file esistenti per timestamp di ultima modifica (os.path.getmtime)
+        ed elimina progressivamente le snapshot più obsolete per prevenire l'esaurimento
+        dello storage su disco.
+        """
         try:
             files = [
                 os.path.join(cartella, f)
@@ -140,7 +146,12 @@ class BackupService:
 
     @classmethod
     def avvia_backup_automatico_daemon(cls, sistema: Sistema, intervallo_secondi: int = 3600):
-        """Avvia un demone in background che esegue periodicamente il backup dei dati."""
+        """
+        Avvia un thread demone (daemon=True) in background (RF23) per il backup periodico.
+        Operando su un thread separato dal Main GUI Thread di PyQt5, assicura che il dump
+        dello stato del sistema e la scrittura su disco avvengano senza generare lag o
+        freeze dell'interfaccia utente.
+        """
         if cls._in_esecuzione:
             return
 
@@ -158,4 +169,5 @@ class BackupService:
 
     @classmethod
     def ferma_backup_automatico(cls):
+        """Arresta in modo pulito il ciclo di esecuzione del thread demone."""
         cls._in_esecuzione = False

@@ -279,8 +279,14 @@ class Sistema:
 
     def invia_promemoria_servizi_24h(self) -> list[dict]:
         """
-        Requisito RNF4: Notifica promemoria servizio 24 ore prima dell'inizio del servizio.
-        Invia un'email di promemoria ai volontari iscritti ai turni previsti entro le 24h.
+        Requisito RNF4: Notifica promemoria servizio 24 ore prima dell'inizio del turno.
+        
+        Logica applicativa:
+        1. Finestra temporale: individua i turni pianificati per la giornata odierna o per l'indomani (lookahead 24h).
+        2. Idempotenza e deduplicazione: genera una chiave composita univoca ('idTurno_codFiscale_data')
+           memorizzata nel set in-memory 'self.promemoria_inviati'. Questo impedisce l'invio duplicato di email
+           al medesimo soccorritore in caso di sincronizzazioni o verifiche successive.
+        3. Dispatch asincrono / simulato tramite EmailService con dettagli operativi (mezzo, orario, checklist).
         """
         from datetime import datetime, timedelta
         from EmailService import EmailService
@@ -292,9 +298,11 @@ class Sistema:
         
         for turno in self.turni:
             data_t = str(getattr(turno, "data", "")).strip()
+            # Valuta i servizi entro le 24 ore successive
             if data_t in [domani_str, oggi_str]:
                 for v in getattr(turno, "volontari_assegnati", []):
                     email = getattr(v, "email", "")
+                    # Chiave composita di deduplicazione per garantire l'idempotenza
                     chiave_notifica = f"{turno.id}_{v.cod_fiscale}_{data_t}"
                     if email and "@" in email and chiave_notifica not in self.promemoria_inviati:
                         nome_vol = v.get_nome_completo() if hasattr(v, "get_nome_completo") else v.nome

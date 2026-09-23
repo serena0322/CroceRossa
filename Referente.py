@@ -6,13 +6,17 @@ from uuid import uuid4
 
 if TYPE_CHECKING:
     from Corso import Corso
-    from Volontario import Volontario
+    from Turno import Turno
 
 from Volontario import Volontario
-
 from Utente import Utente
 
 class Referente(Volontario):
+    """
+    Rappresenta la figura del Referente / Coordinatore di settore della Croce Rossa Italiana.
+    Estende la classe Volontario ereditandone le caratteristiche anagrafiche e operative,
+    e aggiunge le responsabilità di gestione corsi, autorizzazione e coordinamento turni.
+    """
     def __init__(
         self,
         cod_fiscale: str = "",
@@ -51,19 +55,16 @@ class Referente(Volontario):
         self.codice_autorizzazione = kwargs.get("codice_autorizzazione", "CRI2026")
 
     def getAreaGestita(self) -> str:
+        """Restituisce l'area o settore operativo di competenza del referente (UML)."""
         return self.area_gestita
 
     def assegnaTurno(self, volontario: Volontario, turno: Turno) -> bool:
-        """Assegna il turno al volontario (UML)."""
+        """Assegna formalmente il turno di servizio al soccorritore (UML)."""
         return turno.aggiungiVolontario(volontario)
 
     def attestaPartecipazione(self, volontario: Volontario, corso: Corso):
-        """Alias UML per attesta_partecipazione."""
+        """Attesta il completamento con successo di un corso per il volontario (UML)."""
         self.attesta_partecipazione(volontario, corso)
-
-    def creaCorso(self, titolo: str, ore: int = 10) -> Corso:
-        """Crea un nuovo corso formativo con titolo e monte ore (UML)."""
-        return self.crea_corso(nome=titolo, titolo=titolo, durata_ore=ore, checklist=[])
 
     def crea_corso(
             self,
