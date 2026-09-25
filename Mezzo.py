@@ -41,15 +41,6 @@ class Mezzo:
         self._disponibile = disponibile
 
     @property
-    def chilometraggio(self) -> int:
-        """Alias compatibile per il chilometraggio totale del veicolo."""
-        return self.chilometraggioTotale
-    
-    @chilometraggio.setter
-    def chilometraggio(self, val: int):
-        self.chilometraggioTotale = val
-
-    @property
     def disponibile(self) -> bool:
         """Verifica se il mezzo è libero e pronto per essere assegnato a un servizio."""
         return self.stato == "Disponibile" or self.stato == "disponibile" or getattr(self, '_disponibile', True)

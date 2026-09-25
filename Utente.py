@@ -4,7 +4,7 @@ class Utente:
     Classe base per la gestione degli utenti del sistema Croce Rossa Italiana.
     Incapsula le informazioni anagrafiche e i metodi comuni a tutti i profili.
     """
-    def __init__(self, cod_fiscale, nome, cognome, email, data_nascita, ruolo, telefono):
+    def __init__(self, cod_fiscale, nome, cognome, email, data_nascita, ruolo, telefono, comitato_appartenenza: str = "", **kwargs):
         self.cod_fiscale = str(cod_fiscale).strip().upper() if cod_fiscale else ""
         self.nome = str(nome).strip() if nome else ""
         self.cognome = str(cognome).strip() if cognome else ""
@@ -14,7 +14,7 @@ class Utente:
         self.ruolo = str(ruolo).strip().lower() if ruolo else "volontario"
         
         # Campi di stato e appartenenza associativa
-        self.compagnia_appartenenza = ""
+        self.comitato_appartenenza = str(comitato_appartenenza or kwargs.get("compagnia_appartenenza", "")).strip()
         self.curriculum = ""
         self.patenti = []
         self.qualifiche = []
@@ -22,48 +22,6 @@ class Utente:
         self.patente_pdf_path = ""
         self.formazione = []
         self.corsi_frequentati = []
-
-    # --- Property per garantire compatibilità con le varie convenzioni di naming dell'UML ---
-    @property
-    def nascita(self) -> str:
-        return self.data_nascita
-
-    @nascita.setter
-    def nascita(self, val: str):
-        self.data_nascita = val
-
-    @property
-    def dataNascita(self) -> str:
-        return self.data_nascita
-
-    @dataNascita.setter
-    def dataNascita(self, val: str):
-        self.data_nascita = val
-
-    @property
-    def codFiscale(self) -> str:
-        return self.cod_fiscale
-
-    @codFiscale.setter
-    def codFiscale(self, val: str):
-        self.cod_fiscale = val
-
-    @property
-    def comitato_appartenenza(self) -> str:
-        """Denominazione ufficiale del comitato CRI territoriale di afferenza (UML)."""
-        return self.compagnia_appartenenza
-
-    @comitato_appartenenza.setter
-    def comitato_appartenenza(self, val: str):
-        self.compagnia_appartenenza = val
-
-    @property
-    def com_appartenenza(self) -> str:
-        return self.compagnia_appartenenza
-
-    @com_appartenenza.setter
-    def com_appartenenza(self, val: str):
-        self.compagnia_appartenenza = val
 
     # --- Metodi di utilità anagrafica ---
     def get_nome_completo(self) -> str:
@@ -106,7 +64,6 @@ class Utente:
             "data_nascita": self.data_nascita,
             "telefono": self.telefono,
             "ruolo": self.ruolo,
-            "compagnia_appartenenza": self.compagnia_appartenenza,
-            "comitato_appartenenza": self.compagnia_appartenenza,
+            "comitato_appartenenza": self.comitato_appartenenza,
             "patente_pdf_path": self.patente_pdf_path
         }

@@ -33,7 +33,7 @@ class Volontario(Utente):
         data_nascita: str | None = None,
         curriculum: str = "",
         formazione: List[Corso] | None = None,
-        compagnia_appartenenza: str = "",
+        comitato_appartenenza: str = "",
         patenti_pdf: dict[str, str] | None = None,
         patente_pdf_path: str = "",
         app_io_verificato: bool = False,
@@ -44,6 +44,7 @@ class Volontario(Utente):
     ):
         cf = cod_fiscale if cod_fiscale is not None else codFiscale
         dn = dataNascita if dataNascita else (data_nascita if data_nascita else (nascita if nascita else ""))
+        comitato = comitato_appartenenza or kwargs.get("compagnia_appartenenza", "")
         super().__init__(
             cod_fiscale=cf,
             nome=nome,
@@ -51,7 +52,8 @@ class Volontario(Utente):
             email=email,
             data_nascita=dn,
             ruolo=ruolo,
-            telefono=telefono
+            telefono=telefono,
+            comitato_appartenenza=comitato
         )
         
         self.password = password
@@ -70,36 +72,17 @@ class Volontario(Utente):
         # Compatibility properties:
         self.curriculum = curriculum
         self.formazione = formazione if formazione is not None else []
-        self.compagnia_appartenenza = compagnia_appartenenza
         self.referente: Optional[Referente] = None
         self.turni_assegnati: List[Turno] = []
         self.corsi_frequentati: List[Corso] = []
         self.ore_lavorate: dict[int, float] = {}
-
-    @property
-    def codFiscale(self) -> str:
-        """Alias camelCase conforme al diagramma UML."""
-        return self.cod_fiscale
-        
-    @codFiscale.setter
-    def codFiscale(self, val: str):
-        self.cod_fiscale = val
-
-    @property
-    def dataNascita(self) -> str:
-        """Alias camelCase conforme al diagramma UML."""
-        return self.data_nascita
-        
-    @dataNascita.setter
-    def dataNascita(self, val: str):
-        self.data_nascita = val
 
     def aggiornaProfilo(self, v: Volontario) -> bool:
         """Sincronizza le informazioni del profilo a partire da un'altra istanza Volontario (UML)."""
         self.nome = v.nome
         self.cognome = v.cognome
         self.email = v.email
-        self.dataNascita = v.dataNascita
+        self.data_nascita = v.data_nascita
         self.telefono = v.telefono
         self.ruolo = v.ruolo
         self.password = v.password
@@ -152,14 +135,6 @@ class Volontario(Utente):
         if corso in self.formazione:
             self.formazione.remove(corso)
             print(f"{self.nome} disiscritto dal corso {corso.nome}")
-
-    @property
-    def com_appartenenza(self) -> str:
-        return self.compagnia_appartenenza
-
-    @com_appartenenza.setter
-    def com_appartenenza(self, val: str):
-        self.compagnia_appartenenza = val
 
     def prenota_turno(self, turno: Turno, parent=None):
         if turno not in self.turni_assegnati:
@@ -246,7 +221,7 @@ class Volontario(Utente):
             "qualifiche": self.qualifiche,
             "disponibilita": self.disponibilita,
             "curriculum": self.curriculum,
-            "compagnia_appartenenza": self.compagnia_appartenenza,
+            "comitato_appartenenza": self.comitato_appartenenza,
             "patenti_pdf": getattr(self, "patenti_pdf", {}),
             "patente_pdf_path": getattr(self, "patente_pdf_path", ""),
             "app_io_verificato": getattr(self, "app_io_verificato", False),

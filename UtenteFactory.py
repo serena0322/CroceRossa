@@ -12,14 +12,14 @@ def costruisci_utente(data: dict):
             nome=data["nome"],
             cognome=data.get("cognome", ""),
             email=data["email"],
-            nascita=data.get("nascita", ""),
+            nascita=data.get("data_nascita", data.get("nascita", "")),
             telefono=data.get("telefono", ""),
             curriculum=data.get("curriculum", ""),
             patenti=data.get("patenti", []),
             qualifiche=data.get("qualifiche", []),
             monteOreTotale=data.get("monteOreTotale", 0),
             formazione=[],
-            compagnia_appartenenza=data.get("compagnia_appartenenza", ""),
+            comitato_appartenenza=data.get("comitato_appartenenza", data.get("compagnia_appartenenza", "")),
             disponibilita=data.get("disponibilita", [])
         )
         u.patente_pdf_path = data.get("patente_pdf_path", "")
@@ -30,14 +30,14 @@ def costruisci_utente(data: dict):
             nome=data["nome"],
             cognome=data.get("cognome", ""),
             email=data["email"],
-            nascita=data.get("nascita", ""),
+            nascita=data.get("data_nascita", data.get("nascita", "")),
             telefono=data.get("telefono", ""),
             curriculum=data.get("curriculum", ""),
             patenti=data.get("patenti", []),
             qualifiche=data.get("qualifiche", []),
             monteOreTotale=data.get("monteOreTotale", 0),
             formazione=[],
-            compagnia_appartenenza=data.get("compagnia_appartenenza", ""),
+            comitato_appartenenza=data.get("comitato_appartenenza", data.get("compagnia_appartenenza", "")),
             disponibilita=data.get("disponibilita", []),
             area_gestita=data.get("area_gestita", "")
         )

@@ -19,18 +19,18 @@ class Turno:
         paziente_nome: str = "",
         paziente_cognome: str = "",
         paziente_cf: str = "",
-        personeRichieste: int = 1,
+        personeRichieste: int | str = 1,
         stato: str = "Proposto",
         tipoServizio: str = "",
         mezzo_targa: str = "",
         # Compatibility parameters:
-        id_turno: int = None,
-        fascia_oraria: str = None,
-        luogo: str = None,
-        corso_richiesto: str = None,
+        id_turno: int | None = None,
+        fascia_oraria: str | None = None,
+        luogo: str | None = None,
+        corso_richiesto: str | None = None,
         checklist: bool = False,
         tempoExtra: str = "",
-        dispositivi_richiesti: List[str] = None,
+        dispositivi_richiesti: List[str] | None = None,
         **kwargs
     ):
         self.id = str(id_turno) if id_turno is not None else id
@@ -183,7 +183,7 @@ class Turno:
                 self.volontari_assegnati.append(v)
                 self.persone_prenotate.setdefault(v.ruolo, []).append(v.cod_fiscale)
                 if ruolo:
-                    self.volontari_ruoli[str(v.cod_fiscale)] = ruolo
+                    self.volontari_ruoli[v.cod_fiscale] = ruolo
                 if self not in v.turni_assegnati:
                     v.turni_assegnati.append(self)
                 if len(self.volontari_assegnati) == self.personeRichieste:
@@ -211,8 +211,8 @@ class Turno:
             self.volontari_assegnati.remove(v)
             if v.cod_fiscale in self.persone_prenotate.get(v.ruolo, []):
                 self.persone_prenotate[v.ruolo].remove(v.cod_fiscale)
-            if str(v.cod_fiscale) in self.volontari_ruoli:
-                del self.volontari_ruoli[str(v.cod_fiscale)]
+            if v.cod_fiscale in self.volontari_ruoli:
+                del self.volontari_ruoli[v.cod_fiscale]
             if self in v.turni_assegnati:
                 v.turni_assegnati.remove(self)
             self.stato = "Aperto"
@@ -272,8 +272,8 @@ class Turno:
             "persone_richieste": self.persone_richieste,
             "stato": self.stato,
             "tipoServizio": self.tipoServizio,
-            "checklist": bool(self.checklist),
+            "checklist": self.checklist,
             "mezzo_targa": targa_val,
-            "volontari_ids": [str(v.cod_fiscale) for v in self.volontari_assegnati],
+            "volontari_ids": [v.cod_fiscale for v in self.volontari_assegnati],
             "volontari_ruoli": self.volontari_ruoli
         }, merge=True)

@@ -4026,7 +4026,7 @@ class MainWindow(QWidget):
             curriculum="curriculum.pdf",
             patenti=["B"],
             formazione=[],
-            compagnia_appartenenza="CRI Roma",
+            comitato_appartenenza="CRI Roma",
             disponibilita=["Lunedì", "Venerdì"],
             area_gestita="Formazione"
         )
@@ -4041,7 +4041,7 @@ class MainWindow(QWidget):
             curriculum="cv_anna.pdf",
             patenti=["B"],
             formazione=[],
-            compagnia_appartenenza="CRI Roma",
+            comitato_appartenenza="CRI Roma",
             disponibilita=["Lunedì", "Mercoledì"],
             ruolo="volontario"
         )

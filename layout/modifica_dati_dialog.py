@@ -157,7 +157,7 @@ class ModificaDatiDialog(QDialog):
         self.nascita_edit = QDateEdit()
         self.nascita_edit.setCalendarPopup(True)
         self.nascita_edit.setDisplayFormat("dd/MM/yyyy")
-        orig_date = volontario.nascita or ""
+        orig_date = getattr(volontario, "data_nascita", "") or ""
         qdate = QDate.fromString(orig_date, "dd/MM/yyyy")
         if not qdate.isValid():
             qdate = QDate.fromString(orig_date, "yyyy-MM-dd")
@@ -379,14 +379,14 @@ class ModificaDatiDialog(QDialog):
         sec3.layout().addLayout(cv_layout)
         inner_layout.addWidget(sec3)
 
-        # --- SEZIONE 4: Compagnia e Disponibilità ---
-        sec4 = self._crea_card("🏢 Compagnia e Disponibilità Operativa")
+        # --- SEZIONE 4: Comitato e Disponibilità ---
+        sec4 = self._crea_card("🏢 Comitato e Disponibilità Operativa")
         s4_lay = QVBoxLayout()
         s4_lay.setSpacing(10)
 
-        s4_lay.addWidget(QLabel("<b>Compagnia di Appartenenza:</b>"))
-        self.compagnia_edit = QLineEdit(volontario.compagnia_appartenenza)
-        s4_lay.addWidget(self.compagnia_edit)
+        s4_lay.addWidget(QLabel("<b>Comitato di Appartenenza:</b>"))
+        self.comitato_edit = QLineEdit(getattr(volontario, "comitato_appartenenza", ""))
+        s4_lay.addWidget(self.comitato_edit)
 
         s4_lay.addWidget(QLabel("<b>Giorni di Disponibilità Operativa (separati da virgola):</b>"))
         self.disponibilita_edit = QLineEdit(", ".join(volontario.disponibilita))
@@ -706,7 +706,7 @@ class ModificaDatiDialog(QDialog):
         if nuova_email != self.volontario.email:
             self.volontario.aggiorna_email(nuova_email)
 
-        self.volontario.nascita = self.nascita_edit.date().toString("dd/MM/yyyy")
+        self.volontario.data_nascita = self.nascita_edit.date().toString("dd/MM/yyyy")
         self.volontario.telefono = self.telefono_edit.text().strip()
 
         # Salva numero patente e scadenza inseriti o estrapolati da PDF
@@ -719,7 +719,7 @@ class ModificaDatiDialog(QDialog):
 
         self.volontario.patenti = patenti_scelte
         self.volontario.patenti_pdf = self.patenti_pdf
-        self.volontario.compagnia_appartenenza = self.compagnia_edit.text().strip()
+        self.volontario.comitato_appartenenza = self.comitato_edit.text().strip()
         self.volontario.disponibilita = [d.strip() for d in self.disponibilita_edit.text().split(",") if d.strip()]
 
         # Salva ruolo operativo se modificato

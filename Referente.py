@@ -28,13 +28,14 @@ class Referente(Volontario):
         curriculum: str = "",
         patenti: list[str] | None = None,
         formazione: list | None = None,
-        compagnia_appartenenza: str = "",
+        comitato_appartenenza: str = "",
         disponibilita: list[str] | None = None,
         area_gestita: str = "",
         qualifiche: list[str] | None = None,
         monteOreTotale: int = 0,
         **kwargs
     ):
+        comitato = comitato_appartenenza or kwargs.get("compagnia_appartenenza", "")
         super().__init__(
             cod_fiscale=cod_fiscale,
             nome=nome,
@@ -46,7 +47,7 @@ class Referente(Volontario):
             curriculum=curriculum,
             patenti=patenti if patenti is not None else [],
             formazione=formazione if formazione is not None else [],
-            compagnia_appartenenza=compagnia_appartenenza,
+            comitato_appartenenza=comitato,
             disponibilita=disponibilita if disponibilita is not None else [],
             monteOreTotale=monteOreTotale,
             qualifiche=qualifiche if qualifiche is not None else []
@@ -143,7 +144,7 @@ class Referente(Volontario):
             "qualifiche": getattr(self, "qualifiche", []),
             "disponibilita": self.disponibilita,
             "curriculum": self.curriculum,
-            "compagnia_appartenenza": self.compagnia_appartenenza,
+            "comitato_appartenenza": self.comitato_appartenenza,
             "area_gestita": self.area_gestita
         })
         return d

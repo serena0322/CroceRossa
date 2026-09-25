@@ -182,7 +182,7 @@ class Sistema:
             if cognome:
                 volontario.cognome = cognome
             if nascita:
-                volontario.nascita = nascita
+                volontario.data_nascita = nascita
 
     # --- Gestione volontari ---
     def aggiungi_volontario(self, volontario: Volontario):
