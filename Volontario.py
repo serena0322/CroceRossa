@@ -65,6 +65,7 @@ class Volontario(Utente):
         self.patente_pdf_path: str = patente_pdf_path if patente_pdf_path else kwargs.get("patente_pdf_path", "")
         self.app_io_verificato: bool = app_io_verificato or kwargs.get("app_io_verificato", False)
         self.numero_patente: str = numero_patente or kwargs.get("numero_patente", "")
+        self.data_rilascio_patente: str = str(kwargs.get("data_rilascio_patente") or kwargs.get("data_rilascio", "")).strip()
         self.scadenza_patente: str = scadenza_patente or kwargs.get("scadenza_patente", "")
         self.app_io_certificato_id: str = app_io_certificato_id or kwargs.get("app_io_certificato_id", "")
         self.punti_patente: int = int(kwargs.get("punti_patente", 30))
@@ -226,6 +227,7 @@ class Volontario(Utente):
             "patente_pdf_path": getattr(self, "patente_pdf_path", ""),
             "app_io_verificato": getattr(self, "app_io_verificato", False),
             "numero_patente": getattr(self, "numero_patente", ""),
+            "data_rilascio_patente": getattr(self, "data_rilascio_patente", ""),
             "scadenza_patente": getattr(self, "scadenza_patente", ""),
             "punti_patente": getattr(self, "punti_patente", 30),
             "app_io_certificato_id": getattr(self, "app_io_certificato_id", ""),

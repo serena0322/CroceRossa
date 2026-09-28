@@ -201,93 +201,40 @@ class ModificaDatiDialog(QDialog):
         sec1.layout().addLayout(s1_lay)
         inner_layout.addWidget(sec1)
 
-        # --- SEZIONE 2: Patente di Guida & Documento Allegato ---
-        sec2 = self._crea_card("🚗 Patente di Guida & Documento Allegato")
+        # --- SEZIONE 2: Patente di Guida ---
+        sec2 = self._crea_card("🚗 Patente di Guida")
         s2_lay = QVBoxLayout()
         s2_lay.setSpacing(14)
 
-        # 1. Box Caricamento & Estrapolazione Dati da PDF
-        pdf_box = QFrame()
-        pdf_box.setStyleSheet("background-color: #0f1e33; border: 1px solid #1e3f66; border-radius: 8px;")
-        pdf_box_layout = QVBoxLayout(pdf_box)
-        pdf_box_layout.setContentsMargins(16, 14, 16, 14)
-        pdf_box_layout.setSpacing(10)
-
-        pdf_head = QHBoxLayout()
-        lbl_pdf_t = QLabel("📄 <b>Documento Patente (PDF o Scansione)</b>")
-        lbl_pdf_t.setStyleSheet("color: #64b5f6; font-size: 13px; font-weight: bold; border: none; background: transparent;")
-        pdf_head.addWidget(lbl_pdf_t)
-        pdf_head.addStretch()
-
-        self.btn_carica_pdf = QPushButton("📂 Allega PDF ed Estrapola Dati")
-        self.btn_carica_pdf.setToolTip("Seleziona il PDF o la scansione della patente: il sistema convalidata il file ed estrapolerà i dati in automatico.")
-        self.btn_carica_pdf.setStyleSheet("""
-            QPushButton {
-                background-color: #0066cc;
-                color: white;
-                font-weight: bold;
-                padding: 8px 16px;
-                border-radius: 6px;
-                font-size: 12px;
-                border: 1px solid #0055aa;
-            }
-            QPushButton:hover {
-                background-color: #0077ee;
-            }
-            QPushButton:pressed {
-                background-color: #004499;
-            }
-        """)
-        self.btn_carica_pdf.clicked.connect(lambda: self.carica_pdf_patente())
-        pdf_head.addWidget(self.btn_carica_pdf)
-        pdf_box_layout.addLayout(pdf_head)
-
-        lbl_pdf_hint = QLabel("💡 <i>Allegando il PDF della tua patente (digitale o scansionato), il sistema convalidata il documento ed estrapola in tempo reale numero di patente, scadenza e categorie di guida.</i>")
-        lbl_pdf_hint.setStyleSheet("color: #90caf9; font-size: 11px; border: none; background: transparent;")
-        lbl_pdf_hint.setWordWrap(True)
-        pdf_box_layout.addWidget(lbl_pdf_hint)
-
-        pdf_status_row = QHBoxLayout()
-        self.lbl_pdf_status = QLabel()
-        pdf_status_row.addWidget(self.lbl_pdf_status)
-        pdf_status_row.addStretch()
-
-        self.btn_view_pdf = QPushButton("👁️ Visualizza PDF Patente")
-        self.btn_view_pdf.setStyleSheet("""
-            QPushButton {
-                background-color: #0288d1;
-                color: white;
-                padding: 6px 14px;
-                border-radius: 4px;
-                font-weight: bold;
-                font-size: 12px;
-            }
-            QPushButton:hover {
-                background-color: #039be5;
-            }
-        """)
-        self.btn_view_pdf.clicked.connect(self.visualizza_pdf_patente)
-        has_pdf = self.ha_pdf_valido()
-        self.btn_view_pdf.setVisible(has_pdf)
-        pdf_status_row.addWidget(self.btn_view_pdf)
-        pdf_box_layout.addLayout(pdf_status_row)
-
-        s2_lay.addWidget(pdf_box)
-
-        # 2. Campi Dati Patente (Estrapolati dal PDF o modificabili manualmente)
+        # Campi Dati Patente (Numero, Data Rilascio, Data Scadenza)
         patente_fields_box = QFrame()
         patente_fields_box.setStyleSheet("background-color: #1a1a1a; border: 1px solid #2d2d2d; border-radius: 8px;")
         pf_lay = QGridLayout(patente_fields_box)
         pf_lay.setContentsMargins(14, 14, 14, 14)
         pf_lay.setSpacing(12)
 
-        # Riga 0: Numero Patente & Data Scadenza
+        # Riga 0: Numero Patente
         pf_lay.addWidget(QLabel("<b>Numero di Patente:</b>"), 0, 0)
         self.edit_numero_patente = QLineEdit(getattr(volontario, "numero_patente", "") or "")
-        self.edit_numero_patente.setPlaceholderText("Es. U1482910A (estrapolato da PDF o manuale)")
+        self.edit_numero_patente.setPlaceholderText("Es. U1482910A")
         pf_lay.addWidget(self.edit_numero_patente, 1, 0)
 
-        pf_lay.addWidget(QLabel("<b>Data di Scadenza Patente:</b>"), 0, 1)
+        # Riga 0 col 1: Data di Rilascio
+        pf_lay.addWidget(QLabel("<b>Data di Rilascio Patente:</b>"), 0, 1)
+        self.edit_data_rilascio_patente = QDateEdit()
+        self.edit_data_rilascio_patente.setCalendarPopup(True)
+        self.edit_data_rilascio_patente.setDisplayFormat("dd/MM/yyyy")
+        rilascio_str = getattr(volontario, "data_rilascio_patente", "") or ""
+        qril = QDate.fromString(rilascio_str, "yyyy-MM-dd")
+        if not qril.isValid():
+            qril = QDate.fromString(rilascio_str, "dd/MM/yyyy")
+        if not qril.isValid():
+            qril = QDate.currentDate().addYears(-3)
+        self.edit_data_rilascio_patente.setDate(qril)
+        pf_lay.addWidget(self.edit_data_rilascio_patente, 1, 1)
+
+        # Riga 2: Data Scadenza
+        pf_lay.addWidget(QLabel("<b>Data di Scadenza Patente:</b>"), 2, 0)
         self.edit_scadenza_patente = QDateEdit()
         self.edit_scadenza_patente.setCalendarPopup(True)
         self.edit_scadenza_patente.setDisplayFormat("dd/MM/yyyy")
@@ -296,9 +243,9 @@ class ModificaDatiDialog(QDialog):
         if not qscad.isValid():
             qscad = QDate.fromString(scad_str, "dd/MM/yyyy")
         if not qscad.isValid():
-            qscad = QDate.currentDate().addYears(10)
+            qscad = QDate.currentDate().addYears(7)
         self.edit_scadenza_patente.setDate(qscad)
-        pf_lay.addWidget(self.edit_scadenza_patente, 1, 1)
+        pf_lay.addWidget(self.edit_scadenza_patente, 3, 0)
 
         s2_lay.addWidget(patente_fields_box)
 
@@ -324,6 +271,9 @@ class ModificaDatiDialog(QDialog):
         patente_layout.addStretch()
         s2_lay.addWidget(patente_widget)
 
+        self.lbl_pdf_status = QLabel()
+        self.btn_view_pdf = QPushButton()
+        self.btn_view_pdf.hide()
         self.aggiorna_stato_pdf()
         sec2.layout().addLayout(s2_lay)
         inner_layout.addWidget(sec2)
@@ -680,20 +630,6 @@ class ModificaDatiDialog(QDialog):
     def salva_dati(self):
         patenti_scelte = [p for p, cb in self.patente_checkboxes.items() if cb.isChecked()]
 
-        # CONTROLLO DI SICUREZZA:
-        # Se anche una sola patente è spuntata, deve esserci un documento PDF valido!
-        if patenti_scelte:
-            for p in patenti_scelte:
-                if not self.ha_pdf_valido(p):
-                    QMessageBox.critical(
-                        self,
-                        "🛑 Documento PDF Mancante",
-                        f"Impossibile salvare il profilo!\n\n"
-                        f"Hai selezionato la patente '{p}', ma non è stato allegato un documento PDF valido.\n\n"
-                        f"Allega il file PDF tramite il pulsante '📂 Allega PDF ed Estrapola Dati' oppure deseleziona la patente per procedere."
-                    )
-                    return
-
         self.volontario.nome = self.nome_edit.text().strip()
         self.volontario.cognome = self.cognome_edit.text().strip()
         
@@ -709,18 +645,21 @@ class ModificaDatiDialog(QDialog):
         self.volontario.data_nascita = self.nascita_edit.date().toString("dd/MM/yyyy")
         self.volontario.telefono = self.telefono_edit.text().strip()
 
-        # Salva numero patente e scadenza inseriti o estrapolati da PDF
+        # Salva numero patente, data rilascio e scadenza inseriti dall'utente
         if hasattr(self, "edit_numero_patente"):
             num_val = self.edit_numero_patente.text().strip().upper()
             if num_val:
                 self.volontario.numero_patente = num_val
+        if hasattr(self, "edit_data_rilascio_patente"):
+            self.volontario.data_rilascio_patente = self.edit_data_rilascio_patente.date().toString("yyyy-MM-dd")
         if hasattr(self, "edit_scadenza_patente"):
             self.volontario.scadenza_patente = self.edit_scadenza_patente.date().toString("yyyy-MM-dd")
 
         self.volontario.patenti = patenti_scelte
         self.volontario.patenti_pdf = self.patenti_pdf
         self.volontario.comitato_appartenenza = self.comitato_edit.text().strip()
-        self.volontario.disponibilita = [d.strip() for d in self.disponibilita_edit.text().split(",") if d.strip()]
+        if hasattr(self, "disponibilita_edit"):
+            self.volontario.disponibilita = [d.strip() for d in self.disponibilita_edit.text().split(",") if d.strip()]
 
         # Salva ruolo operativo se modificato
         if hasattr(self, "ruolo_combo"):
@@ -765,7 +704,7 @@ class ModificaDatiDialog(QDialog):
 
         try:
             self.volontario.aggiorna_firestore()
-            QMessageBox.information(self, "Successo", "✅ Dati e abilitazioni salvati correttamente.")
+            # Non mostrare popup modale di successo (richiesta di semplificazione UI)
             self.accept()
         except Exception as e:
             QMessageBox.critical(self, "Errore", f"❌ Errore nel salvataggio: {e}")

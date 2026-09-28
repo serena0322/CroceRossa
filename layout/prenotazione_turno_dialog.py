@@ -191,7 +191,7 @@ class PrenotazioneTurnoDialog(QDialog):
 
         # 5. Pulsanti di Azione
         btn_box = QHBoxLayout()
-        self.btn_conferma = QPushButton("✅ Conferma Iscrizione al Turno")
+        self.btn_conferma = QPushButton("✅ Iscriviti al Turno")
         self.btn_conferma.setStyleSheet("""
             QPushButton {
                 background-color: #28a745;

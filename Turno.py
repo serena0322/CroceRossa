@@ -20,7 +20,7 @@ class Turno:
         paziente_cognome: str = "",
         paziente_cf: str = "",
         personeRichieste: int | str = 1,
-        stato: str = "Proposto",
+        stato: str = "Aperto",
         tipoServizio: str = "",
         mezzo_targa: str = "",
         # Compatibility parameters:
@@ -246,6 +246,14 @@ class Turno:
 
     def is_scoperto(self) -> bool:
         return not self.isCompleto()
+
+    def is_modificabile(self) -> bool:
+        """Un turno è modificabile dal referente esclusivamente se si trova in stato 'Aperto'."""
+        return str(self.stato).strip().lower() == "aperto"
+
+    def isModificabile(self) -> bool:
+        """Alias camelCase conforme al diagramma delle classi UML."""
+        return self.is_modificabile()
 
     def richiede_corso(self) -> bool:
         return bool(self.patenteRichiesta)

@@ -95,7 +95,7 @@ class CreaTurnoDialog(QDialog):
         
         layout.addRow("Tipo Servizio:", self.servizio_edit)
         
-        self.btn = QPushButton("Crea")
+        self.btn = QPushButton("Crea Turno")
         self.btn.clicked.connect(self.accept)
         layout.addRow(self.btn)
         self.setLayout(layout)
@@ -2352,7 +2352,7 @@ class MainWindow(QWidget):
         self.tbl_turni_disp.cellDoubleClicked.connect(lambda r, c: self.azione_prenota_turno())
         booking_layout.addWidget(self.tbl_turni_disp)
         
-        btn_prenota = QPushButton("🔗 Prenota Turno Selezionato (o fai doppio clic)")
+        btn_prenota = QPushButton("📝 Iscriviti al Turno Selezionato (o fai doppio clic)")
         btn_prenota.clicked.connect(self.azione_prenota_turno)
         booking_layout.addWidget(btn_prenota)
         
@@ -2364,7 +2364,7 @@ class MainWindow(QWidget):
         personal_layout.setContentsMargins(0, 0, 0, 0)
         personal_layout.setSpacing(10)
         
-        personal_layout.addWidget(QLabel("<h3 style='color: white; margin: 0;'>📋 I Miei Turni Assegnati:</h3>"))
+        personal_layout.addWidget(QLabel("<h3 style='color: white; margin: 0;'>📋 Le Mie Prenotazioni:</h3>"))
         
         self.tbl_miei_turni = QTableWidget(0, 8)
         self.tbl_miei_turni.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -2383,7 +2383,7 @@ class MainWindow(QWidget):
         actions_layout = QHBoxLayout()
         actions_layout.setSpacing(10)
         
-        btn_cancella = QPushButton("❌ Annulla Assegnazione")
+        btn_cancella = QPushButton("❌ Annulla Prenotazione")
         btn_cancella.clicked.connect(self.azione_annulla_turno)
         actions_layout.addWidget(btn_cancella)
 
@@ -2659,18 +2659,7 @@ class MainWindow(QWidget):
         turno = next((t for t in self.sistema.turni if str(t.id) == id_turno), None)
         
         if turno:
-            confirm = QMessageBox.question(
-                self,
-                "Conferma Annullamento",
-                f"Sei sicuro di voler annullare la tua iscrizione al turno del {turno.data} ({turno.fascia_oraria})?\n\n"
-                f"Il posto verrà reso nuovamente disponibile per gli altri volontari.",
-                QMessageBox.Yes | QMessageBox.No,
-                QMessageBox.No
-            )
-            if confirm != QMessageBox.Yes:
-                return
-
-            # Delega al controller
+            # Delega al controller (nessun popup di conferma bloccante)
             self.turni_controller.annullaPrenotazione(turno)
             self.sistema.logged_user.annulla_prenotazione(turno)
             turno.rimuoviVolontario(self.sistema.logged_user)
@@ -2958,7 +2947,6 @@ class MainWindow(QWidget):
         if turno:
             self.turni_controller.eliminaTurno(turno, utente=self.sistema.logged_user)
             self.sistema.turni.remove(turno)
-            QMessageBox.information(self, "Successo", "🗑️ Turno rimosso.")
             self.update_ui()
 
     # --- TAB FLOTTA ---
@@ -3335,7 +3323,7 @@ class MainWindow(QWidget):
             btn_modifica_corso.clicked.connect(self.azione_modifica_corso)
             btn_layout.addWidget(btn_modifica_corso)
 
-            btn_attesta = QPushButton("🏆 Attesta Certificazione Volontario")
+            btn_attesta = QPushButton("📋 Registro / Attesta Partecipazione")
             btn_attesta.setStyleSheet("background-color: #f57f17; color: white; font-weight: bold; padding: 8px 14px; border-radius: 6px;")
             btn_attesta.clicked.connect(self.azione_attesta_partecipazione)
             btn_layout.addWidget(btn_attesta)
@@ -3632,11 +3620,18 @@ class MainWindow(QWidget):
         turno = next((t for t in self.sistema.turni if str(t.id) == id_turno), None)
         if not turno:
             return
+        if not turno.is_modificabile():
+            QMessageBox.warning(
+                self,
+                "Modifica non consentita",
+                f"⚠️ Non è possibile modificare il turno {turno.id} in quanto non si trova in stato 'Aperto' (stato attuale: '{turno.stato}')."
+            )
+            return
         dialog = ModificaTurnoDialog(turno, self.sistema.mezzi, self)
         if dialog.exec_():
             dialog.apply_to(turno, self.flotta_controller, self.sistema.mezzi)
             turno.aggiorna_firestore()
-            QMessageBox.information(self, "Successo", f"✅ Turno {turno.id} aggiornato correttamente.")
+            # Flusso lineare senza messaggio modale: aggiornamento diretto dell'interfaccia
             self.update_ui()
 
     def azione_modifica_mezzo(self):

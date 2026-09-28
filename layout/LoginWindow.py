@@ -713,53 +713,10 @@ class LoginWindow(QWidget):
         btn_login = PrimaryButton("Accedi")
         btn_login.clicked.connect(self._do_login)  # pyrefly: ignore [missing-attribute]
         layout.addWidget(btn_login)
-        layout.addSpacing(14)
-
-        # Divisore ─── oppure ───
-        div_layout = QHBoxLayout()
-        for _ in range(2):
-            line = QFrame()
-            line.setFrameShape(QFrame.HLine)
-            line.setStyleSheet("color: rgba(255,255,255,0.12);")
-            div_layout.addWidget(line)
-            if _ == 0:
-                lbl = QLabel("  oppure  ")
-                lbl.setStyleSheet("font-size: 12px; color: rgba(255,255,255,0.3);")
-                lbl.setAlignment(Qt.AlignCenter)  # type: ignore[attr-defined]
-                div_layout.addWidget(lbl)
-        layout.addLayout(div_layout)
-        layout.addSpacing(14)
-
-        # Bottone Google
-        btn_google = QPushButton()
-        btn_google.setFixedHeight(48)
-        btn_google.setCursor(Qt.PointingHandCursor)  # type: ignore[attr-defined]
-        btn_google.setText("  Continua con Google")
-        btn_google.setStyleSheet("""
-            QPushButton {
-                background: rgba(255,255,255,0.06);
-                border: 1.5px solid rgba(255,255,255,0.18);
-                border-radius: 10px;
-                color: #ffffff;
-                font-size: 14px;
-                font-weight: 600;
-                text-align: center;
-            }
-            QPushButton:hover {
-                background: rgba(255,255,255,0.11);
-                border-color: rgba(255,255,255,0.35);
-            }
-            QPushButton:pressed { background: rgba(255,255,255,0.15); }
-        """)
-        # SVG Google colorato come testo emoji (testo Unicode)
-        btn_google.setText("  🌐  Continua con Google")
-        btn_google.clicked.connect(self._do_google_login)  # pyrefly: ignore [missing-attribute]
-        layout.addWidget(btn_google)
-
         layout.addStretch()
 
         # Link switch a registrazione
-        switch = QPushButton("Non hai un account? Registrati →")
+        switch = QPushButton("Non hai un account? Crea nuovo account →")
         switch.setFlat(True)
         switch.setCursor(Qt.PointingHandCursor)  # type: ignore[attr-defined]
         switch.setStyleSheet("""
@@ -782,7 +739,7 @@ class LoginWindow(QWidget):
         layout.setContentsMargins(48, 36, 48, 28)
         layout.setSpacing(0)
 
-        h_label = QLabel("Crea account")
+        h_label = QLabel("Crea nuovo account")
         h_label.setStyleSheet("font-size: 24px; font-weight: 700; color: #fff;")
         layout.addWidget(h_label)
         layout.addSpacing(4)
@@ -823,7 +780,7 @@ class LoginWindow(QWidget):
 
         layout.addSpacing(16)
 
-        btn_reg = PrimaryButton("Crea Account")
+        btn_reg = PrimaryButton("Crea nuovo account")
         btn_reg.clicked.connect(self._do_register)  # pyrefly: ignore [missing-attribute]
         layout.addWidget(btn_reg)
         layout.addSpacing(10)
@@ -924,8 +881,9 @@ class LoginWindow(QWidget):
             self.sistema.logged_user = nuovo
             from session_manager import save_session
             save_session(nuovo)
-            titolo_ruolo = "Referente / Coordinatore" if ruolo == "referente" else "Volontario"
-            QMessageBox.information(self, "Benvenuto!", f"✅ Account ({titolo_ruolo}) creato con successo. Benvenuto!")
+            # Per il referente non viene mostrato il messaggio modale "Account Creato"
+            if ruolo != "referente":
+                QMessageBox.information(self, "Benvenuto!", "✅ Account Volontario creato con successo. Benvenuto!")
             self.callback_login_success()
             self.close()
         else:

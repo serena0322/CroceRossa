@@ -1,4 +1,4 @@
-
+from __future__ import annotations
 
 def costruisci_utente(data: dict):
     from Volontario import Volontario
@@ -20,9 +20,10 @@ def costruisci_utente(data: dict):
             monteOreTotale=data.get("monteOreTotale", 0),
             formazione=[],
             comitato_appartenenza=data.get("comitato_appartenenza", data.get("compagnia_appartenenza", "")),
-            disponibilita=data.get("disponibilita", [])
+            numero_patente=data.get("numero_patente", ""),
+            data_rilascio_patente=data.get("data_rilascio_patente", data.get("data_rilascio", "")),
+            scadenza_patente=data.get("scadenza_patente", "")
         )
-        u.patente_pdf_path = data.get("patente_pdf_path", "")
         return u
     elif ruolo == "referente":
         r = Referente(
@@ -38,10 +39,12 @@ def costruisci_utente(data: dict):
             monteOreTotale=data.get("monteOreTotale", 0),
             formazione=[],
             comitato_appartenenza=data.get("comitato_appartenenza", data.get("compagnia_appartenenza", "")),
-            disponibilita=data.get("disponibilita", []),
-            area_gestita=data.get("area_gestita", "")
+            area_gestita=data.get("area_gestita", ""),
+            codice_autorizzazione=data.get("codice_autorizzazione", "CRI2026"),
+            numero_patente=data.get("numero_patente", ""),
+            data_rilascio_patente=data.get("data_rilascio_patente", data.get("data_rilascio", "")),
+            scadenza_patente=data.get("scadenza_patente", "")
         )
-        r.patente_pdf_path = data.get("patente_pdf_path", "")
         return r
     else:
         raise ValueError(f"Ruolo sconosciuto: {ruolo}")

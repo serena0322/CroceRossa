@@ -99,9 +99,19 @@ class GestioneTurniController:
             return False
 
     def modificaTurno(self, idTurno: str, t: Turno, utente=None) -> bool:
-        """Aggiorna i parametri di un turno esistente previa verifica dei permessi da referente."""
+        """
+        Aggiorna i parametri di un turno esistente previa verifica dei permessi da referente.
+        Vincolo di business: il turno è modificabile solo ed esclusivamente se in stato 'Aperto'.
+        """
         if not self._verifica_permessi_referente(utente):
             return False
+        
+        # Controllo vincolo di business: Modifica consentita solo se il turno è 'Aperto'
+        stato_corrente = str(getattr(t, "stato", "Aperto")).strip().lower()
+        if stato_corrente != "aperto":
+            print(f"⚠️ Impossibile modificare il turno {idTurno}: consentita la modifica solo se in stato 'Aperto' (stato attuale: '{getattr(t, 'stato', 'N/D')}').")
+            return False
+
         t.id = idTurno
         return self.creaTurno(t, utente=utente)
 
