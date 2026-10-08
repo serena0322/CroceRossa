@@ -460,21 +460,15 @@ class ModificaDatiDialog(QDialog):
 
 
     def ha_pdf_valido(self, patente=None) -> bool:
-        """Verifica se per una data patente esiste un documento PDF valido e integro."""
-        from pdf_validator import valida_pdf_patente
-
+        """Verifica se per una data patente esiste un documento PDF allegato."""
         if patente and patente in getattr(self, "patenti_pdf", {}):
             path = self.patenti_pdf[patente]
             if path and os.path.exists(os.path.abspath(path)):
-                valido, _ = valida_pdf_patente(path)
-                if valido:
-                    return True
+                return True
 
         gen_path = getattr(self.volontario, "patente_pdf_path", "")
         if gen_path and os.path.exists(os.path.abspath(gen_path)):
-            valido, _ = valida_pdf_patente(gen_path)
-            if valido:
-                return True
+            return True
 
         return False
 
@@ -488,7 +482,7 @@ class ModificaDatiDialog(QDialog):
                     self,
                     "📂 Documento Richiesto",
                     f"Per abilitare la patente '<b>{pat}</b>' è necessario allegare il relativo documento PDF.\n\n"
-                    f"Desideri selezionare il file PDF adesso per estrapolare automaticamente i dati?",
+                    f"Desideri selezionare il file PDF adesso?",
                     QMessageBox.Yes | QMessageBox.No,
                     QMessageBox.Yes
                 )
@@ -508,11 +502,11 @@ class ModificaDatiDialog(QDialog):
         has_pdf = self.ha_pdf_valido()
         num_pat = getattr(self.volontario, "numero_patente", "") or (self.edit_numero_patente.text().strip() if hasattr(self, "edit_numero_patente") else "")
         if has_pdf:
-            status_text = f"Documento: ✅ PDF Patente allegato e verificato (N. {num_pat or 'Registrato'})"
+            status_text = f"Documento: ✅ PDF Patente allegato (N. {num_pat or 'Registrato'})"
             self.lbl_pdf_status.setText(status_text)
             self.lbl_pdf_status.setStyleSheet("color: #00e676; font-size: 12px; font-weight: bold;")
         else:
-            status_text = "Documento: ⚠️ Nessun PDF allegato. Clicca su 'Allega PDF' per caricare il file ed estrapolare i dati."
+            status_text = "Documento: ⚠️ Nessun PDF allegato. Clicca su 'Allega PDF' per caricare il file."
             self.lbl_pdf_status.setText(status_text)
             self.lbl_pdf_status.setStyleSheet("color: #ff9800; font-size: 12px;")
         if hasattr(self, "btn_view_pdf"):
@@ -524,14 +518,11 @@ class ModificaDatiDialog(QDialog):
         if not file_path:
             return False
 
-        from pdf_validator import valida_pdf_patente
-        valido, err = valida_pdf_patente(file_path)
-        if not valido:
+        if not file_path.lower().endswith(".pdf"):
             QMessageBox.critical(
                 self,
                 "File Non Valido",
-                f"❌ Il file selezionato non supera i controlli di integrità:\n\n{err}\n\n"
-                f"Assicurati di allegare un documento PDF valido e integro."
+                "❌ Il file selezionato deve avere estensione .pdf."
             )
             return False
 
@@ -547,61 +538,21 @@ class ModificaDatiDialog(QDialog):
             shutil.copy(file_path, dest_path)
             rel_path = f"patenti_pdf/{dest_filename}"
             self.volontario.patente_pdf_path = rel_path
-
-            # --- ESTRAPOLAZIONE AUTOMATICA DATI DA PDF (TESTO O SCANSIONE) ---
-            from patente_extractor import estrai_dati_patente_da_pdf
-            dati_estratti = estrai_dati_patente_da_pdf(dest_path)
-
-            campi_trovati = []
-
-            # 1. Numero patente
-            num_estratto = dati_estratti.get("numero_patente", "").strip().upper()
-            if num_estratto:
-                if hasattr(self, "edit_numero_patente"):
-                    self.edit_numero_patente.setText(num_estratto)
-                self.volontario.numero_patente = num_estratto
-                campi_trovati.append(f"• Numero Patente: <b>{num_estratto}</b>")
-
-            # 2. Data di scadenza
-            scad_estratta = dati_estratti.get("data_scadenza", "").strip()
-            if scad_estratta:
-                qdate = QDate.fromString(scad_estratta, "yyyy-MM-dd")
-                if not qdate.isValid():
-                    qdate = QDate.fromString(scad_estratta, "dd/MM/yyyy")
-                if qdate.isValid():
-                    if hasattr(self, "edit_scadenza_patente"):
-                        self.edit_scadenza_patente.setDate(qdate)
-                    self.volontario.scadenza_patente = scad_estratta
-                    campi_trovati.append(f"• Data di Scadenza: <b>{qdate.toString('dd/MM/yyyy')}</b>")
-
-            # 3. Categorie abilitate
-            cats_estratte = dati_estratti.get("categorie", ["B"])
-            if cats_estratte:
-                self._updating_checkbox = True
-                for cat, cb in self.patente_checkboxes.items():
-                    cb.setChecked(cat in cats_estratte)
-                self._updating_checkbox = False
-                self.volontario.patenti = list(cats_estratte)
-                self.patenti_pdf = {c: rel_path for c in cats_estratte}
-                self.volontario.patenti_pdf = self.patenti_pdf
-                campi_trovati.append(f"• Categorie Rilevate: <b>{', '.join(cats_estratte)}</b>")
-            elif patente_target:
+            if patente_target:
+                if not hasattr(self, "patenti_pdf") or self.patenti_pdf is None:
+                    self.patenti_pdf = {}
                 self.patenti_pdf[patente_target] = rel_path
                 self.volontario.patenti_pdf = self.patenti_pdf
 
             self.aggiorna_stato_pdf()
-
-            riepilogo = "\n".join(campi_trovati) if campi_trovati else "• Documento allegato e verificato regolarmente."
             QMessageBox.information(
                 self,
-                "✅ Dati Estrapolati dal PDF",
-                f"Il documento PDF è stato verificato con successo e i dati sono stati estrapolati automaticamente:\n\n"
-                f"{riepilogo}\n\n"
-                f"I campi del profilo sono stati compilati. Puoi verificare o modificare i campi prima di salvare."
+                "Documento Caricato",
+                f"✅ Documento PDF patente allegato con successo:\n{dest_filename}"
             )
             return True
         except Exception as e:
-            QMessageBox.critical(self, "Errore", f"❌ Errore durante l'elaborazione del file PDF: {e}")
+            QMessageBox.critical(self, "Errore", f"❌ Errore durante il caricamento del file: {e}")
             return False
 
     def visualizza_pdf_patente(self):

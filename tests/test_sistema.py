@@ -268,75 +268,13 @@ class TestSessionManager(unittest.TestCase):
         self.assertIsNone(load_session())
 
 
-class TestPdfValidator(unittest.TestCase):
+class TestVolontarioPatentiPdf(unittest.TestCase):
     def setUp(self):
         import tempfile
         self.temp_dir = tempfile.TemporaryDirectory()
 
     def tearDown(self):
         self.temp_dir.cleanup()
-
-    def test_valida_pdf_inesistente(self):
-        from pdf_validator import valida_pdf_patente
-        valido, msg = valida_pdf_patente("file_fantasma_inesistente.pdf")
-        self.assertFalse(valido)
-        self.assertIn("non esiste", msg)
-
-    def test_valida_pdf_estensione_sbagliata(self):
-        from pdf_validator import valida_pdf_patente
-        path = os.path.join(self.temp_dir.name, "documento.png")
-        with open(path, "wb") as f:
-            f.write(b"not a pdf")
-        valido, msg = valida_pdf_patente(path)
-        self.assertFalse(valido)
-        self.assertIn(".pdf", msg)
-
-    def test_valida_pdf_troppo_piccolo(self):
-        from pdf_validator import valida_pdf_patente
-        path = os.path.join(self.temp_dir.name, "min.pdf")
-        with open(path, "wb") as f:
-            f.write(b"%PDF-1.4 %%EOF")
-        valido, msg = valida_pdf_patente(path)
-        self.assertFalse(valido)
-        self.assertIn("troppo piccolo", msg)
-
-    def test_valida_pdf_magic_number_mancante(self):
-        from pdf_validator import valida_pdf_patente
-        path = os.path.join(self.temp_dir.name, "fake.pdf")
-        with open(path, "wb") as f:
-            # 600 bytes of dummy text without %PDF-
-            f.write(b"ABCDEFGHIJ" * 60)
-        valido, msg = valida_pdf_patente(path)
-        self.assertFalse(valido)
-        self.assertIn("%PDF-", msg)
-
-    def test_valida_pdf_eof_mancante(self):
-        from pdf_validator import valida_pdf_patente
-        path = os.path.join(self.temp_dir.name, "corrupted.pdf")
-        with open(path, "wb") as f:
-            # Contains %PDF- and obj, but lacks %%EOF
-            content = b"%PDF-1.4\n1 0 obj\n<<>>\nendobj\n" + (b"PADDING " * 70)
-            f.write(content)
-        valido, msg = valida_pdf_patente(path)
-        self.assertFalse(valido)
-        self.assertIn("%%EOF", msg)
-
-    def test_valida_pdf_valido(self):
-        from pdf_validator import valida_pdf_patente
-        path = os.path.join(self.temp_dir.name, "patente_ok.pdf")
-        with open(path, "wb") as f:
-            # Valid structure >= 500 bytes with %PDF-, obj and %%EOF
-            body = (b"%PDF-1.5\n"
-                    b"1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n"
-                    b"2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n"
-                    b"3 0 obj\n<< /Type /Page >>\nendobj\n"
-                    + (b"xref\n0 4\n0000000000 65535 f \n" * 15)
-                    + b"trailer\n<< /Root 1 0 R >>\nstartxref\n400\n%%EOF\n")
-            f.write(body)
-        self.assertGreaterEqual(len(body), 500)
-        valido, msg = valida_pdf_patente(path)
-        self.assertTrue(valido)
-        self.assertIn("integro", msg.lower())
 
     def test_volontario_patenti_pdf_to_dict(self):
         v = Volontario(
@@ -1035,11 +973,10 @@ class TestGestioneUtenteController(unittest.TestCase):
             # Il dialog di compilazione NON deve essere stato aperto
             mock_dlg.assert_not_called()
 
-    def test_caricamento_pdf_estrapolazione_dati_e_layout_responsive(self):
+    def test_caricamento_pdf_e_layout_responsive(self):
         from PyQt5.QtWidgets import QApplication
         from layout.modifica_dati_dialog import ModificaDatiDialog
         from Volontario import Volontario
-        from patente_extractor import estrai_dati_patente_da_pdf
         from unittest.mock import patch
 
         app = QApplication.instance() or QApplication([])
@@ -1048,72 +985,32 @@ class TestGestioneUtenteController(unittest.TestCase):
             nome="Serena",
             cognome="Giuliani",
             email="serena.giuliani@gmail.com",
-            patenti=[]
+            patenti=["B"]
         )
 
-        # 1. Creazione file PDF di test conforme (Formato standard card italiana)
-        lines = [
-            "REPUBBLICA ITALIANA",
-            "PATENTE DI GUIDA",
-            "1. GIULIANI",
-            "2. SERENA",
-            "3. 22/01/2003 ROMA (RM)",
-            "4a. 25/01/2021  4c. MIT-UCO",
-            "4b. 22/01/2031",
-            "5. U1X982734K",
-            "9. B"
-        ]
-        content = "BT\n/F1 12 Tf\n"
-        y = 700
-        for l in lines:
-            content += f"40 {y} Td\n({l}) Tj\n-40 {-y} Td\n"
-            y -= 20
-        content += "ET\n"
-        sb = content.encode("latin1")
-        o4 = f"4 0 obj\n<< /Length {len(sb)} >>\nstream\n".encode("latin1") + sb + b"\nendstream\nendobj\n"
-        o1 = b"1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n"
-        o2 = b"2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n"
-        o3 = b"3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n"
-        o5 = b"5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n"
-        h = b"%PDF-1.4\n"
-        off = [len(h), len(h)+len(o1), len(h)+len(o1)+len(o2), len(h)+len(o1)+len(o2)+len(o3), len(h)+len(o1)+len(o2)+len(o3)+len(o4)]
-        xref = f"xref\n0 6\n0000000000 65535 f \n{off[0]:010d} 00000 n \n{off[1]:010d} 00000 n \n{off[2]:010d} 00000 n \n{off[3]:010d} 00000 n \n{off[4]:010d} 00000 n \ntrailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n{off[4]+len(o5)}\n%%EOF\n".encode("latin1")
         tmp_pdf = os.path.abspath("test_patente_card_temp.pdf")
         with open(tmp_pdf, "wb") as f:
-            f.write(h + o1 + o2 + o3 + o4 + o5 + xref)
+            f.write(b"%PDF-1.4\n")
 
         try:
-            # 2. Test estrazione automatica tramite patente_extractor
-            dati = estrai_dati_patente_da_pdf(tmp_pdf)
-            self.assertTrue(dati["esito"])
-            self.assertEqual(dati["numero_patente"], "U1X982734K")
-            self.assertEqual(dati["data_scadenza"], "2031-01-22")
-            self.assertEqual(dati["categorie"], ["B"])
-
-            # 3. Test ModificaDatiDialog con Sticky Footer e ScrollArea
+            # 1. Test ModificaDatiDialog con Sticky Footer e ScrollArea
             dlg_modifica = ModificaDatiDialog(v)
             self.assertIsNotNone(dlg_modifica.salva_btn)
             self.assertEqual(dlg_modifica.salva_btn.text(), "💾 Salva Dati")
             self.assertTrue(dlg_modifica.salva_btn.isEnabled())
 
-            # Test caricamento ed estrapolazione automatica dei campi del form da PDF
+            # 2. Test caricamento file PDF patente
             with patch("PyQt5.QtWidgets.QFileDialog.getOpenFileName", return_value=(tmp_pdf, "File PDF (*.pdf)")), \
                  patch("PyQt5.QtWidgets.QMessageBox.information"):
-                successo_caricamento = dlg_modifica.carica_pdf_patente()
+                successo_caricamento = dlg_modifica.carica_pdf_patente("B")
                 self.assertTrue(successo_caricamento)
 
-            # Verifica che i campi a video siano stati compilati automaticamente
-            self.assertEqual(dlg_modifica.edit_numero_patente.text(), "U1X982734K")
-            self.assertEqual(dlg_modifica.edit_scadenza_patente.date().toString("yyyy-MM-dd"), "2031-01-22")
-            self.assertTrue(dlg_modifica.patente_checkboxes["B"].isChecked())
             self.assertTrue(dlg_modifica.ha_pdf_valido("B"))
 
-            # Test salvataggio dati
+            # 3. Test salvataggio dati
             with patch("PyQt5.QtWidgets.QMessageBox.information"), patch.object(v, "aggiorna_firestore"):
                 dlg_modifica.salva_dati()
-                self.assertEqual(v.numero_patente, "U1X982734K")
-                self.assertEqual(v.scadenza_patente, "2031-01-22")
-                self.assertEqual(v.patenti, ["B"])
+                self.assertIn("B", v.patenti)
         finally:
             if os.path.exists(tmp_pdf):
                 os.remove(tmp_pdf)

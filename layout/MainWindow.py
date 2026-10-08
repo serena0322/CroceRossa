@@ -1354,8 +1354,6 @@ class SchedaVolontarioDialog(QDialog):
         if ok_v and valore.strip():
             valore_clean = valore.strip()
             if tipo == "Patente":
-                from pdf_validator import valida_pdf_patente
-                from patente_extractor import estrai_dati_patente_da_pdf
                 import os
                 import shutil
 
@@ -1369,18 +1367,15 @@ class SchedaVolontarioDialog(QDialog):
                     QMessageBox.warning(
                         self,
                         "Operazione Annullata",
-                        f"⚠️ Aggiunta patente annullata: per registrare la patente '{valore_clean}' è obbligatorio allegare il relativo documento PDF valido."
+                        f"⚠️ Aggiunta patente annullata: per registrare la patente '{valore_clean}' è necessario allegare il relativo documento PDF."
                     )
                     return
 
-                valido, motivo = valida_pdf_patente(file_path)
-                if not valido:
+                if not file_path.lower().endswith(".pdf"):
                     QMessageBox.critical(
                         self,
-                        "❌ Verifica di Sicurezza Fallita",
-                        f"Il file selezionato per la patente '{valore_clean}' non è valido:\n\n"
-                        f"⚠️ {motivo}\n\n"
-                        f"La patente NON è stata aggiunta."
+                        "File Non Valido",
+                        "❌ Il file selezionato deve avere estensione .pdf."
                     )
                     return
 
@@ -1400,13 +1395,6 @@ class SchedaVolontarioDialog(QDialog):
                     self.volontario.patenti_pdf = {}
                 self.volontario.patenti_pdf[valore_clean] = rel_path
                 self.volontario.patente_pdf_path = rel_path
-
-                # Estrapolazione automatica dei dati dal PDF
-                dati_estratti = estrai_dati_patente_da_pdf(dest_path)
-                if dati_estratti.get("numero_patente"):
-                    self.volontario.numero_patente = dati_estratti["numero_patente"]
-                if dati_estratti.get("data_scadenza"):
-                    self.volontario.scadenza_patente = dati_estratti["data_scadenza"]
 
                 if not hasattr(self.volontario, "patenti") or self.volontario.patenti is None:
                     self.volontario.patenti = []
