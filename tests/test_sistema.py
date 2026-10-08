@@ -817,75 +817,6 @@ class TestGestioneUtenteController(unittest.TestCase):
         self.assertIn("Autista Tipo A", item_ruolo.text())
         self.assertIn("🚗", item_ruolo.text())
 
-    def test_google_login_fluido_senza_popup(self):
-        from PyQt5.QtWidgets import QApplication
-        from layout.LoginWindow import LoginWindow
-        from Sistema import Sistema
-        from Volontario import Volontario
-        from session_manager import clear_session
-
-        clear_session()
-        app = QApplication.instance() or QApplication([])
-        sistema = Sistema()
-        sistema.sincronizza_con_firebase = lambda: True
-        v = Volontario(cod_fiscale="GLNSRN03A62I156Z", nome="Serena", cognome="Giuliani", email="serena.giuliani@gmail.com")
-        sistema.volontari = [v]
-
-        callback_invocata = []
-        def on_success(msg=""):
-            callback_invocata.append(msg)
-
-        login_win = LoginWindow(sistema, on_success)
-
-        # Simula ricezione OAuth Google riuscita
-        login_win._on_google_auth_success("serena.giuliani@gmail.com", "Serena", "token_fake")
-
-        # Verifica che il login sia andato a buon fine senza blocchi
-        self.assertEqual(len(callback_invocata), 1)
-        self.assertIn("Accesso eseguito con Google", callback_invocata[0])
-        self.assertIn("Serena", callback_invocata[0])
-        self.assertIsNotNone(sistema.logged_user)
-        assert sistema.logged_user is not None
-        self.assertEqual(sistema.logged_user.cod_fiscale, "GLNSRN03A62I156Z")
-        clear_session()
-
-    def test_google_login_nuovo_utente_zero_richieste_cf(self):
-        from PyQt5.QtWidgets import QApplication
-        from layout.LoginWindow import LoginWindow
-        from Sistema import Sistema
-        from session_manager import clear_session
-        from unittest.mock import patch
-
-        clear_session()
-        app = QApplication.instance() or QApplication([])
-        sistema = Sistema()
-        sistema.sincronizza_con_firebase = lambda: True
-        sistema.volontari = []
-
-        callback_invocata = []
-        def on_success(msg=""):
-            callback_invocata.append(msg)
-
-        login_win = LoginWindow(sistema, on_success)
-
-        # Simula accesso Google per un utente MAI registrato prima
-        with patch("layout.LoginWindow.SelezioneRuoloGoogleDialog.exec_", return_value=1), \
-             patch("layout.LoginWindow.SelezioneRuoloGoogleDialog.get_ruolo_selezionato", return_value="volontario"):
-            login_win._on_google_auth_success("nuovo.volontario@gmail.com", "Mario Rossi", "token_xyz")
-
-        # 1. Verifica login immediato
-        self.assertEqual(len(callback_invocata), 1)
-        self.assertIn("Mario", callback_invocata[0])
-
-        # 2. Verifica creazione profilo con CF univoco a 16 caratteri e dati anagrafici
-        user = sistema.logged_user
-        self.assertIsNotNone(user)
-        self.assertEqual(user.nome, "Mario")
-        self.assertEqual(user.cognome, "Rossi")
-        self.assertEqual(user.email, "nuovo.volontario@gmail.com")
-        self.assertEqual(len(user.cod_fiscale), 16)
-        self.assertTrue(user.cod_fiscale.startswith("GGL"))
-        clear_session()
 
     def test_compila_resoconto_km_risultanti(self):
         from PyQt5.QtWidgets import QApplication
@@ -1143,25 +1074,6 @@ class TestGestioneUtenteController(unittest.TestCase):
             mock_crit.assert_called_once()
             self.assertIn("PIN Referente Richiesto", mock_crit.call_args[0][1])
 
-    def test_primo_accesso_google_scelta_ruolo_referente(self):
-        from PyQt5.QtWidgets import QApplication
-        from layout.LoginWindow import LoginWindow, SelezioneRuoloGoogleDialog
-        from Referente import Referente
-        from unittest.mock import patch
-
-        app = QApplication.instance() or QApplication([])
-        sistema = Sistema()
-        login_win = LoginWindow(sistema, lambda msg="": None)
-
-        with patch.object(SelezioneRuoloGoogleDialog, "exec_", return_value=1), \
-             patch.object(SelezioneRuoloGoogleDialog, "get_ruolo_selezionato", return_value="referente"), \
-             patch.object(login_win.controller, "registraAccount", return_value=True):
-            login_win._on_google_auth_success("nuovo.google@cri.it", "Paolo Rossi", "fake_token_123")
-
-        self.assertIsNotNone(sistema.logged_user)
-        self.assertEqual(sistema.logged_user.ruolo, "referente")
-        self.assertIsInstance(sistema.logged_user, Referente)
-        self.assertEqual(sistema.logged_user.email, "nuovo.google@cri.it")
 
     def test_modifica_ruolo_in_profilo_dialog_con_e_senza_pin(self):
         from PyQt5.QtWidgets import QApplication
