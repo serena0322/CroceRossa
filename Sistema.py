@@ -23,6 +23,7 @@ class Sistema:
         self.checklist: list[Checklist] = []
         self.logged_user: Optional[Volontario] = None
         self.promemoria_inviati: set[str] = set()
+        self.backup_service = None
 
     @classmethod
     def get_instance(cls) -> Optional[Sistema]:
@@ -631,6 +632,8 @@ class Sistema:
 
     def esegui_backup(self, base_dir: str = "backups") -> tuple[bool, str]:
         """Esegue il backup periodico automatico di sistema (RF23)."""
+        if self.backup_service is not None:
+            return self.backup_service.crea_backup(self)
         from BackupService import BackupService
         return BackupService.esegui_backup(self, base_dir=base_dir)
 

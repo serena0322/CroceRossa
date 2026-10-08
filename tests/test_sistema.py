@@ -539,6 +539,8 @@ class TestCalendarService(unittest.TestCase):
         dlg_senza = PrenotazioneTurnoDialog(t, v_senza, ctrl)
         ruoli_senza = dlg_senza.analizza_ruoli_disponibili()
         autista_senza = next((r for r in ruoli_senza if "Autista" in r["nome"]), None)
+        self.assertIsNotNone(autista_senza)
+        assert autista_senza is not None
         self.assertFalse(autista_senza["ha_patente"])
 
     def test_prenotazione_turno_dialog_sovrapposizione(self):
@@ -865,7 +867,7 @@ class TestGestioneUtenteController(unittest.TestCase):
         self.assertEqual(win.header_layout.indexOf(win.lbl_badge_patente), -1)
 
         # 2. Verifica che nella tabella dei turni assegnati ci sia la colonna "Il Tuo Ruolo"
-        header_labels = [win.tbl_miei_turni.horizontalHeaderItem(c).text() for c in range(win.tbl_miei_turni.columnCount())]
+        header_labels = [(it.text() if (it := win.tbl_miei_turni.horizontalHeaderItem(c)) else "") for c in range(win.tbl_miei_turni.columnCount())]
         self.assertIn("Il Tuo Ruolo", header_labels)
         col_idx = header_labels.index("Il Tuo Ruolo")
 
@@ -873,6 +875,7 @@ class TestGestioneUtenteController(unittest.TestCase):
         self.assertGreater(win.tbl_miei_turni.rowCount(), 0)
         item_ruolo = win.tbl_miei_turni.item(0, col_idx)
         self.assertIsNotNone(item_ruolo)
+        assert item_ruolo is not None
         self.assertIn("Autista Tipo A", item_ruolo.text())
         self.assertIn("🚗", item_ruolo.text())
 
@@ -886,7 +889,7 @@ class TestGestioneUtenteController(unittest.TestCase):
         clear_session()
         app = QApplication.instance() or QApplication([])
         sistema = Sistema()
-        sistema.sincronizza_con_firebase = lambda: None
+        sistema.sincronizza_con_firebase = lambda: True
         v = Volontario(cod_fiscale="GLNSRN03A62I156Z", nome="Serena", cognome="Giuliani", email="serena.giuliani@gmail.com")
         sistema.volontari = [v]
 
@@ -903,6 +906,8 @@ class TestGestioneUtenteController(unittest.TestCase):
         self.assertEqual(len(callback_invocata), 1)
         self.assertIn("Accesso eseguito con Google", callback_invocata[0])
         self.assertIn("Serena", callback_invocata[0])
+        self.assertIsNotNone(sistema.logged_user)
+        assert sistema.logged_user is not None
         self.assertEqual(sistema.logged_user.cod_fiscale, "GLNSRN03A62I156Z")
         clear_session()
 
@@ -916,7 +921,7 @@ class TestGestioneUtenteController(unittest.TestCase):
         clear_session()
         app = QApplication.instance() or QApplication([])
         sistema = Sistema()
-        sistema.sincronizza_con_firebase = lambda: None
+        sistema.sincronizza_con_firebase = lambda: True
         sistema.volontari = []
 
         callback_invocata = []
@@ -960,6 +965,8 @@ class TestGestioneUtenteController(unittest.TestCase):
 
         # 1. Verifica che i chilometri iniziali siano letti dal mezzo
         self.assertEqual(dialog.km_iniziali, 125400)
+        self.assertIsNotNone(dialog.spin_km_finali)
+        assert dialog.spin_km_finali is not None
         self.assertEqual(dialog.spin_km_finali.value(), 125400)
         self.assertTrue(dialog.btn_salva.isEnabled())
 
@@ -1007,6 +1014,8 @@ class TestGestioneUtenteController(unittest.TestCase):
 
         # 1. Verifica che lo stato nella tabella indichi checklist OK
         item_stato = win.tbl_miei_turni.item(0, 7)
+        self.assertIsNotNone(item_stato)
+        assert item_stato is not None
         self.assertIn("Checklist OK", item_stato.text())
 
         # 2. Seleziona la riga del turno e verifica che il pulsante segnali che è già completata
@@ -1160,14 +1169,14 @@ class TestGestioneUtenteController(unittest.TestCase):
         win.popola_tabelle_turni_volontario()
 
         # Di default, solo t_libero deve comparire nei turni disponibili per l'iscrizione
-        id_visibili = [win.tbl_turni_disp.item(r, 0).text() for r in range(win.tbl_turni_disp.rowCount())]
+        id_visibili = [(it.text() if (it := win.tbl_turni_disp.item(r, 0)) else "") for r in range(win.tbl_turni_disp.rowCount())]
         self.assertNotIn("T_PIENO", id_visibili, "I turni al completo non devono comparire nei turni disponibili!")
         self.assertIn("T_LIBERO", id_visibili)
 
         # Se l'utente spunta 'Mostra anche turni al completo', deve comparire anche T_PIENO
         win.chk_mostra_completi.setChecked(True)
         win.popola_tabelle_turni_volontario()
-        id_visibili_con_completi = [win.tbl_turni_disp.item(r, 0).text() for r in range(win.tbl_turni_disp.rowCount())]
+        id_visibili_con_completi = [(it.text() if (it := win.tbl_turni_disp.item(r, 0)) else "") for r in range(win.tbl_turni_disp.rowCount())]
         self.assertIn("T_PIENO", id_visibili_con_completi)
         self.assertIn("T_LIBERO", id_visibili_con_completi)
 
