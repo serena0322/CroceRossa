@@ -115,11 +115,16 @@ class Volontario(Utente):
         """Verifica la corrispondenza delle credenziali di accesso (UML)."""
         return self.email == email and self.password == password
 
-    # Compatibility methods:
-    def aggiorna_firestore(self) -> bool:
+    # Persistence methods:
+    def aggiorna_db(self) -> bool:
+        """Salva lo stato corrente del profilo volontario nel database locale JSON."""
         from GestioneUtenteController import GestioneUtenteController
         controller = GestioneUtenteController()
         return controller.modificaProfilo(self)
+
+    def aggiorna_firestore(self) -> bool:
+        """Metodo di compatibilità: salva lo stato nel database locale JSON."""
+        return self.aggiorna_db()
 
     def aggiorna_email(self, nuova_email: str) -> bool:
         self.email = nuova_email

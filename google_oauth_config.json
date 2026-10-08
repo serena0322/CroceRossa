@@ -7,7 +7,7 @@
     "4. Nome: 'Croce Rossa App' → Crea",
     "NOTA: Per le App Desktop NON c'è il campo URI — è normale!",
     "      Google permette automaticamente http://localhost su qualsiasi porta.",
-    "5. Assicurati che 'Google Sign-In' sia abilitato in Firebase Authentication"
+    "5. Assicurati che le API Google OAuth siano abilitate nella console"
   ],
   "client_id": "540289205969-sjb6bjraqsiq9mkm44dt4j0t1b5749hg.apps.googleusercontent.com",
   "client_secret": "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"

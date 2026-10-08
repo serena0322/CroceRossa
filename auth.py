@@ -1,6 +1,5 @@
 import hashlib
-import requests
-from FirebaseConfig import db, api_key
+from typing import Optional
 from UtenteFactory import costruisci_utente
 
 def hash_password(password: str) -> str:
@@ -8,118 +7,84 @@ def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
 def registra_utente(cod_fiscale: str, email: str, password: str, nome: str, ruolo: str) -> bool:
-    """Registra un nuovo utente in Firebase Auth e Firestore."""
+    """Registra un nuovo utente nel sistema locale."""
+    from Sistema import Sistema
+    s = Sistema.get_instance()
+    if not s:
+        return False
 
-    # 1. Controlla se già registrato in Firestore
     if utente_gia_registrato(email, cod_fiscale):
         return False
 
-    # 2. Registra in Firebase Authentication
-    url = f"https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={api_key}"
-    payload = {
-        "email": email,
-        "password": password,
-        "returnSecureToken": True
-    }
-
-    try:
-        response = requests.post(url, json=payload)
-        response.raise_for_status()
-        data = response.json()  # contiene localId, idToken ecc.
-    except requests.exceptions.RequestException as e:
-        print(f"❌ Errore durante la creazione dell'utente Firebase Auth: {e}")
-        # pyrefly: ignore [bad-return]
-        return None
-
-    # 3. Prepara dati utente
     hashed = hash_password(password)
-    utente = {
+    dati = {
         "cod_fiscale": cod_fiscale,
         "email": email,
         "password": hashed,
         "nome": nome,
         "ruolo": ruolo
     }
-
-    # 4. Determina la collezione corretta
-    # 4. Salva in Firestore nella collezione principale 'utenti'
-    try:
-        db.collection("utenti").document(cod_fiscale).set(utente)
-        print("✅ Registrazione completata in Firestore (collezione 'utenti').")
-        return data  # restituisci i dati Firebase Auth se necessario
-    except Exception as e:
-        print(f"❌ Errore durante il salvataggio su Firestore: {e}")
-        return False
+    utente = costruisci_utente(dati)
+    s.volontari.append(utente)
+    s.salva_dati()
+    print("✅ Registrazione completata nel database locale.")
+    return True
 
 def utente_gia_registrato(email: str, cod_fiscale: str) -> bool:
     """Controlla se esiste già un utente registrato con l'email o codice fiscale."""
-    # Controllo collezione principale 'utenti'
-    try:
-        ref_utenti = db.collection("utenti")
-        if ref_utenti.document(cod_fiscale).get().exists:
-            print(f"❌ Codice fiscale già registrato in 'utenti'.")
+    from Sistema import Sistema
+    s = Sistema.get_instance()
+    if not s:
+        return False
+    cf_target = cod_fiscale.strip().upper()
+    email_target = email.strip().lower()
+    for v in s.volontari:
+        if v.cod_fiscale.strip().upper() == cf_target:
             return True
-        if ref_utenti.where("email", "==", email).get():
-            print(f"❌ Email già utilizzata in 'utenti'.")
+        if getattr(v, "email", "").strip().lower() == email_target:
             return True
-    except Exception as e:
-        print(f"⚠️ Errore controllo utenti: {e}")
-
-    # Fallback su eventuali collezioni legacy
-    collezioni_legacy = ["Volontario", "Referente", "Operatore_Sanitario"]
-    for collezione in collezioni_legacy:
-        try:
-            ref = db.collection(collezione)
-            if ref.document(cod_fiscale).get().exists:
-                print(f"❌ Codice fiscale già registrato in {collezione}.")
-                return True
-            if ref.where("email", "==", email).get():
-                print(f"❌ Email già utilizzata in {collezione}.")
-                return True
-        except Exception:
-            pass
-
     return False
 
-def recupera_utente_da_firestore(cod_fiscale: str):
-    doc = db.collection("utenti").document(cod_fiscale).get()
-    if doc.exists:
-        data = doc.to_dict()
-        # pyrefly: ignore [bad-argument-type]
-        return costruisci_utente(data)
-    else:
-        print("❌ Utente non trovato in Firestore.")
+def recupera_utente(cod_fiscale: str):
+    """Recupera l'utente dal database locale tramite codice fiscale."""
+    from Sistema import Sistema
+    s = Sistema.get_instance()
+    if s:
+        return s.get_volontario(cod_fiscale)
+    return None
+
+def login_utente(email: str, password: str) -> Optional[dict]:
+    """Esegue il login verificando email e password in locale."""
+    from Sistema import Sistema
+    s = Sistema.get_instance()
+    if not s:
         return None
-
-
-def login_utente(email: str, password: str, api_key: str) -> dict | None:
-    url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={api_key}"
-    payload = {
-        "email": email,
-        "password": password,
-        "returnSecureToken": True
-    }
-    try:
-        res = requests.post(url, json=payload)
-        res.raise_for_status()
-        data = res.json()
-        return data  # contiene idToken, refreshToken, localId, email, ecc.
-    except requests.exceptions.HTTPError as err:
-        print("❌ Login fallito:", err)
+    email_clean = email.strip().lower()
+    u = next((v for v in s.volontari if getattr(v, "email", "").strip().lower() == email_clean), None)
+    if not u:
         return None
+    pwd_hash = hash_password(password)
+    user_pwd = getattr(u, "password", "")
+    if not user_pwd or user_pwd == password or user_pwd == pwd_hash:
+        return {
+            "localId": u.cod_fiscale,
+            "email": u.email,
+            "nome": u.nome,
+            "ruolo": u.ruolo
+        }
+    return None
 
-
-def send_password_reset_email(email: str, api_key: str):
-    url = f"https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key={api_key}"
-    payload = {
-        "requestType": "PASSWORD_RESET",
-        "email": email
-    }
-    try:
-        response = requests.post(url, json=payload)
-        response.raise_for_status()
-        print("✅ Email per il reset della password inviata con successo.")
-        return True
-    except requests.exceptions.HTTPError as err:
-        print(f"❌ Errore durante l'invio dell'email di reset: {err}")
-        return False
+def send_password_reset_email(email: str) -> bool:
+    """Invia un'email di reset tramite EmailService."""
+    from EmailService import EmailService
+    from Sistema import Sistema
+    s = Sistema.get_instance()
+    u = None
+    if s:
+        u = next((v for v in s.volontari if getattr(v, "email", "").strip().lower() == email.strip().lower()), None)
+    nome = u.nome if u else "Volontario"
+    return EmailService.inviaMail(
+        destinatario=email,
+        messaggio=f"Gentile {nome},\nUtilizza questo messaggio per confermare il ripristino della tua password.",
+        oggetto="🔐 Reset Password CRI"
+    )

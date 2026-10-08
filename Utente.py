@@ -62,7 +62,7 @@ class Utente:
 
     def to_dict(self) -> dict:
         """
-        Serializza l'oggetto in un dizionario compatibile con i documenti Firestore.
+        Serializza l'oggetto in un dizionario per il salvataggio persistente nel database locale JSON.
         """
         return {
             "cod_fiscale": self.cod_fiscale,
@@ -72,6 +72,7 @@ class Utente:
             "data_nascita": self.data_nascita,
             "telefono": self.telefono,
             "ruolo": self.ruolo,
+            "password": getattr(self, "password", ""),
             "comitato_appartenenza": self.comitato_appartenenza
         }
 

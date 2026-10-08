@@ -125,9 +125,8 @@ class Corso:
         self.referente = referente
         print(f"Referente {referente.nome} assegnato al corso {self.nome}.")
 
-    def aggiorna_firestore(self):
-        from FirebaseConfig import db
-        db.collection("corsi").document(self.id).set({
+    def to_dict(self) -> dict:
+        return {
             "id": self.id,
             "dataFine": self.dataFine,
             "dataInizio": self.dataInizio,
@@ -135,10 +134,26 @@ class Corso:
             "qualificaRilasciata": self.qualificaRilasciata,
             "stato": self.stato,
             "titolo": self.titolo,
-            "direttore": self.direttore,
-            "luogo": self.luogo,
-            "orari": self.orari,
-            "requisitiIscrizione": self.requisitiIscrizione,
-            "maxPartecipanti": self.maxPartecipanti,
-            "partecipanti_ids": [str(p.cod_fiscale) for p in self.partecipanti]
-        }, merge=True)
+            "nome": self.nome,
+            "esito": self.esito,
+            "checklist": self.checklist,
+            "scadenza": self.scadenza,
+            "direttore": getattr(self, "direttore", ""),
+            "luogo": getattr(self, "luogo", ""),
+            "orari": getattr(self, "orari", ""),
+            "requisitiIscrizione": getattr(self, "requisitiIscrizione", ""),
+            "maxPartecipanti": getattr(self, "maxPartecipanti", 20),
+            "partecipanti_ids": [str(p.cod_fiscale) for p in self.partecipanti if hasattr(p, "cod_fiscale")],
+            "certificati_ids": getattr(self, "certificati_ids", [])
+        }
+
+    def aggiorna_db(self):
+        """Salva lo stato corrente del corso nel database locale JSON."""
+        from Sistema import Sistema
+        s = Sistema.get_instance()
+        if s:
+            s.salva_dati()
+
+    def aggiorna_firestore(self):
+        """Metodo di compatibilità: salva lo stato nel database locale JSON."""
+        self.aggiorna_db()

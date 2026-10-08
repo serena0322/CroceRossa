@@ -22,8 +22,8 @@ class AppController:
                 email = session.get("email", "").strip().lower()
                 print(f"🔄 Ripristino sessione automatica per {cf or email}...")
 
-                # Sincronizza i dati da Firebase
-                self.sistema.sincronizza_con_firebase()
+                # Carica i dati dal database locale JSON
+                self.sistema.carica_dati()
 
                 # Cerca l'utente autenticato per codice fiscale o email
                 user = None
@@ -38,7 +38,7 @@ class AppController:
                     self.apri_main()
                     return
                 else:
-                    print("⚠️ Profilo utente non trovato in Firebase. Richiedo nuovo login.")
+                    print("⚠️ Profilo utente non trovato nel database locale. Richiedo nuovo login.")
                     clear_session()
             except Exception as e:
                 print(f"⚠️ Errore ripristino sessione: {e}")

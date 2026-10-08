@@ -110,14 +110,23 @@ class Mezzo:
         self._disponibile = False
         print(f"🗑️ Veicolo {self.targa} radiato.")
 
-    def aggiorna_firestore(self):
-        """Salva lo stato corrente del mezzo su Cloud Firestore."""
-        from FirebaseConfig import db
-        db.collection("mezzi").document(self.targa).set({
+    def to_dict(self) -> dict:
+        return {
             "targa": self.targa,
             "tipo": self.tipo,
             "chilometraggioTotale": self.chilometraggioTotale,
             "stato": self.stato,
             "dataScadenzaAssicurazione": self.dataScadenzaAssicurazione,
             "disponibile": self.disponibile
-        }, merge=True)
+        }
+
+    def aggiorna_db(self):
+        """Salva lo stato corrente del mezzo nel database locale JSON."""
+        from Sistema import Sistema
+        s = Sistema.get_instance()
+        if s:
+            s.salva_dati()
+
+    def aggiorna_firestore(self):
+        """Metodo di compatibilità: salva lo stato nel database locale JSON."""
+        self.aggiorna_db()

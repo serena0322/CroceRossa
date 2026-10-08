@@ -12,7 +12,10 @@ if TYPE_CHECKING:
     from Checklist import Checklist
 
 class Sistema:
+    _instance: Optional[Sistema] = None
+
     def __init__(self):
+        Sistema._instance = self
         self.volontari: list[Volontario] = []
         self.corsi: list[Corso] = []
         self.turni: list[Turno] = []
@@ -21,47 +24,247 @@ class Sistema:
         self.logged_user: Optional[Volontario] = None
         self.promemoria_inviati: set[str] = set()
 
-    def sincronizza_con_firebase(self):
+    @classmethod
+    def get_instance(cls) -> Optional[Sistema]:
+        return cls._instance
+
+    @staticmethod
+    def _get_db_path(file_path: str = "database.json") -> str:
+        import os
+        if os.path.isabs(file_path):
+            return file_path
+        return os.path.join(os.path.dirname(os.path.abspath(__file__)), file_path)
+
+    @classmethod
+    def get_seed_data(cls) -> dict:
+        """Restituisce il dataset iniziale predefinito per la Croce Rossa Italiana."""
+        return {
+            "utenti": [
+                {
+                    "cod_fiscale": "VRDGPP75C10H501K",
+                    "nome": "Giuseppe",
+                    "cognome": "Verdi",
+                    "email": "giuseppe.verdi@cri.it",
+                    "data_nascita": "10/03/1975",
+                    "telefono": "3331234567",
+                    "ruolo": "referente",
+                    "password": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
+                    "monteOreTotale": 150,
+                    "patenti": ["B", "C1"],
+                    "qualifiche": ["Soccorritore 118", "BLSD", "Istruttore"],
+                    "comitato_appartenenza": "Comitato Centrale CRI"
+                },
+                {
+                    "cod_fiscale": "RSSMRA85M01H501Z",
+                    "nome": "Mario",
+                    "cognome": "Rossi",
+                    "email": "mario.rossi@cri.it",
+                    "data_nascita": "01/01/1985",
+                    "telefono": "3339876543",
+                    "ruolo": "volontario",
+                    "password": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
+                    "monteOreTotale": 45,
+                    "patenti": ["B", "C1"],
+                    "qualifiche": ["Soccorritore 118", "BLSD"],
+                    "numero_patente": "U1482910A",
+                    "scadenza_patente": "2030-05-15",
+                    "comitato_appartenenza": "Comitato Centrale CRI"
+                },
+                {
+                    "cod_fiscale": "GLNSRN03A62I156Z",
+                    "nome": "Serena",
+                    "cognome": "Giuliani",
+                    "email": "serena.giuliani@cri.it",
+                    "data_nascita": "22/01/2003",
+                    "telefono": "3335557788",
+                    "ruolo": "volontario",
+                    "password": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
+                    "monteOreTotale": 30,
+                    "patenti": ["B"],
+                    "qualifiche": ["Soccorritore 118"],
+                    "numero_patente": "U1984210T",
+                    "scadenza_patente": "2031-01-22",
+                    "comitato_appartenenza": "Comitato Centrale CRI"
+                }
+            ],
+            "mezzi": [
+                {
+                    "targa": "CRI 101 AA",
+                    "tipo": "Ambulanza Emergenza",
+                    "chilometraggioTotale": 45000,
+                    "stato": "Disponibile",
+                    "dataScadenzaAssicurazione": "2026-12-31",
+                    "disponibile": True
+                },
+                {
+                    "targa": "CRI 202 BB",
+                    "tipo": "Automedica",
+                    "chilometraggioTotale": 28000,
+                    "stato": "Disponibile",
+                    "dataScadenzaAssicurazione": "2026-11-30",
+                    "disponibile": True
+                },
+                {
+                    "targa": "CRI 999 ZZ",
+                    "tipo": "Ambulanza Base",
+                    "chilometraggioTotale": 82000,
+                    "stato": "Disponibile",
+                    "dataScadenzaAssicurazione": "2027-05-15",
+                    "disponibile": True
+                }
+            ],
+            "corsi": [
+                {
+                    "id": "C01",
+                    "titolo": "BLSD - Supporto di Base alle Funzioni Vitali",
+                    "nome": "BLSD - Supporto di Base alle Funzioni Vitali",
+                    "dataInizio": "2026-10-25",
+                    "dataFine": "2026-10-26",
+                    "esito": True,
+                    "checklist": [],
+                    "scadenza": "2026-10-20",
+                    "direttore": "Dott. Mario Rossi",
+                    "luogo": "Sede CRI Centrale",
+                    "orari": "09:00 - 17:00",
+                    "requisitiIscrizione": "Volontario CRI",
+                    "maxPartecipanti": 15,
+                    "partecipanti_ids": ["RSSMRA85M01H501Z"],
+                    "certificati_ids": ["RSSMRA85M01H501Z"]
+                },
+                {
+                    "id": "C02",
+                    "titolo": "Soccorso Traumi Avanzato (PHTC)",
+                    "nome": "Soccorso Traumi Avanzato (PHTC)",
+                    "dataInizio": "2026-11-10",
+                    "dataFine": "2026-11-12",
+                    "esito": False,
+                    "checklist": [],
+                    "scadenza": "2026-11-05",
+                    "direttore": "Dott. Giuseppe Verdi",
+                    "luogo": "Polo Formativo Regionale",
+                    "orari": "08:30 - 18:00",
+                    "requisitiIscrizione": "Qualifica Soccorritore 118",
+                    "maxPartecipanti": 12,
+                    "partecipanti_ids": ["GLNSRN03A62I156Z"],
+                    "certificati_ids": []
+                },
+                {
+                    "id": "C03",
+                    "titolo": "Guida Sicura e Mezzi di Emergenza",
+                    "nome": "Guida Sicura e Mezzi di Emergenza",
+                    "dataInizio": "2026-11-20",
+                    "dataFine": "2026-11-22",
+                    "esito": False,
+                    "checklist": [],
+                    "scadenza": "2026-11-15",
+                    "direttore": "Istr. Andrea Bianchi",
+                    "luogo": "Pista Prove CRI",
+                    "orari": "09:00 - 16:30",
+                    "requisitiIscrizione": "Patente B da almeno 2 anni",
+                    "maxPartecipanti": 8,
+                    "partecipanti_ids": [],
+                    "certificati_ids": []
+                }
+            ],
+            "turni": [
+                {
+                    "id": "T101",
+                    "data": "2026-10-15",
+                    "oraInizio": "08:00",
+                    "oraFine": "14:00",
+                    "tipoServizio": "Emergenza 118",
+                    "luogoPrelevamento": "Sede CRI",
+                    "luogoDestinazione": "Ospedale Maggiore",
+                    "patenteRichiesta": "B",
+                    "stato": "Aperto",
+                    "personeRichieste": 2,
+                    "mezzo_targa": "CRI 101 AA",
+                    "volontari_ids": ["RSSMRA85M01H501Z"],
+                    "volontari_ruoli": {"RSSMRA85M01H501Z": "Autista A"},
+                    "checklist": False
+                },
+                {
+                    "id": "T102",
+                    "data": "2026-10-16",
+                    "oraInizio": "14:00",
+                    "oraFine": "20:00",
+                    "tipoServizio": "Trasporto Sanitario Ordinario",
+                    "luogoPrelevamento": "Clinica San Carlo",
+                    "luogoDestinazione": "Domicilio Paziente",
+                    "patenteRichiesta": "B",
+                    "stato": "Aperto",
+                    "personeRichieste": 2,
+                    "mezzo_targa": "CRI 202 BB",
+                    "volontari_ids": [],
+                    "volontari_ruoli": {},
+                    "checklist": False
+                },
+                {
+                    "id": "T103",
+                    "data": "2026-10-17",
+                    "oraInizio": "20:00",
+                    "oraFine": "02:00",
+                    "tipoServizio": "Guardia Notturna Emergenza",
+                    "luogoPrelevamento": "Sede CRI",
+                    "luogoDestinazione": "Territorio Comunale",
+                    "patenteRichiesta": "B",
+                    "stato": "Aperto",
+                    "personeRichieste": 3,
+                    "mezzo_targa": "CRI 999 ZZ",
+                    "volontari_ids": [],
+                    "volontari_ruoli": {},
+                    "checklist": False
+                }
+            ],
+            "checklists": [],
+            "reports": []
+        }
+
+    def carica_dati(self, file_path: str = "database.json") -> bool:
+        """Carica l'intero stato del sistema dal database JSON locale."""
+        import os
+        import json
+        path = self._get_db_path(file_path)
+        if not os.path.exists(path) or os.path.getsize(path) < 10:
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(self.get_seed_data(), f, indent=2, ensure_ascii=False)
+
         try:
-            from FirebaseConfig import db
+            with open(path, "r", encoding="utf-8") as f:
+                dati_totali = json.load(f)
+
             from UtenteFactory import costruisci_utente
             from Turno import Turno
             from Mezzo import Mezzo
             from Corso import Corso
-            
-            # 1. Sincronizza utenti
+
+            # 1. Carica utenti
             self.volontari = []
-            utenti_docs = db.collection("utenti").get()
-            for doc in utenti_docs:
-                dati = doc.to_dict() or {}
-                dati["cod_fiscale"] = doc.id
+            for dati in dati_totali.get("utenti", []):
                 try:
                     user_obj = costruisci_utente(dati)
                     self.volontari.append(user_obj)
                 except Exception as e:
-                    print(f"Errore parsing utente {doc.id}: {e}")
-                    
-            # 2. Sincronizza mezzi
+                    print(f"Errore parsing utente {dati.get('cod_fiscale')}: {e}")
+
+            # 2. Carica mezzi
             self.mezzi = []
-            mezzi_docs = db.collection("mezzi").get()
-            for doc in mezzi_docs:
-                dati = doc.to_dict() or {}
+            for dati in dati_totali.get("mezzi", []):
                 m = Mezzo(
-                    targa=doc.id,
+                    targa=dati.get("targa", ""),
                     tipo=dati.get("tipo", "Ambulanza"),
                     chilometraggioTotale=int(dati.get("chilometraggioTotale", 0) or dati.get("chilometraggio", 0)),
                     stato=dati.get("stato", "Disponibile"),
                     dataScadenzaAssicurazione=dati.get("dataScadenzaAssicurazione", "")
                 )
+                m.disponibile = bool(dati.get("disponibile", True))
                 self.mezzi.append(m)
-                
-            # 3. Sincronizza corsi
+
+            # 3. Carica corsi
             self.corsi = []
-            corsi_docs = db.collection("corsi").get()
-            for doc in corsi_docs:
-                dati = doc.to_dict() or {}
+            for dati in dati_totali.get("corsi", []):
                 c = Corso(
-                    id=doc.id,
+                    id=str(dati.get("id") or ""),
                     titolo=str(dati.get("titolo") or dati.get("nome") or ""),
                     nome=str(dati.get("nome") or dati.get("titolo") or ""),
                     dataInizio=str(dati.get("dataInizio") or ""),
@@ -75,14 +278,13 @@ class Sistema:
                     requisitiIscrizione=str(dati.get("requisitiIscrizione") or ""),
                     maxPartecipanti=int(dati.get("maxPartecipanti", 20) or 20)
                 )
-                
-                # Associa partecipanti e certificati
+
                 partecipanti_ids = dati.get("partecipanti_ids", []) or []
                 certificati_ids = dati.get("certificati_ids", []) or dati.get("completati_ids", []) or []
                 c.certificati_ids = certificati_ids
 
                 for p_id in partecipanti_ids:
-                    v = self.get_volontario(p_id)
+                    v = self.get_volontario(str(p_id))
                     if v:
                         if v not in c.partecipanti:
                             c.partecipanti.append(v)
@@ -90,14 +292,13 @@ class Sistema:
                             v.formazione.append(c)
 
                 for cert_id in certificati_ids:
-                    v = self.get_volontario(cert_id)
+                    v = self.get_volontario(str(cert_id))
                     if v:
                         if c not in v.corsi_frequentati:
                             v.corsi_frequentati.append(c)
                         if c in v.formazione:
                             v.formazione.remove(c)
 
-                # Associa a tutti i volontari se presente nelle loro qualifiche o corsi frequentati salvati
                 for v in self.volontari:
                     v_qualifiche = [str(q).strip().upper() for q in getattr(v, "qualifiche", [])]
                     v_cf_ids = getattr(v, "corsi_frequentati_ids", [])
@@ -108,16 +309,14 @@ class Sistema:
                             v.corsi_frequentati.append(c)
                         if c in v.formazione:
                             v.formazione.remove(c)
-                
+
                 self.corsi.append(c)
 
-            # 4. Sincronizza turni
+            # 4. Carica turni
             self.turni = []
-            turni_docs = db.collection("turni").get()
-            for doc in turni_docs:
-                dati = doc.to_dict() or {}
+            for dati in dati_totali.get("turni", []):
                 t = Turno(
-                    id=doc.id,
+                    id=str(dati.get("id") or ""),
                     data=str(dati.get("data") or ""),
                     luogoDestinazione=str(dati.get("luogoDestinazione") or dati.get("luogo") or ""),
                     luogoPrelevamento=str(dati.get("luogoPrelevamento") or dati.get("luogo") or ""),
@@ -135,8 +334,7 @@ class Sistema:
                     checklist=bool(dati.get("checklist", False))
                 )
                 t.persone_richieste = dati.get("persone_richieste") or {"volontario": t.personeRichieste}
-                
-                # Associa i volontari iscritti
+
                 volontari_ids = dati.get("volontari_ids", [])
                 t.volontari_ruoli = dati.get("volontari_ruoli", {})
                 for v_id in volontari_ids:
@@ -146,8 +344,7 @@ class Sistema:
                             t.volontari_assegnati.append(v)
                         if hasattr(v, "turni_assegnati") and t not in v.turni_assegnati:
                             v.turni_assegnati.append(t)
-                
-                # Associa mezzo se presente
+
                 mezzo_targa = str(dati.get("mezzo_targa") or "").strip()
                 if mezzo_targa:
                     mezzo_obj = next((m for m in self.mezzi if m.targa.strip().upper() == mezzo_targa.upper()), None)
@@ -155,12 +352,104 @@ class Sistema:
                         t.mezzo = mezzo_obj
                         if t not in mezzo_obj.turni_assegnati:
                             mezzo_obj.turni_assegnati.append(t)
-                        
+
                 self.turni.append(t)
-                
-            print(f"🔄 Sincronizzazione Firebase completata: {len(self.volontari)} utenti, {len(self.turni)} turni.")
+
+            print(f"🔄 Database locale JSON caricato: {len(self.volontari)} utenti, {len(self.turni)} turni, {len(self.mezzi)} mezzi, {len(self.corsi)} corsi.")
+            return True
         except Exception as e:
-            print(f"⚠️ Errore durante la sincronizzazione con Firebase: {e}")
+            print(f"⚠️ Errore durante il caricamento del database JSON: {e}")
+            return False
+
+    def salva_dati(self, file_path: str = "database.json") -> bool:
+        """Salva lo stato corrente del sistema sul file JSON specificato."""
+        import json
+        try:
+            path = self._get_db_path(file_path)
+            data = {
+                "utenti": [v.to_dict() for v in self.volontari if hasattr(v, "to_dict")],
+                "mezzi": [
+                    {
+                        "targa": m.targa,
+                        "tipo": m.tipo,
+                        "chilometraggioTotale": m.chilometraggioTotale,
+                        "stato": m.stato,
+                        "dataScadenzaAssicurazione": getattr(m, "dataScadenzaAssicurazione", ""),
+                        "disponibile": getattr(m, "disponibile", True)
+                    }
+                    for m in self.mezzi
+                ],
+                "corsi": [
+                    {
+                        "id": str(c.id),
+                        "titolo": str(c.titolo or c.nome or ""),
+                        "nome": str(c.nome or c.titolo or ""),
+                        "dataInizio": str(c.dataInizio or ""),
+                        "dataFine": str(c.dataFine or ""),
+                        "esito": bool(c.esito),
+                        "checklist": c.checklist,
+                        "scadenza": str(getattr(c, "scadenza", "") or ""),
+                        "direttore": str(getattr(c, "direttore", "") or ""),
+                        "luogo": str(getattr(c, "luogo", "") or ""),
+                        "orari": str(getattr(c, "orari", "") or ""),
+                        "requisitiIscrizione": str(getattr(c, "requisitiIscrizione", "") or ""),
+                        "maxPartecipanti": int(getattr(c, "maxPartecipanti", 20) or 20),
+                        "partecipanti_ids": [str(p.cod_fiscale) for p in c.partecipanti if hasattr(p, "cod_fiscale")],
+                        "certificati_ids": getattr(c, "certificati_ids", [])
+                    }
+                    for c in self.corsi
+                ],
+                "turni": [
+                    {
+                        "id": str(t.id),
+                        "data": str(t.data or ""),
+                        "luogoDestinazione": str(t.luogoDestinazione or ""),
+                        "luogoPrelevamento": str(t.luogoPrelevamento or ""),
+                        "oraInizio": str(t.oraInizio or ""),
+                        "oraFine": str(t.oraFine or ""),
+                        "patenteRichiesta": str(t.patenteRichiesta or ""),
+                        "paziente": str(t.paziente or ""),
+                        "paziente_nome": str(getattr(t, "paziente_nome", "") or ""),
+                        "paziente_cognome": str(getattr(t, "paziente_cognome", "") or ""),
+                        "paziente_cf": str(getattr(t, "paziente_cf", "") or ""),
+                        "personeRichieste": int(t.personeRichieste or 1),
+                        "persone_richieste": getattr(t, "persone_richieste", {}),
+                        "stato": str(t.stato or "Proposto"),
+                        "tipoServizio": str(t.tipoServizio or ""),
+                        "mezzo_targa": str(getattr(t, "mezzo_targa", "") or (t.mezzo.targa if t.mezzo else "")),
+                        "checklist": bool(getattr(t, "checklist", False)),
+                        "volontari_ids": [str(v.cod_fiscale) for v in t.volontari_assegnati if hasattr(v, "cod_fiscale")],
+                        "volontari_ruoli": getattr(t, "volontari_ruoli", {})
+                    }
+                    for t in self.turni
+                ],
+                "checklists": [
+                    {
+                        "id": getattr(cl, "id", ""),
+                        "controlliMeccanici": getattr(cl, "controlliMeccanici", []),
+                        "dispositiviMediciRichiesti": getattr(cl, "dispositiviMediciRichiesti", []),
+                        "dispositiviPresenti": getattr(cl, "dispositiviPresenti", []),
+                        "risposte": getattr(cl, "risposte", {}),
+                        "ruoloCompilatore": getattr(cl, "ruoloCompilatore", ""),
+                        "idoneo": getattr(cl, "idoneo", True)
+                    }
+                    for cl in self.checklist
+                ]
+            }
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+            return True
+        except Exception as e:
+            print(f"⚠️ Errore salvataggio dati su {file_path}: {e}")
+            return False
+
+    def sincronizza_con_firebase(self):
+        """Metodo di compatibilità: carica i dati dal database locale JSON."""
+        return self.carica_dati()
+
+    def sincronizza_con_db(self):
+        """Sincronizza in memoria lo stato dal database locale JSON."""
+        return self.carica_dati()
 
     # --- Login / profilo ---
     def login(self, cod_fiscale: str) -> bool:

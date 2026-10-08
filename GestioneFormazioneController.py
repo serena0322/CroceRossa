@@ -19,20 +19,26 @@ class GestioneFormazioneController:
             print("⚠️ Errore: Corso ID vuoto.")
             return
         try:
-            from FirebaseConfig import db
-            # Update matching course document in Firebase to associate verified members
-            corso_ref = db.collection("corsi").document(s)
-            doc = corso_ref.get()
-            if doc.exists:
-                dati = doc.to_dict() or {}
-                vids = dati.get("partecipanti_ids", [])
-                for v in volontari:
-                    if v.cod_fiscale not in vids:
-                        vids.append(v.cod_fiscale)
-                corso_ref.update({"partecipanti_ids": vids})
+            from Sistema import Sistema
+            sys_inst = Sistema.get_instance()
+            if sys_inst:
+                c_obj = next((c for c in sys_inst.corsi if str(c.id) == str(s)), None)
+                if c_obj:
+                    for v in volontari:
+                        if v not in c_obj.partecipanti:
+                            c_obj.partecipanti.append(v)
+                        if not hasattr(c_obj, "certificati_ids") or c_obj.certificati_ids is None:
+                            c_obj.certificati_ids = []
+                        if v.cod_fiscale not in c_obj.certificati_ids:
+                            c_obj.certificati_ids.append(v.cod_fiscale)
+                        if c_obj not in v.corsi_frequentati:
+                            v.corsi_frequentati.append(c_obj)
+                        if c_obj in v.formazione:
+                            v.formazione.remove(c_obj)
+                sys_inst.salva_dati()
             print(f"[GestioneFormazioneController] attestaPartecipazione per corso {s} completato.")
         except Exception as e:
-            print(f"⚠️ Errore attestaPartecipazione in Firebase: {e}")
+            print(f"⚠️ Errore attestaPartecipazione nel database locale: {e}")
 
     def creaCorso(self, c: Corso) -> bool:
         if not c.id:
@@ -40,40 +46,35 @@ class GestioneFormazioneController:
             c.id = str(uuid.uuid4())[:8].upper()
             c.nome = c.nome if c.nome else c.titolo
         try:
-            from FirebaseConfig import db
-            db.collection("corsi").document(c.id).set({
-                "id": c.id,
-                "titolo": c.titolo,
-                "nome": c.nome,
-                "dataInizio": c.dataInizio,
-                "dataFine": c.dataFine,
-                "esito": c.esito,
-                "checklist": c.checklist,
-                "scadenza": c.scadenza,
-                "direttore": getattr(c, "direttore", ""),
-                "luogo": getattr(c, "luogo", ""),
-                "orari": getattr(c, "orari", ""),
-                "requisitiIscrizione": getattr(c, "requisitiIscrizione", ""),
-                "maxPartecipanti": getattr(c, "maxPartecipanti", 20),
-                "partecipanti_ids": [p.cod_fiscale for p in c.partecipanti]
-            }, merge=True)
-            print(f"[GestioneFormazioneController] creaCorso {c.id} salvato su Firebase.")
+            from Sistema import Sistema
+            sys_inst = Sistema.get_instance()
+            if sys_inst:
+                existing = next((x for x in sys_inst.corsi if str(x.id) == str(c.id)), None)
+                if not existing:
+                    sys_inst.corsi.append(c)
+                sys_inst.salva_dati()
+            print(f"[GestioneFormazioneController] creaCorso {c.id} salvato nel database locale.")
             return True
         except Exception as e:
-            print(f"⚠️ Errore creaCorso in Firebase: {e}")
+            print(f"⚠️ Errore creaCorso nel database locale: {e}")
             return False
 
     def eliminaCorso(self, s: str) -> bool:
         try:
-            from FirebaseConfig import db
-            db.collection("corsi").document(s).delete()
-            print(f"[GestioneFormazioneController] eliminaCorso {s} cancellato da Firebase.")
+            from Sistema import Sistema
+            sys_inst = Sistema.get_instance()
+            if sys_inst:
+                sys_inst.corsi = [c for c in sys_inst.corsi if str(c.id) != str(s)]
+                sys_inst.salva_dati()
+            print(f"[GestioneFormazioneController] eliminaCorso {s} cancellato dal database locale.")
             return True
         except Exception as e:
-            print(f"⚠️ Errore eliminaCorso in Firebase: {e}")
+            print(f"⚠️ Errore eliminaCorso nel database locale: {e}")
             return False
 
     def iscriviVolontario(self, v: Volontario, s: Any, sistema=None) -> bool:
+        from Sistema import Sistema
+        sys_inst = sistema or Sistema.get_instance()
         c_obj = s if hasattr(s, "id") and hasattr(s, "maxPartecipanti") else None
         s_id = str(getattr(s, "id", s))
 
@@ -89,8 +90,8 @@ class GestioneFormazioneController:
                 return False
 
         # 2. Verifica capienza su oggetto in memoria se presente in sistema
-        elif sistema and getattr(sistema, "corsi", None):
-            c_mem = next((c for c in sistema.corsi if str(c.id) == s_id), None)
+        elif sys_inst and getattr(sys_inst, "corsi", None):
+            c_mem = next((c for c in sys_inst.corsi if str(c.id) == s_id), None)
             if c_mem:
                 if c_mem.is_completo() and v not in c_mem.partecipanti:
                     print(f"⚠️ Impossibile iscriversi: corso '{c_mem.titolo or c_mem.nome}' al completo ({c_mem.maxPartecipanti} posti).")
@@ -101,90 +102,37 @@ class GestioneFormazioneController:
                     print(f"⚠️ {e}")
                     return False
 
-        try:
-            from FirebaseConfig import db
-            corso_ref = db.collection("corsi").document(s_id)
-            doc = corso_ref.get()
-            if doc.exists:
-                dati = doc.to_dict() or {}
-                vids = dati.get("partecipanti_ids", [])
-                max_p = int(dati.get("maxPartecipanti", 20) or 20)
-                cf_str = v.cod_fiscale
-                if cf_str not in vids:
-                    if len(vids) >= max_p:
-                        print(f"⚠️ Impossibile iscrivere volontario: capienza massima raggiunta ({max_p} posti).")
-                        return False
-                    vids.append(cf_str)
-                    corso_ref.update({"partecipanti_ids": vids})
-            return True
-        except Exception as e:
-            print(f"⚠️ Errore iscriviVolontario in Firebase: {e}")
-            return False
+        if sys_inst:
+            sys_inst.salva_dati()
+        return True
 
     def disiscriviVolontario(self, v: Volontario, s: str) -> bool:
         """Rimuove l'iscrizione del volontario a un corso non ancora completato."""
         if not v or not s:
             return False
-        try:
-            from FirebaseConfig import db
-            corso_ref = db.collection("corsi").document(s)
-            doc = corso_ref.get()
-            if doc.exists:
-                dati = doc.to_dict() or {}
-                vids = dati.get("partecipanti_ids", [])
-                cf_str = v.cod_fiscale
-                if cf_str in vids:
-                    vids.remove(cf_str)
-                    corso_ref.update({"partecipanti_ids": vids})
-        except Exception as e:
-            print(f"⚠️ Errore disiscriviVolontario su Firebase: {e}")
 
-        # Aggiornamento locale
-        c_obj = next((c for c in getattr(v, "formazione", []) if str(c.id) == s), None)
-        if c_obj:
-            v.disiscriviti_dal_corso(c_obj)
-        if hasattr(v, "aggiorna_firestore"):
-            try:
-                v.aggiorna_firestore()
-            except Exception:
-                pass
+        from Sistema import Sistema
+        sys_inst = Sistema.get_instance()
+        if sys_inst:
+            c_mem = next((c for c in sys_inst.corsi if str(c.id) == str(s)), None)
+            if c_mem and v in c_mem.partecipanti:
+                c_mem.partecipanti.remove(v)
+            c_obj = next((c for c in getattr(v, "formazione", []) if str(c.id) == str(s)), None)
+            if c_obj:
+                v.disiscriviti_dal_corso(c_obj)
+            sys_inst.salva_dati()
         return True
 
     def modificaCorso(self, s: str, c: Corso) -> bool:
         return self.creaCorso(c)
 
     def visualizzaCatalog(self, sistema=None) -> List[Corso]:
-        """Restituisce l'elenco dei corsi di formazione dal sistema o da Firestore."""
-        if sistema and getattr(sistema, "corsi", None):
-            return list(sistema.corsi)
-        try:
-            from FirebaseConfig import db
-            from Corso import Corso
-            corsi = []
-            docs = db.collection("corsi").get()
-            for doc in docs:
-                dati = doc.to_dict() or {}
-                c = Corso(
-                    id=doc.id,
-                    titolo=str(dati.get("titolo") or dati.get("nome") or ""),
-                    nome=str(dati.get("nome") or dati.get("titolo") or ""),
-                    dataInizio=str(dati.get("dataInizio") or ""),
-                    dataFine=str(dati.get("dataFine") or ""),
-                    esito=bool(dati.get("esito", False)),
-                    checklist=dati.get("checklist", []),
-                    scadenza=str(dati.get("scadenza") or ""),
-                    direttore=str(dati.get("direttore") or ""),
-                    luogo=str(dati.get("luogo") or ""),
-                    orari=str(dati.get("orari") or ""),
-                    requisitiIscrizione=str(dati.get("requisitiIscrizione") or ""),
-                    maxPartecipanti=int(dati.get("maxPartecipanti", 20) or 20)
-                )
-                c.certificati_ids = dati.get("certificati_ids", []) or []
-                corsi.append(c)
-            return corsi
-        except Exception as e:
-            print(f"⚠️ Errore visualizzaCatalog: {e}")
-            return []
+        """Restituisce l'elenco dei corsi di formazione dal sistema."""
+        from Sistema import Sistema
+        sys_inst = sistema or Sistema.get_instance()
+        if sys_inst and getattr(sys_inst, "corsi", None):
+            return list(sys_inst.corsi)
+        return []
 
     def visualizzaCatalogo(self, sistema=None) -> List[Corso]:
         """Alias in italiano per visualizzaCatalog (UML)."""

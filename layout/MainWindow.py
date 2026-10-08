@@ -351,7 +351,7 @@ class ModificaTurnoDialog(QDialog):
         try:
             turno.aggiorna_firestore()
         except Exception as e:
-            print(f"⚠️ Errore aggiornamento turno in Firestore: {e}")
+            print(f"⚠️ Errore aggiornamento turno nel database: {e}")
 
 
 class AssegnaMezzoDialog(QDialog):
@@ -1343,7 +1343,7 @@ class SchedaVolontarioDialog(QDialog):
                 QMessageBox.information(self, "Ruolo Aggiornato", f"✅ Ruolo di {self.volontario.get_nome_completo()} aggiornato a '{nuovo}'.")
                 self.accept()
             except Exception as e:
-                QMessageBox.critical(self, "Errore", f"❌ Errore aggiornamento ruolo su Firebase: {e}")
+                QMessageBox.critical(self, "Errore", f"❌ Errore aggiornamento ruolo nel database: {e}")
 
     def aggiungi_qualifica_o_spec(self):
         opzioni_tipo = ["Patente", "Qualifica", "Specializzazione Sanitaria"]
@@ -1439,15 +1439,15 @@ class MainWindow(QWidget):
         # Preserve the logged in user retrieved from login
         prev_logged_user = self.sistema.logged_user
         
-        # Synchronize with Firebase Firestore only if requested or if system has no volunteers yet
+        # Sincronizza con il database locale JSON
         if sync_on_start or not self.sistema.volontari:
-            self.sistema.sincronizza_con_firebase()
+            self.sistema.carica_dati()
         
         # If the database sync returned no volunteers, populate with local demo data as fallback
         if not self.sistema.volontari:
             self.sistema = self.setup_sistema()
             
-        # Restore the logged-in user (re-pointing to the synced instance from Firebase)
+        # Restore the logged-in user (re-pointing to the synced instance from local database)
         if prev_logged_user:
             synced_user = self.sistema.get_volontario(prev_logged_user.cod_fiscale)
             if synced_user:
@@ -1659,7 +1659,7 @@ class MainWindow(QWidget):
 
         # Action Button: Refresh Data
         btn_refresh = QPushButton("🔄 Aggiorna Dati")
-        btn_refresh.setToolTip("Sincronizza in tempo reale i dati con Firebase Firestore")
+        btn_refresh.setToolTip("Ricarica i dati dal database locale JSON")
         btn_refresh.setStyleSheet("""
             QPushButton {
                 background-color: #2b3548;
@@ -1808,9 +1808,9 @@ class MainWindow(QWidget):
 
     def azione_ricarica_dati(self):
         try:
-            self.sistema.sincronizza_con_firebase()
+            self.sistema.carica_dati()
             self.update_ui()
-            self.mostra_toast("🔄 Dati sincronizzati con successo da Firebase!", tipo="success")
+            self.mostra_toast("🔄 Dati sincronizzati con successo dal database locale!", tipo="success")
         except Exception as e:
             self.mostra_toast(f"Errore sincronizzazione: {e}", tipo="error")
 
@@ -2645,7 +2645,7 @@ class MainWindow(QWidget):
             try:
                 self.sistema.logged_user.aggiorna_firestore()
             except Exception as e:
-                print(f"⚠️ Errore aggiornamento profilo volontario su Firebase: {e}")
+                print(f"⚠️ Errore aggiornamento profilo volontario nel database: {e}")
 
             self.update_ui()
             self.mostra_toast(f"✅ Iscrizione confermata al turno {turno.id} come {ruolo}!", tipo="success")
@@ -2669,7 +2669,7 @@ class MainWindow(QWidget):
             try:
                 self.sistema.logged_user.aggiorna_firestore()
             except Exception as e:
-                print(f"⚠️ Errore aggiornamento profilo su Firebase: {e}")
+                print(f"⚠️ Errore aggiornamento profilo nel database: {e}")
 
             self.update_ui()
             self.mostra_toast(f"❌ Iscrizione al turno {turno.id} annullata.", tipo="info")
@@ -3727,7 +3727,7 @@ class MainWindow(QWidget):
         try:
             turno.aggiorna_firestore()
         except Exception as e:
-            QMessageBox.critical(self, "Errore", f"Impossibile salvare le modifiche su Firebase: {e}")
+            QMessageBox.critical(self, "Errore", f"Impossibile salvare le modifiche nel database locale: {e}")
             self.popola_tabella_turni_admin()
 
     def on_mezzo_cell_changed(self, item):
@@ -3766,7 +3766,7 @@ class MainWindow(QWidget):
         try:
             mezzo.aggiorna_firestore()
         except Exception as e:
-            QMessageBox.critical(self, "Errore", f"Impossibile salvare su Firebase: {e}")
+            QMessageBox.critical(self, "Errore", f"Impossibile salvare nel database locale: {e}")
             self.popola_tabella_mezzi()
 
     def on_corso_cell_changed(self, item):
@@ -3803,7 +3803,7 @@ class MainWindow(QWidget):
         try:
             corso.aggiorna_firestore()
         except Exception as e:
-            QMessageBox.critical(self, "Errore", f"Impossibile salvare su Firebase: {e}")
+            QMessageBox.critical(self, "Errore", f"Impossibile salvare nel database locale: {e}")
     def crea_tab_rubrica(self, is_referente):
         widget = QWidget()
         layout = QVBoxLayout(widget)

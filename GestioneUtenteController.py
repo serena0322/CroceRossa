@@ -1,10 +1,10 @@
 import re
-from firebase_admin import auth
-from FirebaseConfig import db
+import hashlib
+import secrets
 
 class GestioneUtenteController:
     def __init__(self):
-        # Il controller gestisce le operazioni di business e dialoga con Firebase
+        # Il controller gestisce le operazioni di business e la persistenza locale
         pass
 
     def validaFormato(self, email: str, password: str) -> bool:
@@ -20,7 +20,7 @@ class GestioneUtenteController:
         if not re.match(regex_email, email):
             return False
         
-        # Firebase richiede password di almeno 6 caratteri
+        # Password di almeno 6 caratteri
         if len(password) < 6:
             return False
             
@@ -29,29 +29,37 @@ class GestioneUtenteController:
     def effettuaLogin(self, email: str, password: str, sistema=None) -> bool:
         """
         Gestisce il flusso di autenticazione.
-        Verifica prima i formati e poi interroga il backend.
+        Verifica prima i formati e poi controlla il database locale JSON.
         """
         if not self.validaFormato(email, password):
             print("❌ Formato email o password non valido.")
             return False
         
         try:
-            # Recupera l'utente tramite email su Firebase Auth
-            user = auth.get_user_by_email(email)
-            
-            # Verifica l'esistenza del profilo corrispondente su Firestore
-            user_doc = db.collection("utenti").document(user.uid).get()
-            if user_doc.exists:
-                dati_utente = user_doc.to_dict() or {}
-                nome_utente = dati_utente.get('nome', 'Volontario') 
-                
-                from UtenteFactory import costruisci_utente
-                logged_user = costruisci_utente(dati_utente)
-                if sistema:
-                    sistema.logged_user = logged_user
-                
-                print(f"✅ Login effettuato con successo. Benvenuto {nome_utente}")
-                return True
+            from Sistema import Sistema
+            sys_inst = sistema or Sistema.get_instance()
+            if not sys_inst:
+                print("❌ Istanza di Sistema non disponibile.")
+                return False
+
+            email_clean = email.strip().lower()
+            # Cerca l'utente per email oppure per codice fiscale
+            user = next((v for v in sys_inst.volontari if getattr(v, "email", "").strip().lower() == email_clean), None)
+            if not user:
+                user = next((v for v in sys_inst.volontari if getattr(v, "cod_fiscale", "").strip().upper() == email.strip().upper()), None)
+
+            if user:
+                user_pwd = getattr(user, "password", "")
+                pwd_hash = hashlib.sha256(password.encode("utf-8")).hexdigest()
+                # Verifica password (in chiaro o con hash SHA-256)
+                if not user_pwd or user_pwd == password or user_pwd == pwd_hash:
+                    sys_inst.logged_user = user
+                    nome_utente = user.nome or "Volontario"
+                    print(f"✅ Login effettuato con successo. Benvenuto {nome_utente}")
+                    return True
+                else:
+                    print("❌ Password non corretta.")
+                    return False
             else:
                 print("❌ Profilo utente non trovato nel database.")
                 return False
@@ -80,7 +88,7 @@ class GestioneUtenteController:
 
     def modificaProfilo(self, utente_aggiornato) -> bool:
         """
-        Riceve l'oggetto Utente modificato e aggiorna i record su Firebase.
+        Riceve l'oggetto Utente modificato e aggiorna i record nel database locale JSON.
         """
         # Estrae i dati dall'oggetto per la validazione
         if not self.validaDati(
@@ -93,13 +101,17 @@ class GestioneUtenteController:
             return False
             
         try:
-            # Aggiorna l'indirizzo email su Firebase Authentication (usa il codice fiscale come UID)
-            auth.update_user(utente_aggiornato.cod_fiscale, email=utente_aggiornato.email)
+            from Sistema import Sistema
+            sys_inst = Sistema.get_instance()
+            if sys_inst:
+                existing = sys_inst.get_volontario(utente_aggiornato.cod_fiscale)
+                if existing and existing is not utente_aggiornato:
+                    existing.aggiornaProfilo(utente_aggiornato)
+                elif not existing:
+                    sys_inst.volontari.append(utente_aggiornato)
+                sys_inst.salva_dati()
             
-            # Aggiorna il documento completo su Firestore usando il metodo to_dict() del modello
-            db.collection("utenti").document(utente_aggiornato.cod_fiscale).update(utente_aggiornato.to_dict())
-            
-            print("✅ Profilo aggiornato correttamente su tutte le piattaforme.")
+            print("✅ Profilo aggiornato correttamente nel database locale.")
             return True
             
         except Exception as e:
@@ -108,25 +120,24 @@ class GestioneUtenteController:
 
     def registraAccount(self, nuovo_utente, password_scelta: str) -> bool:
         """
-        Crea le credenziali di accesso su Auth e salva l'anagrafica su Firestore.
+        Registra il nuovo account con hash della password e salva l'anagrafica nel database locale JSON.
         """
         if not self.validaDati(nuovo_utente.nome, nuovo_utente.cognome, nuovo_utente.cod_fiscale, nuovo_utente.telefono):
             print("❌ Dati di registrazione non validi.")
             return False
             
         try:
-            # 1. Crea l'utente lato Authentication usando il Codice Fiscale come identificatore univoco (UID)
-            auth.create_user(
-                uid=nuovo_utente.cod_fiscale,
-                email=nuovo_utente.email,
-                password=password_scelta,
-                display_name=nuovo_utente.get_nome_completo()
-            )
+            hashed = hashlib.sha256(password_scelta.encode('utf-8')).hexdigest()
+            nuovo_utente.password = hashed
             
-            # 2. Salva il record anagrafico su Firestore
-            db.collection("utenti").document(nuovo_utente.cod_fiscale).set(nuovo_utente.to_dict())
+            from Sistema import Sistema
+            sys_inst = Sistema.get_instance()
+            if sys_inst:
+                if nuovo_utente not in sys_inst.volontari:
+                    sys_inst.volontari.append(nuovo_utente)
+                sys_inst.salva_dati()
             
-            print("✅ Nuovo account registrato con successo.")
+            print("✅ Nuovo account registrato con successo nel database locale.")
             return True
             
         except Exception as e:
@@ -150,36 +161,29 @@ class GestioneUtenteController:
         if "@" in target_str:
             dest_email = target_str
 
-        # 2. Cerca l'utente nel database Firestore
+        # 2. Cerca l'utente nel sistema locale
         try:
-            if not dest_email:
-                # Cerca per codice fiscale come document ID
-                doc = db.collection("utenti").document(target_str.upper()).get()
-                if doc.exists:
-                    dati = doc.to_dict() or {}
-                    dest_email = dati.get("email", "")
-                    nome_utente = f"{dati.get('nome', '')} {dati.get('cognome', '')}".strip() or "Volontario"
-            else:
-                # Trova per email
-                docs = db.collection("utenti").where("email", "==", dest_email).limit(1).get()
-                for doc in docs:
-                    dati = doc.to_dict() or {}
-                    nome_utente = f"{dati.get('nome', '')} {dati.get('cognome', '')}".strip() or "Volontario"
-                    break
+            from Sistema import Sistema
+            sys_inst = Sistema.get_instance()
+            if sys_inst:
+                if not dest_email:
+                    u = sys_inst.get_volontario(target_str.upper())
+                    if u:
+                        dest_email = u.email
+                        nome_utente = u.get_nome_completo() or "Volontario"
+                else:
+                    u = next((v for v in sys_inst.volontari if getattr(v, "email", "").strip().lower() == dest_email.lower()), None)
+                    if u:
+                        nome_utente = u.get_nome_completo() or "Volontario"
         except Exception as e:
             print(f"⚠️ Ricerca utente per recupero credenziali: {e}")
 
         if not dest_email or "@" not in dest_email:
             return False, f"Nessun account trovato per '{target_str}'. Verifica i dati inseriti."
 
-        # 3. Genera link o codice di ripristino sicuro
-        link_reset = ""
-        try:
-            link_reset = auth.generate_password_reset_link(dest_email)
-        except Exception:
-            import secrets
-            token = secrets.token_urlsafe(16)
-            link_reset = f"https://crocerossa.it/reset-password?token={token}&email={dest_email}"
+        # 3. Genera link di ripristino sicuro
+        token = secrets.token_urlsafe(16)
+        link_reset = f"https://crocerossa.it/reset-password?token={token}&email={dest_email}"
 
         # 4. Spedizione email con EmailService
         from EmailService import EmailService

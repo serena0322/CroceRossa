@@ -9,36 +9,30 @@ class GestioneTurniController:
     """
     Controller applicativo per la gestione del ciclo di vita dei turni di servizio (GRASP Controller).
     Coordina la validazione dei vincoli operativi (sovrapposizioni, capienza, limiti orari giornalieri)
-    e sincronizza lo stato sia in memoria che su Cloud Firestore.
+    e sincronizza lo stato sia in memoria che nel database locale JSON.
     """
     def __init__(self):
         pass
 
     def annullaPrenotazione(self, t: Turno) -> bool:
         """
-        Rimuove l'assegnazione dei volontari dal turno specificato e aggiorna il documento su Firestore.
+        Rimuove l'assegnazione dei volontari dal turno specificato e aggiorna il database locale JSON.
         Garantisce la consistenza rimuovendo sia gli ID che i ruoli associati.
         """
         try:
-            from FirebaseConfig import db
-            turno_ref = db.collection("turni").document(t.id)
-            doc = turno_ref.get()
-            if doc.exists:
-                dati = doc.to_dict() or {}
-                vids = dati.get("volontari_ids", [])
-                vruoli = dati.get("volontari_ruoli", {})
-                vids = [str(vid) for vid in vids if str(vid) not in [v.cod_fiscale for v in t.volontari_assegnati]]
-                for v in t.volontari_assegnati:
-                    if v.cod_fiscale in vruoli:
-                        del vruoli[v.cod_fiscale]
-                turno_ref.update({
-                    "volontari_ids": vids,
-                    "volontari_ruoli": vruoli
-                })
+            for v in list(t.volontari_assegnati):
+                if hasattr(v, "turni_assegnati") and t in v.turni_assegnati:
+                    v.turni_assegnati.remove(t)
+            t.volontari_assegnati = []
+            t.volontari_ruoli = {}
+            from Sistema import Sistema
+            s = Sistema.get_instance()
+            if s:
+                s.salva_dati()
             print(f"[GestioneTurniController] annullaPrenotazione turno {t.id} completato.")
             return True
         except Exception as e:
-            print(f"⚠️ Errore annullaPrenotazione in Firebase: {e}")
+            print(f"⚠️ Errore annullaPrenotazione nel database locale: {e}")
             return False
 
     def assegnaTurno(self, v: Volontario, t: Turno) -> None:
@@ -64,7 +58,7 @@ class GestioneTurniController:
 
     def creaTurno(self, t: Turno, utente=None) -> bool:
         """
-        Registra un nuovo turno operativo nel sistema e lo persiste su Firestore.
+        Registra un nuovo turno operativo nel sistema e lo persiste nel database locale JSON.
         Se non è presente un ID, genera un identificativo univoco compatto.
         """
         if not self._verifica_permessi_referente(utente):
@@ -73,29 +67,17 @@ class GestioneTurniController:
             import uuid
             t.id = str(uuid.uuid4())[:8].upper()
         try:
-            from FirebaseConfig import db
-            db.collection("turni").document(t.id).set({
-                "id": t.id,
-                "data": t.data,
-                "luogoDestinazione": t.luogoDestinazione,
-                "luogoPrelevamento": t.luogoPrelevamento,
-                "oraInizio": t.oraInizio,
-                "oraFine": t.oraFine,
-                "patenteRichiesta": t.patenteRichiesta,
-                "paziente": t.paziente,
-                "paziente_nome": getattr(t, "paziente_nome", ""),
-                "paziente_cognome": getattr(t, "paziente_cognome", ""),
-                "paziente_cf": getattr(t, "paziente_cf", ""),
-                "personeRichieste": t.personeRichieste,
-                "persone_richieste": t.persone_richieste,
-                "stato": t.stato,
-                "tipoServizio": t.tipoServizio,
-                "volontari_ids": [v.cod_fiscale for v in t.volontari_assegnati]
-            }, merge=True)
-            print(f"[GestioneTurniController] creaTurno {t.id} salvato su Firebase.")
+            from Sistema import Sistema
+            s = Sistema.get_instance()
+            if s:
+                existing = next((x for x in s.turni if str(x.id) == str(t.id)), None)
+                if not existing:
+                    s.turni.append(t)
+                s.salva_dati()
+            print(f"[GestioneTurniController] creaTurno {t.id} salvato nel database locale.")
             return True
         except Exception as e:
-            print(f"⚠️ Errore creaTurno in Firebase: {e}")
+            print(f"⚠️ Errore creaTurno nel database locale: {e}")
             return False
 
     def modificaTurno(self, idTurno: str, t: Turno, utente=None) -> bool:
@@ -116,57 +98,47 @@ class GestioneTurniController:
         return self.creaTurno(t, utente=utente)
 
     def eliminaTurno(self, idTurno: str, utente=None) -> bool:
-        """Cancella il turno dal database Firestore."""
+        """Cancella il turno dal database locale JSON."""
         if not self._verifica_permessi_referente(utente):
             return False
         try:
-            from FirebaseConfig import db
-            db.collection("turni").document(idTurno).delete()
-            print(f"[GestioneTurniController] eliminaTurno {idTurno} rimosso da Firebase.")
+            from Sistema import Sistema
+            s = Sistema.get_instance()
+            if s:
+                s.turni = [t for t in s.turni if str(t.id) != str(idTurno)]
+                s.salva_dati()
+            print(f"[GestioneTurniController] eliminaTurno {idTurno} rimosso dal database locale.")
             return True
         except Exception as e:
-            print(f"⚠️ Errore eliminaTurno in Firebase: {e}")
+            print(f"⚠️ Errore eliminaTurno nel database locale: {e}")
             return False
 
     def prenotaTurno(self, idTurno: str, idVolontario: str, ruolo: str = "Soccorritore", sistema: Any = None) -> bool:
         """
         Iscrive un volontario al turno specificato.
-        Verifica preventivamente il limite delle 12 ore massime giornaliere se l'istanza sistema è disponibile.
+        Verifica preventivamente il limite delle 12 ore massime giornaliere.
         """
-        if sistema:
-            turno_obj = next((t for t in getattr(sistema, "turni", []) if t.id == idTurno), None)
-            vol_obj = next((v for v in getattr(sistema, "volontari", []) if v.cod_fiscale.upper() == idVolontario.upper()), None)
-            if turno_obj and vol_obj:
-                if not self.verificaLimiteOreGiornaliere(vol_obj, turno_obj):
-                    return False
+        from Sistema import Sistema
+        s = sistema or Sistema.get_instance()
         try:
-            from FirebaseConfig import db
-            turno_ref = db.collection("turni").document(idTurno)
-            doc = turno_ref.get()
-            if doc.exists:
-                dati = doc.to_dict() or {}
-                vids = dati.get("volontari_ids", [])
-                vids = [str(vid) for vid in vids]
-                vruoli = dati.get("volontari_ruoli", {})
-                if idVolontario not in vids:
-                    vids.append(idVolontario)
-                vruoli[idVolontario] = ruolo
-                turno_ref.update({
-                    "volontari_ids": vids,
-                    "volontari_ruoli": vruoli
-                })
-            else:
-                # Se il turno non esiste ancora su Firestore, lo creiamo inizializzandolo come Proposto
-                turno_ref.set({
-                    "id": idTurno,
-                    "volontari_ids": [idVolontario],
-                    "volontari_ruoli": {idVolontario: ruolo},
-                    "stato": "Proposto"
-                })
-            print(f"[GestioneTurniController] prenotaTurno {idTurno} salvato su Firebase.")
+            if s:
+                turno_obj = next((t for t in getattr(s, "turni", []) if str(t.id) == str(idTurno)), None)
+                vol_obj = next((v for v in getattr(s, "volontari", []) if v.cod_fiscale.upper() == idVolontario.upper()), None)
+                if turno_obj and vol_obj:
+                    if not self.verificaLimiteOreGiornaliere(vol_obj, turno_obj):
+                        return False
+                    if vol_obj not in turno_obj.volontari_assegnati:
+                        turno_obj.volontari_assegnati.append(vol_obj)
+                    if not hasattr(turno_obj, "volontari_ruoli") or turno_obj.volontari_ruoli is None:
+                        turno_obj.volontari_ruoli = {}
+                    turno_obj.volontari_ruoli[idVolontario] = ruolo
+                    if hasattr(vol_obj, "turni_assegnati") and turno_obj not in vol_obj.turni_assegnati:
+                        vol_obj.turni_assegnati.append(turno_obj)
+                s.salva_dati()
+            print(f"[GestioneTurniController] prenotaTurno {idTurno} salvato nel database locale.")
             return True
         except Exception as e:
-            print(f"⚠️ Errore prenotaTurno in Firebase: {e}")
+            print(f"⚠️ Errore prenotaTurno nel database locale: {e}")
             return False
 
     def validaDati(self, t: Turno | None = None) -> bool:
@@ -259,39 +231,14 @@ class GestioneTurniController:
 
     def visualizzaTurniDisponibili(self, sistema=None) -> List[Turno]:
         """
-        Restituisce i turni aperti e con posti ancora scoperti.
-        Interroga prioritariamente lo stato in memoria del sistema, oppure consulta direttamente Firestore.
+        Restituisce i turni aperti e con posti ancora scoperti dal database locale.
         """
-        if sistema and getattr(sistema, "turni", None):
+        from Sistema import Sistema
+        s = sistema or Sistema.get_instance()
+        if s and getattr(s, "turni", None):
             return [
-                t for t in sistema.turni
-                if t.stato in ["Proposto", "Aperto"]
+                t for t in s.turni
+                if str(t.stato).strip().capitalize() in ["Proposto", "Aperto"]
                 and len(getattr(t, "volontari_assegnati", [])) < getattr(t, "personeRichieste", 1)
             ]
-        try:
-            from FirebaseConfig import db
-            from Turno import Turno
-            turni = []
-            docs = db.collection("turni").get()
-            for doc in docs:
-                dati = doc.to_dict() or {}
-                stato = str(dati.get("stato") or "Proposto")
-                if stato in ["Proposto", "Aperto"]:
-                    t = Turno(
-                        id=doc.id,
-                        data=str(dati.get("data") or ""),
-                        luogoDestinazione=str(dati.get("luogoDestinazione") or dati.get("luogo") or ""),
-                        luogoPrelevamento=str(dati.get("luogoPrelevamento") or dati.get("luogo") or ""),
-                        oraInizio=str(dati.get("oraInizio") or ""),
-                        oraFine=str(dati.get("oraFine") or ""),
-                        patenteRichiesta=str(dati.get("patenteRichiesta") or dati.get("corso_richiesto") or ""),
-                        paziente=str(dati.get("paziente") or ""),
-                        personeRichieste=int(dati.get("personeRichieste", 1)),
-                        stato=stato,
-                        tipoServizio=str(dati.get("tipoServizio") or "")
-                    )
-                    turni.append(t)
-            return turni
-        except Exception as e:
-            print(f"⚠️ Errore visualizzaTurniDisponibili: {e}")
-            return []
+        return []

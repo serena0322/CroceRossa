@@ -261,10 +261,9 @@ class Turno:
     def dispositivi_mancanti(self, disponibili: List[str]) -> List[str]:
         return [d for d in self.dispositivi_richiesti if d not in disponibili]
 
-    def aggiorna_firestore(self):
-        from FirebaseConfig import db
+    def to_dict(self) -> dict:
         targa_val = self.mezzo_targa or (self.mezzo.targa if self.mezzo else "")
-        db.collection("turni").document(self.id).set({
+        return {
             "id": self.id,
             "data": self.data,
             "luogoDestinazione": self.luogoDestinazione,
@@ -282,6 +281,17 @@ class Turno:
             "tipoServizio": self.tipoServizio,
             "checklist": self.checklist,
             "mezzo_targa": targa_val,
-            "volontari_ids": [v.cod_fiscale for v in self.volontari_assegnati],
+            "volontari_ids": [v.cod_fiscale for v in self.volontari_assegnati if hasattr(v, "cod_fiscale")],
             "volontari_ruoli": self.volontari_ruoli
-        }, merge=True)
+        }
+
+    def aggiorna_db(self):
+        """Salva lo stato corrente del turno nel database locale JSON."""
+        from Sistema import Sistema
+        s = Sistema.get_instance()
+        if s:
+            s.salva_dati()
+
+    def aggiorna_firestore(self):
+        """Metodo di compatibilità: salva lo stato nel database locale JSON."""
+        self.aggiorna_db()
