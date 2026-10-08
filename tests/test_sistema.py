@@ -374,42 +374,6 @@ class TestCalendarService(unittest.TestCase):
     def tearDown(self):
         self.temp_dir.cleanup()
 
-    def test_genera_file_ics(self):
-        from calendar_service import genera_file_ics
-        v = Volontario(
-            cod_fiscale="RSSMRA85M01H501Z",
-            nome="Mario",
-            cognome="Rossi"
-        )
-        t1 = Turno(
-            id="T_CAL1",
-            data="2026-11-20",
-            oraInizio="08:00",
-            oraFine="14:00",
-            luogoDestinazione="Sede CRI",
-            tipoServizio="Emergenza 118"
-        )
-        t2 = Turno(
-            id="T_CAL2",
-            data="2026-11-21",
-            oraInizio="14:00",
-            oraFine="20:00",
-            luogoDestinazione="Ospedale",
-            tipoServizio="Trasporto Sanitario"
-        )
-        dest = os.path.join(self.temp_dir.name, "miei_turni.ics")
-        genera_file_ics([t1, t2], v, dest)
-
-        self.assertTrue(os.path.exists(dest))
-        with open(dest, "r", encoding="utf-8") as f:
-            content = f.read()
-
-        self.assertIn("BEGIN:VCALENDAR", content)
-        self.assertIn("END:VCALENDAR", content)
-        self.assertIn("UID:TURNO-T_CAL1@cri.it", content)
-        self.assertIn("SUMMARY:🚑 Turno CRI: Emergenza 118", content)
-        self.assertIn("LOCATION:Sede CRI", content)
-        self.assertIn("UID:TURNO-T_CAL2@cri.it", content)
 
     def test_turni_compatibili_filtro_controller(self):
         ctrl = GestioneTurniController()

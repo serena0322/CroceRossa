@@ -2375,23 +2375,6 @@ class MainWindow(QWidget):
         btn_cancella.clicked.connect(self.azione_annulla_turno)
         actions_layout.addWidget(btn_cancella)
 
-        btn_esporta_ics = QPushButton("📅 Aggiungi a Calendario (.ics)")
-        btn_esporta_ics.setToolTip("Esporta i turni in formato iCalendar per Apple Calendar, Google Calendar o Outlook")
-        btn_esporta_ics.setStyleSheet("""
-            QPushButton {
-                background-color: #0277bd;
-                color: white;
-                font-weight: bold;
-                padding: 6px 14px;
-                border-radius: 4px;
-            }
-            QPushButton:hover {
-                background-color: #0288d1;
-            }
-        """)
-        btn_esporta_ics.clicked.connect(self.esporta_calendario_ics)
-        actions_layout.addWidget(btn_esporta_ics)
-
         btn_cambia_mezzo = QPushButton("🚐 Assegna / Cambia Mezzo")
         btn_cambia_mezzo.setToolTip("Consente all'autista o soccorritore di confermare o sostituire il mezzo operativo per questo turno")
         btn_cambia_mezzo.setStyleSheet("""
@@ -2431,29 +2414,6 @@ class MainWindow(QWidget):
         layout.addWidget(scroll)
         widget.setLayout(layout)
         return widget
-
-    def esporta_calendario_ics(self):
-        """Esporta i turni assegnati al volontario in formato standard iCalendar (.ics)."""
-        from calendar_service import genera_file_ics
-        user = self.sistema.logged_user
-        turni = getattr(user, "turni_assegnati", [])
-        if not turni:
-            self.mostra_toast("Nessun turno assegnato da esportare.", tipo="warning")
-            return
-
-        default_filename = f"Turni_CRI_{user.cod_fiscale}.ics"
-        file_path, _ = QFileDialog.getSaveFileName(
-            self,
-            "Esporta Turni su Calendario (.ics)",
-            default_filename,
-            "iCalendar Files (*.ics)"
-        )
-        if file_path:
-            try:
-                genera_file_ics(turni, user, file_path)
-                self.mostra_toast("📅 Turni esportati con successo nel file .ics!", tipo="success")
-            except Exception as e:
-                QMessageBox.critical(self, "Errore Esportazione", f"Errore durante la creazione del file .ics: {e}")
 
     def popola_tabelle_turni_volontario(self):
         # 1. Available shifts
