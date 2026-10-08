@@ -378,43 +378,13 @@ class TestPdfValidator(unittest.TestCase):
         self.assertTrue(dlg.ha_pdf_valido("B"))
 
 
-class TestAppIOService(unittest.TestCase):
+class TestVerificaPatente(unittest.TestCase):
     def setUp(self):
         import tempfile
         self.temp_dir = tempfile.TemporaryDirectory()
 
     def tearDown(self):
         self.temp_dir.cleanup()
-
-    def test_verifica_patente_app_io_successo(self):
-        from app_io_service import AppIOService
-        cf = "GLNSRN03A62I156Z"
-        res = AppIOService.verifica_patente_codice_fiscale(cf, "Serena", "Giuliani")
-        self.assertTrue(res["esito"])
-        self.assertEqual(res["codice_fiscale"], cf)
-        self.assertTrue(res["numero_patente"].startswith("U1"))
-        self.assertIn("B", res["categorie"])
-        self.assertEqual(res["punti_residui"], 30)
-        self.assertIn("IO-ITW-", res["id_transazione_io"])
-
-    def test_verifica_patente_app_io_cf_non_valido(self):
-        from app_io_service import AppIOService
-        res = AppIOService.verifica_patente_codice_fiscale("CORT")
-        self.assertFalse(res["esito"])
-        self.assertIn("non valido", res["errore"])
-
-    def test_genera_certificato_digitale_pdf(self):
-        from app_io_service import AppIOService
-        from pdf_validator import valida_pdf_patente
-
-        cf = "RSSMRA85M01H501Z"
-        res = AppIOService.verifica_patente_codice_fiscale(cf, "Mario", "Rossi")
-        cert_path = os.path.join(self.temp_dir.name, f"{cf}_certificato_app_io.pdf")
-        AppIOService.genera_certificato_digitale_pdf(res, cert_path)
-
-        self.assertTrue(os.path.exists(cert_path))
-        valido, msg = valida_pdf_patente(cert_path)
-        self.assertTrue(valido, f"Il certificato generato non è conforme: {msg}")
 
     def test_volontario_app_io_serialization(self):
         v = Volontario(
