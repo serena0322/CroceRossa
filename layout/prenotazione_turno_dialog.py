@@ -21,7 +21,7 @@ class PrenotazioneTurnoDialog(QDialog):
         self.turni_controller = turni_controller
         self.ruolo_selezionato = None
 
-        self.setWindowTitle(f"📋 Iscrizione Turno — {turno.id}")
+        self.setWindowTitle(f"📋 Iscrizione Turno — {turno.codice}")
         self.resize(560, 580)
         self.setMinimumWidth(500)
 
@@ -73,7 +73,7 @@ class PrenotazioneTurnoDialog(QDialog):
 
         titolo_box = QHBoxLayout()
         lbl_servizio = QLabel(f"<h2 style='color: white; margin: 0;'>🚑 {turno.tipoServizio or 'Servizio CRI'}</h2>")
-        badge_id = QLabel(f"<span style='background-color: #37474f; color: white; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;'>ID: {turno.id}</span>")
+        badge_id = QLabel(f"<span style='background-color: #37474f; color: white; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;'>Codice: {turno.codice}</span>")
         titolo_box.addWidget(lbl_servizio)
         titolo_box.addStretch()
         titolo_box.addWidget(badge_id)

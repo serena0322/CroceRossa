@@ -9,9 +9,10 @@ class Referente(Volontario):
     Estende formalmente la classe Volontario secondo la gerarchia:
         Utente <-- Volontario <-- Referente
     Eredita tutte le caratteristiche anagrafiche e operative del Volontario
-    (monte ore, patenti, qualifiche) e aggiunge l'area di competenza gestita
-    e il codice di autorizzazione.
-    
+    (oreServizio, patenti, qualifiche) e aggiunge il settore di competenza gestita.
+
+    Attributi UML aggiuntivi: settoreGestito.
+    Metodi UML aggiuntivi: getSettoreGestito().
     Come da requisiti architetturali UML, i metodi operativi di creazione/modifica turni e corsi
     risiedono nei rispettivi Controller (GestioneTurniController e GestioneFormazioneController).
     """
@@ -27,12 +28,17 @@ class Referente(Volontario):
         patenti: list[str] | None = None,
         formazione: list | None = None,
         comitato_appartenenza: str = "",
-        area_gestita: str = "",
+        settoreGestito: str = "",
+        codiceAutorizzazione: str = "",
         qualifiche: list[str] | None = None,
-        monteOreTotale: int = 0,
+        oreServizio: int = 0,
+        # old name compatibility:
+        area_gestita: str | None = None,
+        monteOreTotale: int | None = None,
         **kwargs
     ):
         comitato = comitato_appartenenza or kwargs.get("compagnia_appartenenza", "")
+        ore = monteOreTotale if monteOreTotale is not None else oreServizio
         super().__init__(
             cod_fiscale=cod_fiscale,
             nome=nome,
@@ -45,29 +51,34 @@ class Referente(Volontario):
             patenti=patenti if patenti is not None else [],
             formazione=formazione if formazione is not None else [],
             comitato_appartenenza=comitato,
-            monteOreTotale=monteOreTotale,
+            oreServizio=ore,
             qualifiche=qualifiche if qualifiche is not None else [],
             **kwargs
         )
-        self.area_gestita = area_gestita
-        self.codice_autorizzazione = kwargs.get("codice_autorizzazione", "CRI2026")
+        self.settoreGestito = area_gestita if area_gestita is not None else settoreGestito
+        self.codiceAutorizzazione = str(codiceAutorizzazione or kwargs.get("codice_autorizzazione", "1234")).strip()
 
-    def getAreaGestita(self) -> str:
-        """Restituisce l'area o settore operativo di competenza del referente (UML)."""
-        return self.area_gestita
+    def getSettoreGestito(self) -> str:
+        """Restituisce il settore operativo di competenza del referente (UML)."""
+        return self.settoreGestito
+
+    def verificaCodiceAutorizzazione(self, codice: str) -> bool:
+        """Verifica la validità del codice autorizzazione per la registrazione referente (UML CreaAccountReferente)."""
+        return self.codiceAutorizzazione == str(codice).strip()
 
     def to_dict(self) -> dict:
         d = super().to_dict()
         d.update({
-            "monteOreTotale": getattr(self, "monteOreTotale", 0),
+            "monteOreTotale": getattr(self, "oreServizio", 0),
             "patenti": self.patenti,
             "qualifiche": getattr(self, "qualifiche", []),
             "curriculum": self.curriculum,
             "comitato_appartenenza": self.comitato_appartenenza,
-            "area_gestita": self.area_gestita,
-            "codice_autorizzazione": self.codice_autorizzazione
+            "area_gestita": self.settoreGestito,
+            "settoreGestito": self.settoreGestito,
+            "codiceAutorizzazione": self.codiceAutorizzazione,
         })
         return d
 
     def __repr__(self) -> str:
-        return f"<Referente {self.get_nome_completo()} - Area: {self.area_gestita}>"
+        return f"<Referente {self.getNomeCompleto()} - Settore: {self.settoreGestito}>"

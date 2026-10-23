@@ -32,13 +32,13 @@ class TestModelli(unittest.TestCase):
             qualifiche=["Soccorritore 118"]
         )
         self.assertEqual(v.cod_fiscale, "RSSMRA85M01H501Z")
-        self.assertEqual(v.get_nome_completo(), "Mario Rossi")
+        self.assertEqual(v.getNomeCompleto(), "Mario Rossi")
         self.assertIn("B", v.patenti)
         self.assertEqual(v.getMonteOre(), 0)
 
         v.aggiungiOreServizio(12)
         self.assertEqual(v.getMonteOre(), 12)
-        self.assertEqual(v.calcola_ore_totali(), 12.0)
+        self.assertEqual(v.getMonteOre(), 12.0)
 
     def test_ruoli_ammessi_solo_volontario_e_referente(self):
         # Verifica che il sistema ammetta solo Volontario e Referente e che OperatoreSanitario sia rimosso
@@ -61,10 +61,10 @@ class TestModelli(unittest.TestCase):
             nome="Giuseppe",
             cognome="Verdi",
             email="giuseppe.verdi@cri.it",
-            area_gestita="Formazione & Flotta"
+            settoreGestito="Formazione & Flotta"
         )
         self.assertEqual(ref.ruolo, "referente")
-        self.assertEqual(ref.area_gestita, "Formazione & Flotta")
+        self.assertEqual(ref.settoreGestito, "Formazione & Flotta")
 
     def test_turno_and_checklist(self):
         t = Turno(
@@ -152,6 +152,14 @@ class TestSistema(unittest.TestCase):
         self.assertIn(self.volontario.nome, report_txt)
         self.assertIn(self.volontario.cod_fiscale, report_txt)
 
+        # Verifica con turno assegnato e ore registrate
+        t = Turno(codice="T_REP_1", data="2026-11-01", fascia_oraria="08:00 - 14:00", tipoServizio="118")
+        self.volontario.turni_assegnati.append(t)
+        self.volontario.compila_report_turno(t, 6.0)
+        report_con_turni = self.sistema.stampa_report_volontario(self.volontario.cod_fiscale)
+        self.assertIn("Turni assegnati:", report_con_turni)
+        self.assertIn("Ore: 6.00", report_con_turni)
+
 
 class TestGestioneTurniController(unittest.TestCase):
     def setUp(self):
@@ -187,7 +195,7 @@ class TestGestioneTurniController(unittest.TestCase):
         t2_sovrapposto = Turno(id="T_SOVR", data="2026-10-10", oraInizio="12:00", oraFine="18:00")
         t3_distaccato = Turno(id="T_DIST", data="2026-10-10", oraInizio="15:00", oraFine="21:00")
 
-        self.volontario.prenota_turno(t1)
+        self.volontario.prenotaTurno(t1)
 
         # Sovrapposto: deve ritornare False
         self.assertFalse(self.controller.verificaTempoLimite(self.volontario, t2_sovrapposto))
@@ -1135,7 +1143,7 @@ class TestGestioneUtenteController(unittest.TestCase):
         sistema = Sistema()
         sistema.turni = [t1, t2]
         sistema.volontari = [v]
-        ok_p = ctrl.prenotaTurno(t2.id, v.cod_fiscale, sistema=sistema)
+        ok_p = ctrl.prenotaTurno(t2.codice, v.cod_fiscale, sistema=sistema)
         self.assertFalse(ok_p)
         self.assertNotIn(v, t2.volontari_assegnati)
 
@@ -1153,7 +1161,7 @@ class TestGestioneUtenteController(unittest.TestCase):
         )
         self.assertEqual(corso.direttore, "Dott.ssa Laura Galli")
         self.assertEqual(corso.maxPartecipanti, 2)
-        self.assertFalse(corso.is_completo())
+        self.assertFalse(corso.isCompleto())
 
         v1 = Volontario(cod_fiscale="CF001", nome="V1", cognome="Uno")
         v2 = Volontario(cod_fiscale="CF002", nome="V2", cognome="Due")
@@ -1161,7 +1169,7 @@ class TestGestioneUtenteController(unittest.TestCase):
 
         self.assertTrue(ctrl.iscriviVolontario(v1, corso))
         self.assertTrue(ctrl.iscriviVolontario(v2, corso))
-        self.assertTrue(corso.is_completo())
+        self.assertTrue(corso.isCompleto())
 
         # Il 3° volontario non può iscriversi perché il corso è completo
         self.assertFalse(ctrl.iscriviVolontario(v3, corso))
@@ -1234,13 +1242,13 @@ class TestGestioneUtenteController(unittest.TestCase):
 
         # Volontario semplice deve fallire
         self.assertFalse(turni_ctrl.creaTurno(t, utente=volontario))
-        self.assertFalse(turni_ctrl.eliminaTurno(t.id, utente=volontario))
+        self.assertFalse(turni_ctrl.eliminaTurno(t.codice, utente=volontario))
         self.assertFalse(flotta_ctrl.aggiungiMezzo(m, utente=volontario))
 
         # Referente deve avere successo
         self.assertTrue(turni_ctrl.creaTurno(t, utente=referente))
         self.assertTrue(flotta_ctrl.aggiungiMezzo(m, utente=referente))
-        self.assertTrue(turni_ctrl.eliminaTurno(t.id, utente=referente))
+        self.assertTrue(turni_ctrl.eliminaTurno(t.codice, utente=referente))
 
 
 if __name__ == "__main__":

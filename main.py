@@ -34,7 +34,7 @@ class AppController:
 
                 if user:
                     self.sistema.logged_user = user
-                    print(f"✅ Accesso automatico riuscito: {user.get_nome_completo()} ({user.ruolo})")
+                    print(f"✅ Accesso automatico riuscito: {user.getNomeCompleto()} ({user.ruolo})")
                     self.apri_main()
                     return
                 else:

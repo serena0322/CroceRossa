@@ -226,7 +226,7 @@ class ModificaTurnoDialog(QDialog):
     def __init__(self, turno, mezzi=None, parent=None):
         super().__init__(parent)
         from PyQt5.QtWidgets import QSpinBox
-        self.setWindowTitle(f"✏️ Modifica Turno — {turno.id}")
+        self.setWindowTitle(f"✏️ Modifica Turno — {turno.codice}")
         self.setMinimumWidth(440)
         self.mezzi_list = list(mezzi) if mezzi else []
         self.turno = turno
@@ -302,7 +302,7 @@ class ModificaTurnoDialog(QDialog):
                     cur_r = "Autista Tipo A" if "Emergenza" in getattr(turno, "tipoServizio", "") else "Soccorritore Tipo B"
                 combo_v.setCurrentText(cur_r)
                 self.volontari_ruoli_combos[str(v.cod_fiscale)] = combo_v
-                layout.addRow(f" • {v.get_nome_completo()}:", combo_v)
+                layout.addRow(f" • {v.getNomeCompleto()}:", combo_v)
 
         btn = QPushButton("💾 Salva Modifiche")
         btn.clicked.connect(self.accept)
@@ -376,7 +376,7 @@ class AssegnaMezzoDialog(QDialog):
         self.turno_combo.addItem("⚪ Nessun turno (Libera / non assegnare)", "")
         for t in self.turni:
             current_m = f" (Mezzo: {t.mezzo_targa})" if getattr(t, "mezzo_targa", "") else " (Senza mezzo)"
-            self.turno_combo.addItem(f"📅 {t.data} [{t.fascia_oraria}] — {t.tipoServizio} ({t.luogo}){current_m}", str(t.id))
+            self.turno_combo.addItem(f"📅 {t.data} [{t.fascia_oraria}] — {t.tipoServizio} ({t.luogo}){current_m}", str(t.codice))
 
         layout.addRow("Seleziona Veicolo:", self.mezzo_combo)
         layout.addRow("Assegna al Turno:", self.turno_combo)
@@ -396,7 +396,7 @@ class AssegnaMezzoDialog(QDialog):
         targa = self.mezzo_combo.currentData()
         turno_id = self.turno_combo.currentData()
         mezzo = next((m for m in self.mezzi if m.targa == targa), None) if targa else None
-        turno = next((t for t in self.turni if str(t.id) == turno_id), None) if turno_id else None
+        turno = next((t for t in self.turni if str(t.codice) == turno_id), None) if turno_id else None
         return mezzo, turno
 
 
@@ -1128,9 +1128,9 @@ class VisualizzaReportDialog(QDialog):
                         email = getattr(self.volontario, "email", "")
                         turni = getattr(self.volontario, "turni_assegnati", [])
                         if not turni:
-                            writer.writerow([cf, nome, cognome, email, "Nessuno", "", "", getattr(self.volontario, "monteOreTotale", 0)])
+                            writer.writerow([cf, nome, cognome, email, "Nessuno", "", "", getattr(self.volontario, "oreServizio", 0)])
                         for t in turni:
-                            ore = getattr(self.volontario, "ore_lavorate", {}).get(t.id_turno, 0.0)
+                            ore = getattr(self.volontario, "ore_lavorate", {}).get(t.codice, 0.0)
                             writer.writerow([cf, nome, cognome, email, t.data, t.fascia_oraria, t.tipoServizio, f"{ore:.2f}"])
                     else:
                         writer.writerow(["Report Generale", "", "", "", "", "", "", ""])
@@ -1146,7 +1146,7 @@ class SchedaVolontarioDialog(QDialog):
         self.volontario = volontario
         self.sistema = sistema
         self.is_referente = is_referente
-        self.setWindowTitle(f"👤 Scheda Membro: {volontario.get_nome_completo()}")
+        self.setWindowTitle(f"👤 Scheda Membro: {volontario.getNomeCompleto()}")
         self.resize(600, 560)
 
         layout = QVBoxLayout(self)
@@ -1155,7 +1155,7 @@ class SchedaVolontarioDialog(QDialog):
 
         # Header con ruolo colorato
         h_box = QHBoxLayout()
-        titolo = QLabel(f"<h2 style='color: white; margin: 0;'>{volontario.get_nome_completo()}</h2>")
+        titolo = QLabel(f"<h2 style='color: white; margin: 0;'>{volontario.getNomeCompleto()}</h2>")
         h_box.addWidget(titolo)
 
         ruolo_str = str(getattr(volontario, "ruolo", "volontario")).capitalize()
@@ -1172,7 +1172,7 @@ class SchedaVolontarioDialog(QDialog):
         form.addRow("Email:", QLabel(volontario.email or "N/D"))
         form.addRow("Telefono:", QLabel(volontario.telefono or "N/D"))
         form.addRow("Data di nascita:", QLabel(volontario.data_nascita or "N/D"))
-        form.addRow("Monte Ore Totale:", QLabel(f"<b style='color: #00e676;'>{getattr(volontario, 'monteOreTotale', 0)} ore</b>"))
+        form.addRow("Monte Ore Totale:", QLabel(f"<b style='color: #00e676;'>{getattr(volontario, 'oreServizio', 0)} ore</b>"))
 
         patenti_str = ", ".join(getattr(volontario, "patenti", [])) or "Nessuna patente specifica"
         patenti_widget = QWidget()
@@ -1282,7 +1282,7 @@ class SchedaVolontarioDialog(QDialog):
                 ruolo_t = "Autista Tipo A" if "Emergenza" in getattr(t, "tipoServizio", "") else "Soccorritore Tipo B"
             tbl_turni.setItem(r, 3, QTableWidgetItem(ruolo_t))
             
-            ore = getattr(volontario, "ore_lavorate", {}).get(t.id_turno, 0.0)
+            ore = getattr(volontario, "ore_lavorate", {}).get(t.codice, 0.0)
             tbl_turni.setItem(r, 4, QTableWidgetItem(f"{ore:.1f} h"))
         layout.addWidget(tbl_turni)
 
@@ -1328,19 +1328,19 @@ class SchedaVolontarioDialog(QDialog):
 
     def apri_report(self):
         testo = self.sistema.stampa_report_volontario(self.volontario.cod_fiscale)
-        dlg = VisualizzaReportDialog(f"Report Attività — {self.volontario.get_nome_completo()}", testo, self.volontario, self)
+        dlg = VisualizzaReportDialog(f"Report Attività — {self.volontario.getNomeCompleto()}", testo, self.volontario, self)
         dlg.exec_()
 
     def cambia_ruolo(self):
         opzioni = ["volontario", "referente"]
         ruolo_attuale = str(getattr(self.volontario, "ruolo", "volontario")).lower()
         idx_default = opzioni.index(ruolo_attuale) if ruolo_attuale in opzioni else 0
-        nuovo, ok = QInputDialog.getItem(self, "Modifica Ruolo Membro", f"Seleziona il nuovo ruolo per {self.volontario.get_nome_completo()}:", opzioni, idx_default, False)
+        nuovo, ok = QInputDialog.getItem(self, "Modifica Ruolo Membro", f"Seleziona il nuovo ruolo per {self.volontario.getNomeCompleto()}:", opzioni, idx_default, False)
         if ok and nuovo:
             self.volontario.ruolo = nuovo
             try:
                 self.volontario.aggiorna_firestore()
-                QMessageBox.information(self, "Ruolo Aggiornato", f"✅ Ruolo di {self.volontario.get_nome_completo()} aggiornato a '{nuovo}'.")
+                QMessageBox.information(self, "Ruolo Aggiornato", f"✅ Ruolo di {self.volontario.getNomeCompleto()} aggiornato a '{nuovo}'.")
                 self.accept()
             except Exception as e:
                 QMessageBox.critical(self, "Errore", f"❌ Errore aggiornamento ruolo nel database: {e}")
@@ -1762,7 +1762,7 @@ class MainWindow(QWidget):
     def update_user_label(self):
         user = self.sistema.logged_user
         if user:
-            nome_completo = user.get_nome_completo()
+            nome_completo = user.getNomeCompleto()
             inits = "".join([part[0].upper() for part in nome_completo.split()[:2]]) or "CR"
             self.lbl_avatar.setText(inits)
 
@@ -1773,7 +1773,7 @@ class MainWindow(QWidget):
                 f"<span style='background-color: {badge_color}; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;'>{ruolo_str}</span>"
             )
 
-            ore = getattr(user, "monteOreTotale", 0)
+            ore = getattr(user, "oreServizio", getattr(user, "getMonteOre", lambda: 0)())
             self.lbl_badge_ore.setText(f"⏱️ {ore}h svolte")
             self.lbl_badge_ore.setStyleSheet("background-color: #2e7d32; color: white; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 11px;")
             self.lbl_badge_ore.setVisible(True)
@@ -1936,7 +1936,7 @@ class MainWindow(QWidget):
         ch_layout.setSpacing(6)
         
         ch_icon = QLabel("<span style='font-size: 20px;'>⏱️</span>")
-        ch_val = QLabel(f"<span style='font-size: 18px; font-weight: bold; color: #ff5252;'>{self.sistema.logged_user.calcola_ore_totali():.1f} h</span>")
+        ch_val = QLabel(f"<span style='font-size: 18px; font-weight: bold; color: #ff5252;'>{self.sistema.logged_user.getMonteOre():.1f} h</span>")
         ch_lbl = QLabel("<span style='color: #888; font-size: 11px;'>Monte Ore Servizio</span>")
         ch_icon.setWordWrap(True)
         ch_val.setWordWrap(True)
@@ -2225,7 +2225,7 @@ class MainWindow(QWidget):
                 # Right side: Hours worked / Status
                 right_layout = QVBoxLayout()
                 right_layout.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-                ore_eff = self.sistema.logged_user.ore_lavorate.get(turno.id_turno, 0.0)
+                ore_eff = self.sistema.logged_user.ore_lavorate.get(turno.codice, 0.0)
                 if ore_eff > 0:
                     lbl_status = QLabel(f"<span style='color: #00e676; font-weight: bold; font-size: 13px;'>✓ Completato ({ore_eff:.1f} h)</span>")
                 else:
@@ -2437,7 +2437,7 @@ class MainWindow(QWidget):
         for t in disponibili:
             row = self.tbl_turni_disp.rowCount()
             self.tbl_turni_disp.insertRow(row)
-            self.tbl_turni_disp.setItem(row, 0, QTableWidgetItem(str(t.id)))
+            self.tbl_turni_disp.setItem(row, 0, QTableWidgetItem(str(t.codice)))
             self.tbl_turni_disp.setItem(row, 1, QTableWidgetItem(t.data))
             self.tbl_turni_disp.setItem(row, 2, QTableWidgetItem(t.fascia_oraria))
             item_luogo = QTableWidgetItem(t.luogo)
@@ -2472,7 +2472,7 @@ class MainWindow(QWidget):
         for t in miei:
             row = self.tbl_miei_turni.rowCount()
             self.tbl_miei_turni.insertRow(row)
-            self.tbl_miei_turni.setItem(row, 0, QTableWidgetItem(str(t.id)))
+            self.tbl_miei_turni.setItem(row, 0, QTableWidgetItem(str(t.codice)))
             self.tbl_miei_turni.setItem(row, 1, QTableWidgetItem(t.data))
             self.tbl_miei_turni.setItem(row, 2, QTableWidgetItem(t.fascia_oraria))
             self.tbl_miei_turni.setItem(row, 3, QTableWidgetItem(t.luogo))
@@ -2526,7 +2526,7 @@ class MainWindow(QWidget):
         for t in self.sistema.turni:
             row = self.tbl_tutti_turni.rowCount()
             self.tbl_tutti_turni.insertRow(row)
-            self.tbl_tutti_turni.setItem(row, 0, QTableWidgetItem(str(t.id)))
+            self.tbl_tutti_turni.setItem(row, 0, QTableWidgetItem(str(t.codice)))
             self.tbl_tutti_turni.setItem(row, 1, QTableWidgetItem(t.data))
             self.tbl_tutti_turni.setItem(row, 2, QTableWidgetItem(t.fascia_oraria))
             item_luogo = QTableWidgetItem(t.luogo)
@@ -2549,7 +2549,7 @@ class MainWindow(QWidget):
                 dettagli = []
                 for v in t.volontari_assegnati:
                     r_v = getattr(t, "volontari_ruoli", {}).get(str(v.cod_fiscale), "Soccorritore")
-                    dettagli.append(f"• {v.get_nome_completo()}: {r_v}")
+                    dettagli.append(f"• {v.getNomeCompleto()}: {r_v}")
                 item_iscritti.setToolTip("\n".join(dettagli))
             self.tbl_tutti_turni.setItem(row, 7, item_iscritti)
             
@@ -2562,7 +2562,7 @@ class MainWindow(QWidget):
             QMessageBox.warning(self, "Attenzione", "Seleziona un turno da prenotare dalla tabella.")
             return
         id_turno = self.tbl_turni_disp.item(row, 0).text()
-        turno = next((t for t in self.sistema.turni if str(t.id) == id_turno), None)
+        turno = next((t for t in self.sistema.turni if str(t.codice) == id_turno), None)
         
         if turno:
             # Controllo se il turno è già al completo
@@ -2585,8 +2585,8 @@ class MainWindow(QWidget):
                 return
 
             # Salvataggio e assegnazione
-            self.turni_controller.prenotaTurno(turno.id, self.sistema.logged_user.cod_fiscale, ruolo)
-            self.sistema.logged_user.prenota_turno(turno)
+            self.turni_controller.prenotaTurno(turno.codice, self.sistema.logged_user.cod_fiscale, ruolo)
+            self.sistema.logged_user.prenotaTurno(turno)
             turno.aggiungiVolontario(self.sistema.logged_user)
             turno.volontari_ruoli[str(self.sistema.logged_user.cod_fiscale)] = ruolo
 
@@ -2596,7 +2596,7 @@ class MainWindow(QWidget):
                 print(f"⚠️ Errore aggiornamento profilo volontario nel database: {e}")
 
             self.update_ui()
-            self.mostra_toast(f"✅ Iscrizione confermata al turno {turno.id} come {ruolo}!", tipo="success")
+            self.mostra_toast(f"✅ Iscrizione confermata al turno {turno.codice} come {ruolo}!", tipo="success")
 
     def azione_annulla_turno(self):
         row = self.tbl_miei_turni.currentRow()
@@ -2604,12 +2604,12 @@ class MainWindow(QWidget):
             QMessageBox.warning(self, "Attenzione", "Seleziona un turno da annullare.")
             return
         id_turno = self.tbl_miei_turni.item(row, 0).text()
-        turno = next((t for t in self.sistema.turni if str(t.id) == id_turno), None)
+        turno = next((t for t in self.sistema.turni if str(t.codice) == id_turno), None)
         
         if turno:
             # Delega al controller (nessun popup di conferma bloccante)
             self.turni_controller.annullaPrenotazione(turno)
-            self.sistema.logged_user.annulla_prenotazione(turno)
+            self.sistema.logged_user.annullaPrenotazione(turno)
             turno.rimuoviVolontario(self.sistema.logged_user)
             if str(self.sistema.logged_user.cod_fiscale) in getattr(turno, "volontari_ruoli", {}):
                 del turno.volontari_ruoli[str(self.sistema.logged_user.cod_fiscale)]
@@ -2620,7 +2620,7 @@ class MainWindow(QWidget):
                 print(f"⚠️ Errore aggiornamento profilo nel database: {e}")
 
             self.update_ui()
-            self.mostra_toast(f"❌ Iscrizione al turno {turno.id} annullata.", tipo="info")
+            self.mostra_toast(f"❌ Iscrizione al turno {turno.codice} annullata.", tipo="info")
 
     def azione_volontario_cambia_mezzo(self):
         """Consente all'autista o volontario di abbinare o cambiare il mezzo del proprio turno."""
@@ -2632,21 +2632,21 @@ class MainWindow(QWidget):
         if not id_item:
             return
         id_turno = id_item.text()
-        turno = next((t for t in self.sistema.turni if str(t.id) == id_turno), None)
+        turno = next((t for t in self.sistema.turni if str(t.codice) == id_turno), None)
         if not turno:
             return
 
         cur_m = turno.mezzo or next((m for m in self.sistema.mezzi if m.targa == getattr(turno, "mezzo_targa", "")), None)
         dialog = AssegnaMezzoDialog(self.sistema.mezzi, [turno], preselected_mezzo=cur_m, parent=self)
-        dialog.setWindowTitle(f"🚐 Assegna / Cambia Mezzo — Turno {turno.id}")
+        dialog.setWindowTitle(f"🚐 Assegna / Cambia Mezzo — Turno {turno.codice}")
         if dialog.exec_():
             mezzo, _ = dialog.get_selected()
             if mezzo:
                 self.flotta_controller.assegnaMezzoATurno(mezzo, turno)
-                self.mostra_toast(f"✅ Mezzo {mezzo.targa} abbinato al turno {turno.id}!", tipo="success")
+                self.mostra_toast(f"✅ Mezzo {mezzo.targa} abbinato al turno {turno.codice}!", tipo="success")
             else:
                 self.flotta_controller.assegnaMezzoATurno(None, turno)
-                self.mostra_toast(f"⚪ Mezzo rimosso dal turno {turno.id}.", tipo="info")
+                self.mostra_toast(f"⚪ Mezzo rimosso dal turno {turno.codice}.", tipo="info")
             self.update_ui()
 
     def azione_compila_checklist(self):
@@ -2659,7 +2659,7 @@ class MainWindow(QWidget):
         if not id_item:
             return
         id_turno = id_item.text()
-        turno = next((t for t in self.sistema.turni if str(t.id) == id_turno), None)
+        turno = next((t for t in self.sistema.turni if str(t.codice) == id_turno), None)
         if not turno:
             return
             
@@ -2668,7 +2668,7 @@ class MainWindow(QWidget):
             QMessageBox.information(
                 self,
                 "Checklist Già Completata",
-                f"✅ La checklist per il turno {turno.id} ({turno.data} - {turno.fascia_oraria}) è già stata compilata e verificata con successo.\n\n"
+                f"✅ La checklist per il turno {turno.codice} ({turno.data} - {turno.fascia_oraria}) è già stata compilata e verificata con successo.\n\n"
                 "I dispositivi di bordo e le dotazioni del mezzo risultano già conformi. Non è necessario compilarla nuovamente."
             )
             return
@@ -2730,7 +2730,7 @@ class MainWindow(QWidget):
         # Inizializza l'oggetto checklist se non presente
         if not hasattr(turno, 'checklist_obj') or not turno.checklist_obj:
             turno.checklist_obj = Checklist(
-                id=f"CL_{turno.id}",
+                id=f"CL_{turno.codice}",
                 controlliMeccanici=False,
                 dispositiviMediciRichiesti=["Defibrillatore", "Barella", "Bombola O2"],
                 dispositiviPresenti=False,
@@ -2770,7 +2770,7 @@ class MainWindow(QWidget):
         if not id_item:
             return
         id_turno = id_item.text()
-        turno = next((t for t in self.sistema.turni if str(t.id) == id_turno), None)
+        turno = next((t for t in self.sistema.turni if str(t.codice) == id_turno), None)
         if turno and getattr(turno, "checklist", False):
             self.btn_checklist.setText("✅ Checklist Completata")
             self.btn_checklist.setToolTip("Checklist già compilata con successo per questo turno.")
@@ -2795,7 +2795,7 @@ class MainWindow(QWidget):
             QMessageBox.warning(self, "Attenzione", "Seleziona il turno da completare.")
             return
         id_turno = self.tbl_miei_turni.item(row, 0).text()
-        turno = next((t for t in self.sistema.turni if str(t.id) == id_turno), None)
+        turno = next((t for t in self.sistema.turni if str(t.codice) == id_turno), None)
         
         if turno:
             mezzo_obj = turno.mezzo or next((m for m in self.sistema.mezzi if m.targa == getattr(turno, "mezzo_targa", "")), None)
@@ -2820,7 +2820,7 @@ class MainWindow(QWidget):
                 
                 # Save using Fleet controller
                 r = Report(
-                    id="REP_" + str(turno.id),
+                    id="REP_" + str(turno.codice),
                     kmPercorsi=km_percorsi,
                     noteIntervento=note,
                     oreEffettive=int(ore),
@@ -2890,7 +2890,7 @@ class MainWindow(QWidget):
             QMessageBox.warning(self, "Attenzione", "Seleziona un turno da eliminare.")
             return
         id_turno = self.tbl_tutti_turni.item(row, 0).text()
-        turno = next((t for t in self.sistema.turni if str(t.id) == id_turno), None)
+        turno = next((t for t in self.sistema.turni if str(t.codice) == id_turno), None)
         
         if turno:
             self.turni_controller.eliminaTurno(turno, utente=self.sistema.logged_user)
@@ -2989,10 +2989,10 @@ class MainWindow(QWidget):
             mezzo, turno = dialog.get_selected()
             if turno and mezzo:
                 self.flotta_controller.assegnaMezzoATurno(mezzo, turno)
-                QMessageBox.information(self, "Successo", f"✅ Mezzo {mezzo.targa} assegnato al turno {turno.id} ({turno.data}).")
+                QMessageBox.information(self, "Successo", f"✅ Mezzo {mezzo.targa} assegnato al turno {turno.codice} ({turno.data}).")
             elif turno and not mezzo:
                 self.flotta_controller.assegnaMezzoATurno(None, turno)
-                QMessageBox.information(self, "Successo", f"⚪ Mezzo rimosso dal turno {turno.id}.")
+                QMessageBox.information(self, "Successo", f"⚪ Mezzo rimosso dal turno {turno.codice}.")
             elif preselected and not turno:
                 for t in list(preselected.turni_assegnati):
                     self.flotta_controller.assegnaMezzoATurno(None, t)
@@ -3382,7 +3382,7 @@ class MainWindow(QWidget):
             iscr_str = f"{len(c.partecipanti)} / {max_p}"
             item_posti = QTableWidgetItem(iscr_str)
             item_posti.setTextAlignment(Qt.AlignCenter)
-            if c.is_completo():
+            if c.isCompleto():
                 item_posti.setForeground(Qt.red)
             self.tbl_corsi.setItem(row, 4, item_posti)
 
@@ -3396,7 +3396,7 @@ class MainWindow(QWidget):
             elif cid in inc_ids:
                 item_st = QTableWidgetItem("🟡 ⏳ Iscritto")
                 item_st.setForeground(Qt.yellow)
-            elif c.is_completo():
+            elif c.isCompleto():
                 item_st = QTableWidgetItem("🔴 Completo")
                 item_st.setForeground(Qt.red)
             else:
@@ -3539,10 +3539,10 @@ class MainWindow(QWidget):
         c = next((corso for corso in self.sistema.corsi if str(corso.id) == id_corso), None)
         
         if c:
-            nomi = [v.get_nome_completo() for v in self.sistema.volontari if v.ruolo.lower() == "volontario"]
+            nomi = [v.getNomeCompleto() for v in self.sistema.volontari if v.ruolo.lower() == "volontario"]
             item, ok = QInputDialog.getItem(self, "Seleziona Volontario", "Scegli il volontario da certificare:", nomi, 0, False)
             if ok and item:
-                volontario = next((v for v in self.sistema.volontari if v.get_nome_completo() == item), None)
+                volontario = next((v for v in self.sistema.volontari if v.getNomeCompleto() == item), None)
                 if volontario:
                     self.formazione_controller.attestaPartecipazione(c.id, [volontario])
                     if c not in volontario.corsi_frequentati:
@@ -3552,7 +3552,7 @@ class MainWindow(QWidget):
                     volontario.aggiungiQualifica(c.titolo)
                     volontario.aggiungiOreServizio(int(getattr(c, "mesiValidita", 1) * 10))
                     volontario.aggiorna_firestore()
-                    self.mostra_toast(f"🏆 Brevetto '{c.titolo}' rilasciato a {volontario.get_nome_completo()}!", tipo="success")
+                    self.mostra_toast(f"🏆 Brevetto '{c.titolo}' rilasciato a {volontario.getNomeCompleto()}!", tipo="success")
                     self.update_ui()
 
 
@@ -3565,14 +3565,14 @@ class MainWindow(QWidget):
             QMessageBox.warning(self, "Attenzione", "Seleziona prima un turno dalla lista.")
             return
         id_turno = self.tbl_tutti_turni.item(row, 0).text()
-        turno = next((t for t in self.sistema.turni if str(t.id) == id_turno), None)
+        turno = next((t for t in self.sistema.turni if str(t.codice) == id_turno), None)
         if not turno:
             return
-        if not turno.is_modificabile():
+        if not turno.isModificabile():
             QMessageBox.warning(
                 self,
                 "Modifica non consentita",
-                f"⚠️ Non è possibile modificare il turno {turno.id} in quanto non si trova in stato 'Aperto' (stato attuale: '{turno.stato}')."
+                f"⚠️ Non è possibile modificare il turno {turno.codice} in quanto non si trova in stato 'Aperto' (stato attuale: '{turno.stato}')."
             )
             return
         dialog = ModificaTurnoDialog(turno, self.sistema.mezzi, self)
@@ -3636,7 +3636,7 @@ class MainWindow(QWidget):
         if not id_item:
             return
         id_turno = id_item.text()
-        turno = next((t for t in self.sistema.turni if str(t.id) == id_turno), None)
+        turno = next((t for t in self.sistema.turni if str(t.codice) == id_turno), None)
         if not turno:
             return
             
@@ -3841,7 +3841,7 @@ class MainWindow(QWidget):
         if filtro_lower:
             membri = [
                 m for m in membri
-                if filtro_lower in m.get_nome_completo().lower()
+                if filtro_lower in m.getNomeCompleto().lower()
                 or filtro_lower in str(m.cod_fiscale).lower()
                 or filtro_lower in getattr(m, "ruolo", "").lower()
                 or any(filtro_lower in str(p).lower() for p in getattr(m, "patenti", []))
@@ -3852,7 +3852,7 @@ class MainWindow(QWidget):
         self.tbl_volontari.setRowCount(len(membri))
         for r, m in enumerate(membri):
             self.tbl_volontari.setItem(r, 0, QTableWidgetItem(str(m.cod_fiscale)))
-            self.tbl_volontari.setItem(r, 1, QTableWidgetItem(m.get_nome_completo()))
+            self.tbl_volontari.setItem(r, 1, QTableWidgetItem(m.getNomeCompleto()))
 
             ruolo_cap = str(getattr(m, "ruolo", "volontario")).capitalize()
             self.tbl_volontari.setItem(r, 2, QTableWidgetItem(ruolo_cap))
@@ -3896,7 +3896,7 @@ class MainWindow(QWidget):
         v = self.get_volontario_selezionato()
         if v:
             testo = self.sistema.stampa_report_volontario(v.cod_fiscale)
-            dlg = VisualizzaReportDialog(f"Report Attività — {v.get_nome_completo()}", testo, v, self)
+            dlg = VisualizzaReportDialog(f"Report Attività — {v.getNomeCompleto()}", testo, v, self)
             dlg.exec_()
 
     def cambia_ruolo_volontario_selezionato(self):
@@ -3906,7 +3906,7 @@ class MainWindow(QWidget):
         opzioni = ["volontario", "referente"]
         ruolo_attuale = str(getattr(v, "ruolo", "volontario")).lower()
         idx_default = opzioni.index(ruolo_attuale) if ruolo_attuale in opzioni else 0
-        nuovo, ok = QInputDialog.getItem(self, "Modifica Ruolo Membro", f"Nuovo ruolo per {v.get_nome_completo()}:", opzioni, idx_default, False)
+        nuovo, ok = QInputDialog.getItem(self, "Modifica Ruolo Membro", f"Nuovo ruolo per {v.getNomeCompleto()}:", opzioni, idx_default, False)
         if ok and nuovo:
             v.ruolo = nuovo
             try:
@@ -3953,7 +3953,7 @@ class MainWindow(QWidget):
         user = self.sistema.logged_user
         if user:
             testo = self.sistema.stampa_report_volontario(user.cod_fiscale)
-            dlg = VisualizzaReportDialog(f"Report Personale — {user.get_nome_completo()}", testo, user, self)
+            dlg = VisualizzaReportDialog(f"Report Personale — {user.getNomeCompleto()}", testo, user, self)
             dlg.exec_()
 
     def setup_sistema(self):
@@ -3971,7 +3971,7 @@ class MainWindow(QWidget):
             formazione=[],
             comitato_appartenenza="CRI Roma",
             disponibilita=["Lunedì", "Venerdì"],
-            area_gestita="Formazione"
+            settoreGestito="Formazione"
         )
 
         volontario = Volontario(

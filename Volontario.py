@@ -10,8 +10,10 @@ if TYPE_CHECKING:
 class Volontario(Utente):
     """
     Rappresenta il profilo del Soccorritore / Volontario della Croce Rossa Italiana.
-    Incapsula le qualifiche operative conseguite, i turni di servizio svolti, il monte ore
-    totale accumulato e le disponibilità fornite.
+    Attributi UML: oreServizio, patenti, qualifiche.
+    Metodi UML: aggiornaProfilo, aggiungiOreServizio, aggiungiPatente, aggiungiQualifica,
+                getMonteOre, verificaCredenziali, prenotaTurno, annullaPrenotazione,
+                getTurniAssegnati.
     """
     def __init__(
         self,
@@ -23,7 +25,7 @@ class Volontario(Utente):
         telefono: str = "",
         ruolo: str = "volontario",
         password: str = "",
-        monteOreTotale: int = 0,
+        oreServizio: int = 0,
         patenti: List[str] | None = None,
         qualifiche: List[str] | None = None,
         disponibilita: List[str] | None = None,
@@ -40,6 +42,8 @@ class Volontario(Utente):
         numero_patente: str = "",
         scadenza_patente: str = "",
         app_io_certificato_id: str = "",
+        # old name compatibility:
+        monteOreTotale: int | None = None,
         **kwargs
     ):
         cf = cod_fiscale if cod_fiscale is not None else codFiscale
@@ -55,9 +59,10 @@ class Volontario(Utente):
             telefono=telefono,
             comitato_appartenenza=comitato
         )
-        
+
         self.password = password
-        self.monteOreTotale = monteOreTotale
+        # Supporta il vecchio nome monteOreTotale per retrocompatibilità con il DB JSON
+        self.oreServizio = monteOreTotale if monteOreTotale is not None else oreServizio
         self.patenti = patenti if patenti is not None else []
         self.qualifiche = qualifiche if qualifiche is not None else []
         self.disponibilita = disponibilita if disponibilita is not None else []
@@ -69,14 +74,13 @@ class Volontario(Utente):
         self.scadenza_patente: str = scadenza_patente or kwargs.get("scadenza_patente", "")
         self.app_io_certificato_id: str = app_io_certificato_id or kwargs.get("app_io_certificato_id", "")
         self.punti_patente: int = int(kwargs.get("punti_patente", 30))
-        
-        # Compatibility properties:
+
         self.curriculum = curriculum
         self.formazione = formazione if formazione is not None else []
         self.referente: Optional[Referente] = None
         self.turni_assegnati: List[Turno] = []
         self.corsi_frequentati: List[Corso] = []
-        self.ore_lavorate: dict[int, float] = {}
+        self.ore_lavorate: dict[str, float] = {}
 
     def aggiornaProfilo(self, v: Volontario) -> bool:
         """Sincronizza le informazioni del profilo a partire da un'altra istanza Volontario (UML)."""
@@ -87,15 +91,35 @@ class Volontario(Utente):
         self.telefono = v.telefono
         self.ruolo = v.ruolo
         self.password = v.password
-        self.monteOreTotale = v.monteOreTotale
+        self.oreServizio = v.oreServizio
         self.patenti = v.patenti
         self.qualifiche = v.qualifiche
         self.disponibilita = v.disponibilita
         return True
 
+    @property
+    def codiceFiscale(self) -> str:
+        return self.cod_fiscale
+
+    @codiceFiscale.setter
+    def codiceFiscale(self, val: str):
+        self.cod_fiscale = val
+
+    def possiedePatenteValida(self, tipo: str = "") -> bool:
+        """Verifica se il volontario possiede una patente valida non scaduta (UML PrenotaTurno)."""
+        if not tipo:
+            return len(self.patenti) > 0
+        for p in self.patenti:
+            if isinstance(p, str) and p.strip().upper() == tipo.strip().upper():
+                return True
+            elif hasattr(p, "tipo") and str(p.tipo).strip().upper() == tipo.strip().upper():
+                if hasattr(p, "isScaduta") and not p.isScaduta():
+                    return True
+        return False
+
     def aggiungiOreServizio(self, ore: int) -> None:
         """Incrementa il monte ore di servizio certificato svolto dal volontario (UML)."""
-        self.monteOreTotale += ore
+        self.oreServizio += ore
 
     def aggiungiPatente(self, patente: str) -> None:
         """Registra una patente di guida nell'elenco del soccorritore (UML)."""
@@ -109,13 +133,12 @@ class Volontario(Utente):
 
     def getMonteOre(self) -> int:
         """Restituisce il totale cumulato delle ore di volontariato prestate (UML)."""
-        return self.monteOreTotale
+        return self.oreServizio
 
     def verificaCredenziali(self, email: str, password: str) -> bool:
         """Verifica la corrispondenza delle credenziali di accesso (UML)."""
         return self.email == email and self.password == password
 
-    # Persistence methods:
     def aggiorna_db(self) -> bool:
         """Salva lo stato corrente del profilo volontario nel database locale JSON."""
         from GestioneUtenteController import GestioneUtenteController
@@ -123,7 +146,7 @@ class Volontario(Utente):
         return controller.modificaProfilo(self)
 
     def aggiorna_firestore(self) -> bool:
-        """Metodo di compatibilità: salva lo stato nel database locale JSON."""
+        """Salva lo stato nel database locale JSON."""
         return self.aggiorna_db()
 
     def aggiorna_email(self, nuova_email: str) -> bool:
@@ -132,28 +155,14 @@ class Volontario(Utente):
         controller = GestioneUtenteController()
         return controller.modificaProfilo(self)
 
-    def iscriviti_al_corso(self, corso: Corso):
-        if corso not in self.formazione:
-            self.formazione.append(corso)
-            print(f"{self.nome} iscritto al corso {corso.nome}")
-
-    def disiscriviti_dal_corso(self, corso: Corso):
-        if corso in self.formazione:
-            self.formazione.remove(corso)
-            print(f"{self.nome} disiscritto dal corso {corso.nome}")
-
-    def prenota_turno(self, turno: Turno, parent=None):
-        if turno not in self.turni_assegnati:
-            self.turni_assegnati.append(turno)
-
     def prenotaTurno(self, turno: Turno | str) -> bool:
+        """Prenota un turno di servizio (UML)."""
         if isinstance(turno, str):
-            # Se viene passato l'ID del turno
             for t in self.turni_assegnati:
-                if t.id == turno:
+                if t.codice == turno:
                     return True
             from Turno import Turno
-            t_obj = Turno(id=turno)
+            t_obj = Turno(codice=turno)
             self.turni_assegnati.append(t_obj)
             return True
         elif turno and turno not in self.turni_assegnati:
@@ -161,13 +170,10 @@ class Volontario(Utente):
             return True
         return False
 
-    def annulla_prenotazione(self, turno: Turno):
-        if turno in self.turni_assegnati:
-            self.turni_assegnati.remove(turno)
-
     def annullaPrenotazione(self, turno: Turno | str) -> bool:
+        """Annulla la prenotazione a un turno di servizio (UML)."""
         if isinstance(turno, str):
-            to_remove = [t for t in self.turni_assegnati if t.id == turno]
+            to_remove = [t for t in self.turni_assegnati if t.codice == turno]
             for t in to_remove:
                 self.turni_assegnati.remove(t)
             return True
@@ -176,23 +182,26 @@ class Volontario(Utente):
             return True
         return False
 
-    def rimuovi_turno(self, turno: Turno):
-        """Alias compatibile per annulla_prenotazione."""
-        self.annulla_prenotazione(turno)
+    def iscriviti_al_corso(self, corso: Corso) -> bool:
+        """Iscrive il volontario a un corso di formazione."""
+        if corso not in self.formazione:
+            self.formazione.append(corso)
+        if hasattr(corso, "aggiungiPartecipante"):
+            corso.aggiungiPartecipante(self)
+        return True
+
+    def disiscriviti_dal_corso(self, corso: Corso) -> bool:
+        """Annulla l'iscrizione del volontario a un corso."""
+        if corso in self.formazione:
+            self.formazione.remove(corso)
+        if hasattr(corso, "rimuoviPartecipante"):
+            corso.rimuoviPartecipante(self)
+        return True
 
     def compila_report_turno(self, turno: Turno, ore_lavorate: float):
-        self.ore_lavorate[turno.id_turno] = ore_lavorate
+        self.ore_lavorate[turno.codice] = ore_lavorate
         self.aggiungiOreServizio(int(ore_lavorate))
         print(f"{self.nome} ha registrato {ore_lavorate} ore per il turno del {turno.data}")
-
-    def calcola_ore_totali(self) -> float:
-        return float(self.monteOreTotale)
-
-    def has_disponibilita(self, giorno: str) -> bool:
-        return giorno in self.disponibilita
-
-    def visualizzaTurniScelti(self) -> List[Turno]:
-        return list(self.turni_assegnati)
 
     def getTurniAssegnati(self) -> List[Turno]:
         """Restituisce l'elenco dei turni di servizio assegnati al volontario (UML)."""
@@ -212,7 +221,7 @@ class Volontario(Utente):
             return
         print("📘 Rubrica volontari:")
         for volontario in colleghi:
-            print(f" - {volontario.get_nome_completo()} | 📧 {volontario.email} | 📞 {volontario.telefono}")
+            print(f" - {volontario.getNomeCompleto()} | 📧 {volontario.email} | 📞 {volontario.telefono}")
 
     def apri_modifica_dati(self):
         from layout.modifica_dati_dialog import ModificaDatiDialog
@@ -222,7 +231,7 @@ class Volontario(Utente):
     def to_dict(self) -> dict:
         d = super().to_dict()
         d.update({
-            "monteOreTotale": self.monteOreTotale,
+            "monteOreTotale": self.oreServizio,
             "patenti": self.patenti,
             "qualifiche": self.qualifiche,
             "disponibilita": self.disponibilita,

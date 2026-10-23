@@ -50,7 +50,9 @@ class Sistema:
                     "telefono": "3331234567",
                     "ruolo": "referente",
                     "password": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
-                    "monteOreTotale": 150,
+                    "oreServizio": 150,
+                    "settoreGestito": "Turni e Soccorso",
+                    "codiceAutorizzazione": "1234",
                     "patenti": ["B", "C1"],
                     "qualifiche": ["Soccorritore 118", "BLSD", "Istruttore"],
                     "comitato_appartenenza": "Comitato Centrale CRI"
@@ -64,7 +66,7 @@ class Sistema:
                     "telefono": "3339876543",
                     "ruolo": "volontario",
                     "password": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
-                    "monteOreTotale": 45,
+                    "oreServizio": 45,
                     "patenti": ["B", "C1"],
                     "qualifiche": ["Soccorritore 118", "BLSD"],
                     "numero_patente": "U1482910A",
@@ -80,7 +82,7 @@ class Sistema:
                     "telefono": "3335557788",
                     "ruolo": "volontario",
                     "password": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
-                    "monteOreTotale": 30,
+                    "oreServizio": 30,
                     "patenti": ["B"],
                     "qualifiche": ["Soccorritore 118"],
                     "numero_patente": "U1984210T",
@@ -317,7 +319,7 @@ class Sistema:
             self.turni = []
             for dati in dati_totali.get("turni", []):
                 t = Turno(
-                    id=str(dati.get("id") or ""),
+                    codice=str(dati.get("codice") or dati.get("id") or ""),
                     data=str(dati.get("data") or ""),
                     luogoDestinazione=str(dati.get("luogoDestinazione") or dati.get("luogo") or ""),
                     luogoPrelevamento=str(dati.get("luogoPrelevamento") or dati.get("luogo") or ""),
@@ -402,7 +404,8 @@ class Sistema:
                 ],
                 "turni": [
                     {
-                        "id": str(t.id),
+                        "id": str(t.codice),
+                        "codice": str(t.codice),
                         "data": str(t.data or ""),
                         "luogoDestinazione": str(t.luogoDestinazione or ""),
                         "luogoPrelevamento": str(t.luogoPrelevamento or ""),
@@ -496,7 +499,7 @@ class Sistema:
 
     def prenota_turno(self, cod_fiscale: str, id_turno: str | int):
         volontario = self.get_volontario(cod_fiscale)
-        turno = next((t for t in self.turni if t.id == str(id_turno) or getattr(t, "id_turno", None) == id_turno), None)
+        turno = next((t for t in self.turni if t.codice == str(id_turno)), None)
 
         if not volontario:
             print("⚠️ Volontario non trovato.")
@@ -505,7 +508,7 @@ class Sistema:
             print("⚠️ Turno non trovato.")
             return
 
-        turno.assegna_turno(volontario)
+        turno.aggiungiVolontario(volontario)
 
     # --- Gestione corsi ---
     def aggiungi_corso(self, corso: Corso):
@@ -541,14 +544,14 @@ class Sistema:
     def assegna_turno(self, cod_fiscale: str, turno: Turno):
         volontario = self.get_volontario(cod_fiscale)
         if volontario:
-            volontario.prenota_turno(turno)
-            turno.assegna_turno(volontario)
+            volontario.prenotaTurno(turno)
+            turno.aggiungiVolontario(volontario)
 
     def annulla_turno(self, cod_fiscale: str, turno: Turno):
         volontario = self.get_volontario(cod_fiscale)
         if volontario:
-            volontario.annulla_prenotazione(turno)
-            turno.rimuovi_volontario(volontario)
+            volontario.annullaPrenotazione(turno)
+            turno.rimuoviVolontario(volontario)
 
     def notifica_turni_scoperti(self) -> list[dict]:
         avvisi = []
@@ -565,7 +568,7 @@ class Sistema:
                     "oggetto": turno
                 }
                 avvisi.append(avviso)
-                print(f"⚠️ Turno {turno.id} ancora scoperto (iscritti: {iscritti}/{persone_richieste})")
+                print(f"⚠️ Turno {turno.codice} ancora scoperto (iscritti: {iscritti}/{persone_richieste})")
         return avvisi
 
     def invia_promemoria_servizi_24h(self) -> list[dict]:
@@ -594,9 +597,9 @@ class Sistema:
                 for v in getattr(turno, "volontari_assegnati", []):
                     email = getattr(v, "email", "")
                     # Chiave composita di deduplicazione per garantire l'idempotenza
-                    chiave_notifica = f"{turno.id}_{v.cod_fiscale}_{data_t}"
+                    chiave_notifica = f"{turno.codice}_{v.cod_fiscale}_{data_t}"
                     if email and "@" in email and chiave_notifica not in self.promemoria_inviati:
-                        nome_vol = v.get_nome_completo() if hasattr(v, "get_nome_completo") else v.nome
+                        nome_vol = v.getNomeCompleto() if hasattr(v, "getNomeCompleto") else v.nome
                         servizio = turno.tipoServizio or "Servizio Operativo"
                         orario = turno.fascia_oraria or f"{turno.oraInizio} - {turno.oraFine}"
                         luogo = turno.luogo
@@ -623,7 +626,8 @@ class Sistema:
                             "volontario": v,
                             "volontario_cf": getattr(v, "cod_fiscale", ""),
                             "turno": turno,
-                            "id_turno": getattr(turno, "id", ""),
+                            "codice": getattr(turno, "codice", ""),
+                            "id_turno": getattr(turno, "codice", ""),
                             "email": email,
                             "data": data_t
                         })
@@ -713,7 +717,7 @@ class Sistema:
         report.append("-" * 40)
         report.append(f"Codice fiscale : {volontario.cod_fiscale}")
         report.append(f"Email : {volontario.email}")
-        report.append(f"Totale ore : {volontario.calcola_ore_totali():.2f} h")
+        report.append(f"Totale ore : {volontario.getMonteOre():.2f} h")
 
         if not volontario.turni_assegnati:
             report.append("\nNessun turno assegnato.")
@@ -721,7 +725,7 @@ class Sistema:
 
         report.append("\n🗓️ Turni assegnati:")
         for turno in volontario.turni_assegnati:
-            ore = volontario.ore_lavorate.get(turno.id_turno, 0.0)
+            ore = volontario.ore_lavorate.get(turno.codice, 0.0)
             report.append(f"- {turno.data} | {turno.fascia_oraria} | Servizio: {turno.tipoServizio} | Ore: {ore:.2f}")
 
         return "\n".join(report)

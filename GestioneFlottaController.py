@@ -25,7 +25,7 @@ class GestioneFlottaController:
         if utente is None:
             return True  # Fallback per chiamate interne o test
         ruolo = str(getattr(utente, "ruolo", "")).strip().lower()
-        if ruolo == "referente" or hasattr(utente, "area_gestita"):
+        if ruolo == "referente" or hasattr(utente, "settoreGestito"):
             return True
         print("❌ Operazione negata: solo gli utenti con ruolo 'Referente' possono gestire la flotta.")
         return False
@@ -69,14 +69,14 @@ class GestioneFlottaController:
                 t.assegna_mezzo(m)
                 m.stato = "Assegnato"
                 m._disponibile = False
-                print(f"[GestioneFlottaController] Mezzo {m.targa} assegnato al turno {t.id}.")
+                print(f"[GestioneFlottaController] Mezzo {m.targa} assegnato al turno {t.codice}.")
             else:
                 old_mezzo = getattr(t, "mezzo", None)
                 t.rimuovi_mezzo()
                 if old_mezzo and len(old_mezzo.turni_assegnati) == 0:
                     old_mezzo.stato = "Disponibile"
                     old_mezzo._disponibile = True
-                print(f"[GestioneFlottaController] Mezzo rimosso dal turno {t.id}.")
+                print(f"[GestioneFlottaController] Mezzo rimosso dal turno {t.codice}.")
             from Sistema import Sistema
             s = Sistema.get_instance()
             if s:

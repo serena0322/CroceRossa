@@ -267,7 +267,7 @@ class DettaglioCorsoDialog(QDialog):
                 f"CORSO DI FORMAZIONE: {self.corso.titolo or self.corso.nome} (ID: {self.corso.id})",
                 f"DATA RILASCIO ATTESTATO: {now_str}",
                 "----------------------------------------------------------------------------------------------------",
-                f"PARTECIPANTE: {self.utente.get_nome_completo()}",
+                f"PARTECIPANTE: {self.utente.getNomeCompleto()}",
                 f"CODICE FISCALE: {self.utente.cod_fiscale}",
                 f"RUOLO / QUALIFICA ACQUISITA: {qualifica}",
                 f"PERIODO FORMATIVO: dal {self.corso.dataInizio or 'N/D'} al {self.corso.dataFine or 'N/D'}",
@@ -347,7 +347,7 @@ class DettaglioCorsoDialog(QDialog):
                 f.write(f"Data Fine: {self.corso.dataFine}\n")
                 f.write(f"Qualifica Rilasciata: {getattr(self.corso, 'qualificaRilasciata', '') or self.corso.titolo}\n")
                 f.write(f"Stato Personale: {self.stato_tipo.upper()}\n")
-                f.write(f"Volontario: {self.utente.get_nome_completo()} ({self.utente.cod_fiscale})\n")
+                f.write(f"Volontario: {self.utente.getNomeCompleto()} ({self.utente.cod_fiscale})\n")
             QMessageBox.information(self, "Esportato", f"✅ Scheda salvata in:\n{file_path}")
         except Exception as e:
             QMessageBox.critical(self, "Errore", f"Errore durante l'esportazione: {e}")
@@ -374,7 +374,7 @@ class DettaglioCorsoDialog(QDialog):
         self.accept()
 
     def azione_iscrivi(self):
-        if hasattr(self.corso, "is_completo") and self.corso.is_completo():
+        if self.corso.isCompleto():
             QMessageBox.critical(self, "Corso al Completo", f"❌ Impossibile iscriversi: il corso ha raggiunto la capienza massima consentita ({getattr(self.corso, 'maxPartecipanti', 20)} partecipanti).")
             return
         if self.controller:

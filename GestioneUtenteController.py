@@ -170,11 +170,11 @@ class GestioneUtenteController:
                     u = sys_inst.get_volontario(target_str.upper())
                     if u:
                         dest_email = u.email
-                        nome_utente = u.get_nome_completo() or "Volontario"
+                        nome_utente = u.getNomeCompleto() or "Volontario"
                 else:
                     u = next((v for v in sys_inst.volontari if getattr(v, "email", "").strip().lower() == dest_email.lower()), None)
                     if u:
-                        nome_utente = u.get_nome_completo() or "Volontario"
+                        nome_utente = u.getNomeCompleto() or "Volontario"
         except Exception as e:
             print(f"⚠️ Ricerca utente per recupero credenziali: {e}")
 

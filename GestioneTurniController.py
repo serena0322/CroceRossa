@@ -29,7 +29,7 @@ class GestioneTurniController:
             s = Sistema.get_instance()
             if s:
                 s.salva_dati()
-            print(f"[GestioneTurniController] annullaPrenotazione turno {t.id} completato.")
+            print(f"[GestioneTurniController] annullaPrenotazione turno {t.codice} completato.")
             return True
         except Exception as e:
             print(f"⚠️ Errore annullaPrenotazione nel database locale: {e}")
@@ -37,11 +37,11 @@ class GestioneTurniController:
 
     def assegnaTurno(self, v: Volontario, t: Turno) -> None:
         """Assegna formalmente il turno al volontario invocando la procedura di prenotazione."""
-        self.prenotaTurno(t.id, v.cod_fiscale)
+        self.prenotaTurno(t.codice, v.cod_fiscale)
 
     def calcolaOrePeriodo(self, v: Volontario, inizio: str, fine: str) -> int:
         """Calcola il monte ore complessivo svolto dal volontario."""
-        return v.monteOreTotale
+        return v.oreServizio
 
     def _verifica_permessi_referente(self, utente) -> bool:
         """
@@ -51,7 +51,7 @@ class GestioneTurniController:
         if utente is None:
             return True  # Fallback per chiamate di sistema/test senza utente esplicito
         ruolo = str(getattr(utente, "ruolo", "")).strip().lower()
-        if ruolo == "referente" or hasattr(utente, "area_gestita"):
+        if ruolo == "referente" or hasattr(utente, "settoreGestito"):
             return True
         print("❌ Operazione negata: solo gli utenti con ruolo 'Referente' possono gestire i turni.")
         return False
@@ -63,18 +63,18 @@ class GestioneTurniController:
         """
         if not self._verifica_permessi_referente(utente):
             return False
-        if not t.id:
+        if not t.codice:
             import uuid
-            t.id = str(uuid.uuid4())[:8].upper()
+            t.codice = str(uuid.uuid4())[:8].upper()
         try:
             from Sistema import Sistema
             s = Sistema.get_instance()
             if s:
-                existing = next((x for x in s.turni if str(x.id) == str(t.id)), None)
+                existing = next((x for x in s.turni if str(x.codice) == str(t.codice)), None)
                 if not existing:
                     s.turni.append(t)
                 s.salva_dati()
-            print(f"[GestioneTurniController] creaTurno {t.id} salvato nel database locale.")
+            print(f"[GestioneTurniController] creaTurno {t.codice} salvato nel database locale.")
             return True
         except Exception as e:
             print(f"⚠️ Errore creaTurno nel database locale: {e}")
@@ -94,7 +94,7 @@ class GestioneTurniController:
             print(f"⚠️ Impossibile modificare il turno {idTurno}: consentita la modifica solo se in stato 'Aperto' (stato attuale: '{getattr(t, 'stato', 'N/D')}').")
             return False
 
-        t.id = idTurno
+        t.codice = idTurno
         return self.creaTurno(t, utente=utente)
 
     def eliminaTurno(self, idTurno: str, utente=None) -> bool:
@@ -105,7 +105,7 @@ class GestioneTurniController:
             from Sistema import Sistema
             s = Sistema.get_instance()
             if s:
-                s.turni = [t for t in s.turni if str(t.id) != str(idTurno)]
+                s.turni = [t for t in s.turni if str(t.codice) != str(idTurno)]
                 s.salva_dati()
             print(f"[GestioneTurniController] eliminaTurno {idTurno} rimosso dal database locale.")
             return True
@@ -122,7 +122,7 @@ class GestioneTurniController:
         s = sistema or Sistema.get_instance()
         try:
             if s:
-                turno_obj = next((t for t in getattr(s, "turni", []) if str(t.id) == str(idTurno)), None)
+                turno_obj = next((t for t in getattr(s, "turni", []) if str(t.codice) == str(idTurno)), None)
                 vol_obj = next((v for v in getattr(s, "volontari", []) if v.cod_fiscale.upper() == idVolontario.upper()), None)
                 if turno_obj and vol_obj:
                     if not self.verificaLimiteOreGiornaliere(vol_obj, turno_obj):
@@ -189,7 +189,7 @@ class GestioneTurniController:
         if not v or not t or not getattr(v, "turni_assegnati", None):
             return True
         for altro in v.turni_assegnati:
-            if altro.id == t.id:
+            if altro.codice == t.codice:
                 continue
             if altro.data.strip() == t.data.strip():
                 try:
@@ -199,7 +199,7 @@ class GestioneTurniController:
                     a_fin = altro.oraFine.strip()
                     # Condizione necessaria e sufficiente di sovrapposizione tra fasce orarie
                     if max(t_ini, a_ini) < min(t_fin, a_fin):
-                        print(f"⚠️ Sovrapposizione oraria rilevata con turno {altro.id} ({altro.data} {altro.fascia_oraria})")
+                        print(f"⚠️ Sovrapposizione oraria rilevata con turno {altro.codice} ({altro.data} {altro.fascia_oraria})")
                         return False
                 except Exception:
                     pass
@@ -218,7 +218,7 @@ class GestioneTurniController:
         durata_nuovo = t.calcola_durata_ore() if hasattr(t, "calcola_durata_ore") else 4.0
         ore_giornaliere = 0.0
         for altro in getattr(v, "turni_assegnati", []):
-            if altro.id == t.id:
+            if altro.codice == t.codice:
                 continue
             if altro.data.strip() == t.data.strip():
                 ore_giornaliere += altro.calcola_durata_ore() if hasattr(altro, "calcola_durata_ore") else 4.0

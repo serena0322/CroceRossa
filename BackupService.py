@@ -87,7 +87,8 @@ class BackupService:
                 ],
                 "turni": [
                     {
-                        "id": t.id,
+                        "id": getattr(t, "codice", getattr(t, "id", "")),
+                        "codice": getattr(t, "codice", getattr(t, "id", "")),
                         "data": t.data,
                         "luogoPrelevamento": getattr(t, "luogoPrelevamento", ""),
                         "luogoDestinazione": getattr(t, "luogoDestinazione", ""),

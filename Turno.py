@@ -1,14 +1,41 @@
 from __future__ import annotations
 from typing import List, TYPE_CHECKING
+from datetime import datetime
 
 if TYPE_CHECKING:
     from Volontario import Volontario
     from Mezzo import Mezzo
 
+
 class Turno:
+    """
+    Rappresenta un turno di servizio operativo della Croce Rossa Italiana.
+    Classe conforme al diagramma delle classi UML (Package Attivita).
+
+    Attributi UML:
+        codice: str (String)
+        corsiRichiesti: str (String)
+        data: str (Data)
+        datiPaziente: str (String)
+        luogo: str (String)
+        materialeNecessario: str (String)
+        mezzo: str (String)
+        oraFine: str (Ora)
+        oraInizio: str (Ora)
+        patenteRichiesta: str (String)
+        postiLiberi: int (Integer)
+        postiTotali: int (Integer)
+        stato: str (StatoAttivita: PROGRAMMATO, IN_CORSO, CONCLUSO)
+        tipoServizio: str (String)
+
+    Metodi UML:
+        getDati(), setDati(), setPostiLiberi(), isCompleto(), isModificabile(),
+        aggiungiVolontario(), rimuoviVolontario(), getTurniDisponibili(),
+        getDataOraInizio(), ordinaPerData(), soddisfaCriterio().
+    """
     def __init__(
         self,
-        id: str = "",
+        codice: str = "",
         data: str = "",
         luogoDestinazione: str = "",
         luogoPrelevamento: str = "",
@@ -20,10 +47,15 @@ class Turno:
         paziente_cognome: str = "",
         paziente_cf: str = "",
         personeRichieste: int | str = 1,
+        postiTotali: int | None = None,
+        postiLiberi: int | None = None,
         stato: str = "Aperto",
         tipoServizio: str = "",
         mezzo_targa: str = "",
+        corsiRichiesti: str = "",
+        materialeNecessario: str = "",
         # Compatibility parameters:
+        id: str | None = None,
         id_turno: int | None = None,
         fascia_oraria: str | None = None,
         luogo: str | None = None,
@@ -33,38 +65,47 @@ class Turno:
         dispositivi_richiesti: List[str] | None = None,
         **kwargs
     ):
-        self.id = str(id_turno) if id_turno is not None else id
-        self.data = data
+        if id_turno is not None:
+            self.codice = str(id_turno)
+        elif id is not None:
+            self.codice = str(id)
+        else:
+            self.codice = str(codice or kwargs.get("id", ""))
+
+        self.data = str(data)
         self.luogoDestinazione = luogoDestinazione if luogoDestinazione else (luogo if luogo else "")
         self.luogoPrelevamento = luogoPrelevamento if luogoPrelevamento else (luogo if luogo else "")
-        
-        # Gestione campi separati paziente
+
+        # Gestione campi paziente
         self.paziente_nome = paziente_nome or kwargs.get("paziente_nome_cognome", "")
         self.paziente_cognome = paziente_cognome
         self.paziente_cf = paziente_cf or kwargs.get("codice_fiscale_paziente", "")
         self._paziente_raw = paziente
         if not self.paziente_nome and paziente and paziente != "Nessuno":
             self.paziente_nome = paziente
-        
+
         if fascia_oraria and " - " in fascia_oraria:
             parts = fascia_oraria.split(" - ")
-            self.oraInizio = parts[0]
-            self.oraFine = parts[1]
+            self.oraInizio = parts[0].strip()
+            self.oraFine = parts[1].strip()
         else:
-            self.oraInizio = oraInizio
-            self.oraFine = oraFine
+            self.oraInizio = str(oraInizio).strip()
+            self.oraFine = str(oraFine).strip()
 
         self.patenteRichiesta = patenteRichiesta if patenteRichiesta else (corso_richiesto if corso_richiesto else "")
-        
+        self.corsiRichiesti = corsiRichiesti or self.patenteRichiesta
+        self.materialeNecessario = materialeNecessario or kwargs.get("materiale_necessario", "")
+
+        tot = postiTotali if postiTotali is not None else personeRichieste
         try:
-            self.personeRichieste = int(personeRichieste)
+            self.postiTotali = int(tot)
         except (ValueError, TypeError):
-            self.personeRichieste = 1
-            
+            self.postiTotali = 1
+        self.personeRichieste = self.postiTotali
+
         self.stato = stato
         self.tipoServizio = tipoServizio
-        
-        # Compatibility attributes
+
         self.volontari_assegnati: List[Volontario] = []
         self.mezzo: Mezzo | None = None
         self.mezzo_targa: str = mezzo_targa
@@ -72,20 +113,22 @@ class Turno:
         self.tempoExtra = tempoExtra
         self.dispositivi_richiesti = dispositivi_richiesti if dispositivi_richiesti is not None else []
         self.corso_richiesto = self.patenteRichiesta
-        self.persone_richieste = {"volontario": self.personeRichieste}
+        self.persone_richieste = {"volontario": self.postiTotali}
         self.persone_prenotate = {}
         self.volontari_ruoli: dict[str, str] = {}
 
+        if postiLiberi is not None:
+            self.postiLiberi = int(postiLiberi)
+        else:
+            self.postiLiberi = max(0, self.postiTotali - len(self.volontari_assegnati))
+
     @property
-    def id_turno(self) -> int:
-        try:
-            return int(self.id)
-        except ValueError:
-            return 0
-            
-    @id_turno.setter
-    def id_turno(self, val: int):
-        self.id = str(val)
+    def datiPaziente(self) -> str:
+        return self.paziente
+
+    @datiPaziente.setter
+    def datiPaziente(self, val: str):
+        self.paziente = val
 
     @property
     def paziente(self) -> str:
@@ -109,7 +152,7 @@ class Turno:
         if self.luogoPrelevamento and self.luogoDestinazione and self.luogoPrelevamento != self.luogoDestinazione:
             return f"{self.luogoPrelevamento} ➔ {self.luogoDestinazione}"
         return self.luogoDestinazione or self.luogoPrelevamento or ""
-        
+
     @luogo.setter
     def luogo(self, val: str):
         if " ➔ " in val:
@@ -124,9 +167,81 @@ class Turno:
             self.luogoDestinazione = val
             self.luogoPrelevamento = val
 
+    @property
+    def fascia_oraria(self) -> str:
+        return f"{self.oraInizio} - {self.oraFine}"
+
+    @fascia_oraria.setter
+    def fascia_oraria(self, val: str):
+        if " - " in val:
+            parts = val.split(" - ")
+            self.oraInizio = parts[0].strip()
+            self.oraFine = parts[1].strip()
+
+    def getDati(self) -> dict:
+        """Restituisce i dati del turno conformi al diagramma di sequenza UML VisualizzaTurni / PrenotaTurno."""
+        return {
+            "codice": self.codice,
+            "data": self.data,
+            "oraInizio": self.oraInizio,
+            "oraFine": self.oraFine,
+            "luogo": self.luogo,
+            "luogoPrelevamento": self.luogoPrelevamento,
+            "luogoDestinazione": self.luogoDestinazione,
+            "tipoServizio": self.tipoServizio,
+            "patenteRichiesta": self.patenteRichiesta,
+            "corsiRichiesti": self.corsiRichiesti,
+            "materialeNecessario": self.materialeNecessario,
+            "datiPaziente": self.datiPaziente,
+            "postiTotali": self.postiTotali,
+            "postiLiberi": self.postiLiberi,
+            "stato": self.stato,
+            "mezzo": self.mezzo_targa or (self.mezzo.targa if self.mezzo else "")
+        }
+
+    def setDati(self, **kwargs) -> None:
+        """Aggiorna le informazioni del turno (UML CUDTurno)."""
+        for k, v in kwargs.items():
+            if hasattr(self, k):
+                setattr(self, k, v)
+        if "postiTotali" in kwargs:
+            self.personeRichieste = self.postiTotali
+            self.postiLiberi = max(0, self.postiTotali - len(self.volontari_assegnati))
+
+    def setPostiLiberi(self, val: int | None = None) -> None:
+        """Imposta il numero di posti liberi rimasti per il turno (UML PrenotaTurno / CUDTurno)."""
+        if val is not None:
+            self.postiLiberi = max(0, int(val))
+        else:
+            self.postiLiberi = max(0, self.postiTotali - len(self.volontari_assegnati))
+
+    def getDataOraInizio(self) -> datetime | None:
+        """Restituisce la data e l'ora di inizio come oggetto datetime (UML VisualizzaPrenotazioni)."""
+        try:
+            return datetime.strptime(f"{self.data} {self.oraInizio}", "%Y-%m-%d %H:%M")
+        except Exception:
+            return None
+
+    def soddisfaCriterio(self, criterio: str = "") -> bool:
+        """Verifica se il turno soddisfa un criterio di ricerca (UML RicercaTurno)."""
+        if not criterio:
+            return True
+        crit = criterio.lower()
+        return (
+            crit in self.codice.lower()
+            or crit in self.tipoServizio.lower()
+            or crit in self.luogo.lower()
+            or crit in self.data.lower()
+            or crit in self.stato.lower()
+        )
+
+    @staticmethod
+    def ordinaPerData(turni: List[Turno]) -> List[Turno]:
+        """Ordina i turni dal più recente al meno recente (UML VisualizzaTurni)."""
+        return sorted(turni, key=lambda t: f"{getattr(t, 'data', '')} {getattr(t, 'oraInizio', '')}", reverse=True)
+
     def calcola_durata_ore(self) -> float:
         """Calcola la durata in ore del turno per la verifica dei limiti operativi."""
-        from datetime import datetime
         try:
             fmt = "%H:%M"
             t_ini = datetime.strptime(self.oraInizio.strip(), fmt)
@@ -138,87 +253,52 @@ class Turno:
         except Exception:
             return 4.0
 
-    def to_dict(self) -> dict:
-        """Serializza il turno in formato dizionario."""
-        return {
-            "id": self.id,
-            "data": self.data,
-            "oraInizio": self.oraInizio,
-            "oraFine": self.oraFine,
-            "fascia_oraria": self.fascia_oraria,
-            "luogoPrelevamento": self.luogoPrelevamento,
-            "luogoDestinazione": self.luogoDestinazione,
-            "luogo": self.luogo,
-            "tipoServizio": self.tipoServizio,
-            "paziente_nome": self.paziente_nome,
-            "paziente_cognome": self.paziente_cognome,
-            "paziente_cf": self.paziente_cf,
-            "patenteRichiesta": self.patenteRichiesta,
-            "personeRichieste": self.personeRichieste,
-            "mezzo_targa": self.mezzo_targa,
-            "stato": self.stato,
-            "volontari_ids": [getattr(v, "cod_fiscale", str(v)) for v in self.volontari_assegnati],
-            "volontari_ruoli": getattr(self, "volontari_ruoli", {})
-        }
-
-    @property
-    def fascia_oraria(self) -> str:
-        return f"{self.oraInizio} - {self.oraFine}"
-        
-    @fascia_oraria.setter
-    def fascia_oraria(self, val: str):
-        if " - " in val:
-            parts = val.split(" - ")
-            self.oraInizio = parts[0]
-            self.oraFine = parts[1]
-
     def aggiornaDati(self, **kwargs) -> None:
-        for key, value in kwargs.items():
-            if hasattr(self, key):
-                setattr(self, key, value)
+        self.setDati(**kwargs)
 
     def aggiungiVolontario(self, v: Volontario, ruolo: str = "") -> bool:
-        if len(self.volontari_assegnati) < self.personeRichieste:
+        """Aggiunge un volontario al turno se ci sono posti disponibili (UML)."""
+        if len(self.volontari_assegnati) < self.postiTotali:
             if v not in self.volontari_assegnati:
                 self.volontari_assegnati.append(v)
-                self.persone_prenotate.setdefault(v.ruolo, []).append(v.cod_fiscale)
+                self.postiLiberi = max(0, self.postiTotali - len(self.volontari_assegnati))
+                self.persone_prenotate.setdefault(getattr(v, "ruolo", "volontario"), []).append(v.cod_fiscale)
                 if ruolo:
                     self.volontari_ruoli[v.cod_fiscale] = ruolo
-                if self not in v.turni_assegnati:
+                if self not in getattr(v, "turni_assegnati", []):
                     v.turni_assegnati.append(self)
-                if len(self.volontari_assegnati) == self.personeRichieste:
+                if len(self.volontari_assegnati) >= self.postiTotali:
                     self.stato = "Completo"
                 return True
         return False
 
-    def assegna_turno(self, utente: Volontario) -> bool:
-        return self.aggiungiVolontario(utente)
-
     def getVolontariIscritti(self) -> List[Volontario]:
+        """Restituisce la lista dei volontari assegnati al turno (UML)."""
         return self.volontari_assegnati
 
     def isCompleto(self) -> bool:
-        return len(self.volontari_assegnati) >= self.personeRichieste
+        """Verifica se il turno ha raggiunto il numero di persone richieste (UML)."""
+        return len(self.volontari_assegnati) >= self.postiTotali
 
     @staticmethod
     def getTurniDisponibili(servizio: str = "") -> List[Turno]:
+        """Restituisce i turni disponibili alla prenotazione (UML)."""
         from GestioneTurniController import GestioneTurniController
         ctrl = GestioneTurniController()
         return ctrl.visualizzaTurniDisponibili()
 
     def rimuoviVolontario(self, v: Volontario) -> None:
+        """Rimuove un volontario dal turno (UML)."""
         if v in self.volontari_assegnati:
             self.volontari_assegnati.remove(v)
-            if v.cod_fiscale in self.persone_prenotate.get(v.ruolo, []):
-                self.persone_prenotate[v.ruolo].remove(v.cod_fiscale)
+            self.postiLiberi = max(0, self.postiTotali - len(self.volontari_assegnati))
+            if v.cod_fiscale in self.persone_prenotate.get(getattr(v, "ruolo", "volontario"), []):
+                self.persone_prenotate[getattr(v, "ruolo", "volontario")].remove(v.cod_fiscale)
             if v.cod_fiscale in self.volontari_ruoli:
                 del self.volontari_ruoli[v.cod_fiscale]
-            if self in v.turni_assegnati:
+            if self in getattr(v, "turni_assegnati", []):
                 v.turni_assegnati.remove(self)
             self.stato = "Aperto"
-
-    def rimuovi_volontario(self, volontario: Volontario):
-        self.rimuoviVolontario(volontario)
 
     def assegna_mezzo(self, mezzo: Mezzo):
         self.mezzo = mezzo
@@ -244,16 +324,10 @@ class Turno:
     def cambia_stato(self, nuovo_stato: str):
         self.stato = nuovo_stato
 
-    def is_scoperto(self) -> bool:
-        return not self.isCompleto()
-
-    def is_modificabile(self) -> bool:
-        """Un turno è modificabile dal referente esclusivamente se si trova in stato 'Aperto'."""
-        return str(self.stato).strip().lower() == "aperto"
-
     def isModificabile(self) -> bool:
-        """Alias camelCase conforme al diagramma delle classi UML."""
-        return self.is_modificabile()
+        """Un turno è modificabile dal referente esclusivamente se si trova in stato 'Aperto' o 'PROGRAMMATO' (UML)."""
+        st = str(self.stato).strip().lower()
+        return st in ["aperto", "programmato"]
 
     def richiede_corso(self) -> bool:
         return bool(self.patenteRichiesta)
@@ -264,18 +338,25 @@ class Turno:
     def to_dict(self) -> dict:
         targa_val = self.mezzo_targa or (self.mezzo.targa if self.mezzo else "")
         return {
-            "id": self.id,
+            "id": self.codice,
+            "codice": self.codice,
             "data": self.data,
             "luogoDestinazione": self.luogoDestinazione,
             "luogoPrelevamento": self.luogoPrelevamento,
+            "luogo": self.luogo,
             "oraInizio": self.oraInizio,
             "oraFine": self.oraFine,
             "patenteRichiesta": self.patenteRichiesta,
+            "corsiRichiesti": self.corsiRichiesti,
+            "materialeNecessario": self.materialeNecessario,
+            "datiPaziente": self.datiPaziente,
             "paziente": self.paziente,
             "paziente_nome": self.paziente_nome,
             "paziente_cognome": self.paziente_cognome,
             "paziente_cf": self.paziente_cf,
-            "personeRichieste": self.personeRichieste,
+            "personeRichieste": self.postiTotali,
+            "postiTotali": self.postiTotali,
+            "postiLiberi": self.postiLiberi,
             "persone_richieste": self.persone_richieste,
             "stato": self.stato,
             "tipoServizio": self.tipoServizio,
@@ -286,12 +367,10 @@ class Turno:
         }
 
     def aggiorna_db(self):
-        """Salva lo stato corrente del turno nel database locale JSON."""
         from Sistema import Sistema
         s = Sistema.get_instance()
         if s:
             s.salva_dati()
 
     def aggiorna_firestore(self):
-        """Metodo di compatibilità: salva lo stato nel database locale JSON."""
         self.aggiorna_db()

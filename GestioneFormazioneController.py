@@ -80,7 +80,7 @@ class GestioneFormazioneController:
 
         # 1. Verifica capienza su oggetto corso diretto
         if c_obj is not None:
-            if c_obj.is_completo() and v not in c_obj.partecipanti:
+            if c_obj.isCompleto() and v not in c_obj.partecipanti:
                 print(f"⚠️ Impossibile iscriversi: corso '{c_obj.titolo or c_obj.nome}' al completo ({c_obj.maxPartecipanti} posti).")
                 return False
             try:
@@ -93,7 +93,7 @@ class GestioneFormazioneController:
         elif sys_inst and getattr(sys_inst, "corsi", None):
             c_mem = next((c for c in sys_inst.corsi if str(c.id) == s_id), None)
             if c_mem:
-                if c_mem.is_completo() and v not in c_mem.partecipanti:
+                if c_mem.isCompleto() and v not in c_mem.partecipanti:
                     print(f"⚠️ Impossibile iscriversi: corso '{c_mem.titolo or c_mem.nome}' al completo ({c_mem.maxPartecipanti} posti).")
                     return False
                 try:

@@ -1,208 +1,95 @@
 {
   "utenti": [
     {
-      "cod_fiscale": "VRDGPP75C10H501K",
-      "nome": "Giuseppe",
-      "cognome": "Verdi",
-      "email": "giuseppe.verdi@cri.it",
-      "data_nascita": "10/03/1975",
-      "telefono": "3331234567",
-      "ruolo": "referente",
-      "password": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
-      "monteOreTotale": 150,
-      "patenti": [
-        "B",
-        "C1"
-      ],
-      "qualifiche": [
-        "Soccorritore 118",
-        "BLSD",
-        "Istruttore"
-      ],
-      "comitato_appartenenza": "Comitato Centrale CRI"
-    },
-    {
       "cod_fiscale": "RSSMRA85M01H501Z",
       "nome": "Mario",
       "cognome": "Rossi",
-      "email": "mario.rossi@cri.it",
-      "data_nascita": "01/01/1985",
-      "telefono": "3339876543",
+      "email": "",
+      "data_nascita": "",
+      "telefono": "",
       "ruolo": "volontario",
-      "password": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
-      "monteOreTotale": 45,
-      "patenti": [
-        "B",
-        "C1"
-      ],
-      "qualifiche": [
-        "Soccorritore 118",
-        "BLSD"
-      ],
-      "numero_patente": "U1482910A",
-      "scadenza_patente": "2030-05-15",
-      "comitato_appartenenza": "Comitato Centrale CRI"
-    },
-    {
-      "cod_fiscale": "GLNSRN03A62I156Z",
-      "nome": "Serena",
-      "cognome": "Giuliani",
-      "email": "serena.giuliani@cri.it",
-      "data_nascita": "22/01/2003",
-      "telefono": "3335557788",
-      "ruolo": "volontario",
-      "password": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
-      "monteOreTotale": 30,
-      "patenti": [
-        "B"
-      ],
-      "qualifiche": [
-        "Soccorritore 118"
-      ],
-      "numero_patente": "U1984210T",
-      "scadenza_patente": "2031-01-22",
-      "comitato_appartenenza": "Comitato Centrale CRI"
+      "password": "",
+      "comitato": "",
+      "comitato_appartenenza": "",
+      "monteOreTotale": 0,
+      "patenti": [],
+      "qualifiche": [],
+      "disponibilita": [],
+      "curriculum": "",
+      "patenti_pdf": {},
+      "patente_pdf_path": "",
+      "app_io_verificato": false,
+      "numero_patente": "",
+      "data_rilascio_patente": "",
+      "scadenza_patente": "",
+      "punti_patente": 30,
+      "app_io_certificato_id": "",
+      "corsi_frequentati_ids": [],
+      "formazione_ids": []
     }
   ],
   "mezzi": [
     {
-      "targa": "CRI 101 AA",
-      "tipo": "Ambulanza Emergenza",
-      "chilometraggioTotale": 45000,
+      "targa": "CRI 777 XY",
+      "tipo": "Ambulanza Tipo A",
+      "chilometraggioTotale": 0,
       "stato": "Disponibile",
-      "dataScadenzaAssicurazione": "2026-12-31",
-      "disponibile": true
-    },
-    {
-      "targa": "CRI 202 BB",
-      "tipo": "Automedica",
-      "chilometraggioTotale": 28000,
-      "stato": "Disponibile",
-      "dataScadenzaAssicurazione": "2026-11-30",
-      "disponibile": true
-    },
-    {
-      "targa": "CRI 999 ZZ",
-      "tipo": "Ambulanza Base",
-      "chilometraggioTotale": 82000,
-      "stato": "Disponibile",
-      "dataScadenzaAssicurazione": "2027-05-15",
+      "dataScadenzaAssicurazione": "",
       "disponibile": true
     }
   ],
-  "corsi": [
-    {
-      "id": "C01",
-      "titolo": "BLSD - Supporto di Base alle Funzioni Vitali",
-      "nome": "BLSD - Supporto di Base alle Funzioni Vitali",
-      "dataInizio": "2026-10-25",
-      "dataFine": "2026-10-26",
-      "esito": true,
-      "checklist": [],
-      "scadenza": "2026-10-20",
-      "direttore": "Dott. Mario Rossi",
-      "luogo": "Sede CRI Centrale",
-      "orari": "09:00 - 17:00",
-      "requisitiIscrizione": "Volontario CRI",
-      "maxPartecipanti": 15,
-      "partecipanti_ids": [
-        "RSSMRA85M01H501Z"
-      ],
-      "certificati_ids": [
-        "RSSMRA85M01H501Z"
-      ]
-    },
-    {
-      "id": "C02",
-      "titolo": "Soccorso Traumi Avanzato (PHTC)",
-      "nome": "Soccorso Traumi Avanzato (PHTC)",
-      "dataInizio": "2026-11-10",
-      "dataFine": "2026-11-12",
-      "esito": false,
-      "checklist": [],
-      "scadenza": "2026-11-05",
-      "direttore": "Dott. Giuseppe Verdi",
-      "luogo": "Polo Formativo Regionale",
-      "orari": "08:30 - 18:00",
-      "requisitiIscrizione": "Qualifica Soccorritore 118",
-      "maxPartecipanti": 12,
-      "partecipanti_ids": [
-        "GLNSRN03A62I156Z"
-      ],
-      "certificati_ids": []
-    },
-    {
-      "id": "C03",
-      "titolo": "Guida Sicura e Mezzi di Emergenza",
-      "nome": "Guida Sicura e Mezzi di Emergenza",
-      "dataInizio": "2026-11-20",
-      "dataFine": "2026-11-22",
-      "esito": false,
-      "checklist": [],
-      "scadenza": "2026-11-15",
-      "direttore": "Istr. Andrea Bianchi",
-      "luogo": "Pista Prove CRI",
-      "orari": "09:00 - 16:30",
-      "requisitiIscrizione": "Patente B da almeno 2 anni",
-      "maxPartecipanti": 8,
-      "partecipanti_ids": [],
-      "certificati_ids": []
-    }
-  ],
+  "corsi": [],
   "turni": [
     {
-      "id": "T101",
-      "data": "2026-10-15",
+      "id": "T_12H_1",
+      "codice": "T_12H_1",
+      "data": "2026-11-25",
+      "luogoDestinazione": "",
+      "luogoPrelevamento": "",
       "oraInizio": "08:00",
-      "oraFine": "14:00",
-      "tipoServizio": "Emergenza 118",
-      "luogoPrelevamento": "Sede CRI",
-      "luogoDestinazione": "Ospedale Maggiore",
-      "patenteRichiesta": "B",
-      "stato": "Aperto",
+      "oraFine": "16:00",
+      "patenteRichiesta": "",
+      "paziente": "",
+      "paziente_nome": "",
+      "paziente_cognome": "",
+      "paziente_cf": "",
       "personeRichieste": 2,
-      "mezzo_targa": "CRI 101 AA",
+      "persone_richieste": {
+        "volontario": 2
+      },
+      "stato": "Aperto",
+      "tipoServizio": "",
+      "mezzo_targa": "",
+      "checklist": false,
       "volontari_ids": [
         "RSSMRA85M01H501Z"
       ],
-      "volontari_ruoli": {
-        "RSSMRA85M01H501Z": "Autista A"
-      },
-      "checklist": false
+      "volontari_ruoli": {}
     },
     {
-      "id": "T102",
-      "data": "2026-10-16",
-      "oraInizio": "14:00",
-      "oraFine": "20:00",
-      "tipoServizio": "Trasporto Sanitario Ordinario",
-      "luogoPrelevamento": "Clinica San Carlo",
-      "luogoDestinazione": "Domicilio Paziente",
-      "patenteRichiesta": "B",
-      "stato": "Aperto",
+      "id": "T_12H_2",
+      "codice": "T_12H_2",
+      "data": "2026-11-25",
+      "luogoDestinazione": "",
+      "luogoPrelevamento": "",
+      "oraInizio": "17:00",
+      "oraFine": "22:00",
+      "patenteRichiesta": "",
+      "paziente": "",
+      "paziente_nome": "",
+      "paziente_cognome": "",
+      "paziente_cf": "",
       "personeRichieste": 2,
-      "mezzo_targa": "CRI 202 BB",
-      "volontari_ids": [],
-      "volontari_ruoli": {},
-      "checklist": false
-    },
-    {
-      "id": "T103",
-      "data": "2026-10-17",
-      "oraInizio": "20:00",
-      "oraFine": "02:00",
-      "tipoServizio": "Guardia Notturna Emergenza",
-      "luogoPrelevamento": "Sede CRI",
-      "luogoDestinazione": "Territorio Comunale",
-      "patenteRichiesta": "B",
+      "persone_richieste": {
+        "volontario": 2
+      },
       "stato": "Aperto",
-      "personeRichieste": 3,
-      "mezzo_targa": "CRI 999 ZZ",
+      "tipoServizio": "",
+      "mezzo_targa": "",
+      "checklist": false,
       "volontari_ids": [],
-      "volontari_ruoli": {},
-      "checklist": false
+      "volontari_ruoli": {}
     }
   ],
-  "checklists": [],
-  "reports": []
+  "checklists": []
 }

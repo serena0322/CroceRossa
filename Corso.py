@@ -1,51 +1,89 @@
 from __future__ import annotations
 from typing import List, TYPE_CHECKING
+from datetime import datetime
 
 if TYPE_CHECKING:
     from Volontario import Volontario
     from Referente import Referente
 
+
 class Corso:
+    """
+    Rappresenta un corso di formazione della Croce Rossa Italiana.
+    Classe conforme al diagramma delle classi UML (Package Attivita).
+
+    Attributi UML:
+        codice: str (String)
+        dataFine: str (Data)
+        dataInizio: str (Data)
+        descrizione: str (String)
+        direttoreCorso: str (String)
+        luogo: str (String)
+        nome: str (String)
+        orario: str (String)
+        postiLiberi: int (Integer)
+        postiTotali: int (Integer)
+        stato: str (StatoAttivita: PROGRAMMATO, IN_CORSO, CONCLUSO)
+        tipoCorso: str (String)
+
+    Metodi UML:
+        getDati(), setDati(), setPostiLiberi(), isCompleto(),
+        aggiungiPartecipante(), rimuoviPartecipante(), ordinaPerData().
+    """
     def __init__(
         self,
-        id: str = "",
+        codice: str = "",
         dataFine: str = "",
         dataInizio: str = "",
+        descrizione: str = "",
+        direttoreCorso: str = "",
+        luogo: str = "",
+        nome: str = "",
+        orario: str = "",
+        postiLiberi: int | None = None,
+        postiTotali: int = 20,
+        stato: str = "PROGRAMMATO",
+        tipoCorso: str = "",
+        # Compatibility parameters:
+        id: str = "",
+        titolo: str = "",
+        direttore: str = "",
+        orari: str = "",
+        maxPartecipanti: int | None = None,
         mesiValidita: int = 12,
         qualificaRilasciata: str = "",
-        stato: str = "Programmato",
-        titolo: str = "",
-        # Specifiche PDF UC 10:
-        direttore: str = "",
-        luogo: str = "",
-        orari: str = "",
         requisitiIscrizione: str = "",
-        maxPartecipanti: int = 20,
-        # Compatibility arguments:
-        nome: str = "",
         esito: bool = False,
-        checklist: List[dict] = None,
+        checklist: List[dict] | None = None,
         scadenza: str = "",
         **kwargs
     ):
-        self.id = id
-        self.dataFine = dataFine
-        self.dataInizio = dataInizio
-        self.mesiValidita = mesiValidita
-        self.qualificaRilasciata = qualificaRilasciata if qualificaRilasciata else (titolo if titolo else "")
-        self.stato = stato
-        self.titolo = titolo
-        self.direttore = direttore or kwargs.get("direttore_corso", "")
-        self.luogo = luogo or kwargs.get("luogo_corso", "")
-        self.orari = orari or kwargs.get("orari_corso", "")
-        self.requisitiIscrizione = requisitiIscrizione or kwargs.get("requisiti_iscrizione", "")
+        self.codice = str(codice or id or "").strip()
+        self.id = self.codice  # Riferimento diretto per compatibilità
+        self.dataFine = str(dataFine).strip()
+        self.dataInizio = str(dataInizio).strip()
+        self.descrizione = str(descrizione or kwargs.get("descrizione_corso", "")).strip()
+        self.direttoreCorso = str(direttoreCorso or direttore or kwargs.get("direttore_corso", "")).strip()
+        self.direttore = self.direttoreCorso
+        self.luogo = str(luogo or kwargs.get("luogo_corso", "")).strip()
+        self.nome = str(nome or titolo or "").strip()
+        self.titolo = self.nome
+        self.orario = str(orario or orari or kwargs.get("orari_corso", "")).strip()
+        self.orari = self.orario
+
+        totali = maxPartecipanti if maxPartecipanti is not None else postiTotali
         try:
-            self.maxPartecipanti = int(maxPartecipanti or kwargs.get("numero_massimo_partecipanti", 20))
+            self.postiTotali = int(totali)
         except (ValueError, TypeError):
-            self.maxPartecipanti = 20
-        
-        # Compatibility properties:
-        self.nome = nome if nome else (titolo if titolo else "")
+            self.postiTotali = 20
+        self.maxPartecipanti = self.postiTotali
+
+        self.stato = str(stato).strip()
+        self.tipoCorso = str(tipoCorso or qualificaRilasciata or "").strip()
+        self.qualificaRilasciata = self.tipoCorso
+
+        self.mesiValidita = mesiValidita
+        self.requisitiIscrizione = str(requisitiIscrizione or kwargs.get("requisiti_iscrizione", "")).strip()
         self.esito = esito
         self.checklist = checklist if checklist is not None else []
         self.scadenza = scadenza
@@ -53,70 +91,99 @@ class Corso:
         self.partecipanti: List[Volontario] = []
         self.certificati_ids: List[str] = []
 
-    def aggiornaDati(self, c: Corso) -> None:
-        self.id = c.id
-        self.dataFine = c.dataFine
-        self.dataInizio = c.dataInizio
-        self.mesiValidita = c.mesiValidita
-        self.qualificaRilasciata = c.qualificaRilasciata
-        self.stato = c.stato
-        self.titolo = c.titolo
-        self.direttore = c.direttore
-        self.luogo = c.luogo
-        self.orari = c.orari
-        self.requisitiIscrizione = c.requisitiIscrizione
-        self.maxPartecipanti = c.maxPartecipanti
+        if postiLiberi is not None:
+            self.postiLiberi = int(postiLiberi)
+        else:
+            self.postiLiberi = max(0, self.postiTotali - len(self.partecipanti))
 
-    def is_completo(self) -> bool:
-        return len(self.partecipanti) >= self.maxPartecipanti
+    def getDati(self) -> dict:
+        """Restituisce i dati del corso conformi al diagramma di sequenza UML VisualizzaCorsi."""
+        return {
+            "codice": self.codice,
+            "nome": self.nome,
+            "dataInizio": self.dataInizio,
+            "dataFine": self.dataFine,
+            "orario": self.orario,
+            "luogo": self.luogo,
+            "direttoreCorso": self.direttoreCorso,
+            "descrizione": self.descrizione,
+            "tipoCorso": self.tipoCorso,
+            "postiTotali": self.postiTotali,
+            "postiLiberi": self.postiLiberi,
+            "stato": self.stato
+        }
+
+    def setDati(self, **kwargs) -> None:
+        """Aggiorna le informazioni del corso (UML)."""
+        for k, v in kwargs.items():
+            if hasattr(self, k):
+                setattr(self, k, v)
+        if "nome" in kwargs:
+            self.titolo = self.nome
+        if "postiTotali" in kwargs:
+            self.maxPartecipanti = self.postiTotali
+            self.postiLiberi = max(0, self.postiTotali - len(self.partecipanti))
+
+    def setPostiLiberi(self, val: int) -> None:
+        """Imposta il numero di posti liberi rimasti per il corso (UML)."""
+        self.postiLiberi = max(0, int(val))
 
     def isCompleto(self) -> bool:
-        """Alias UML per is_completo."""
-        return self.is_completo()
+        """Verifica se il corso ha raggiunto la capienza massima (UML)."""
+        return len(self.partecipanti) >= self.postiTotali
 
-    def aggiungiIscritto(self, dati: Volontario) -> bool:
+    def aggiungiPartecipante(self, dati: Volontario) -> bool:
+        """Iscrive un volontario al corso (UML)."""
         if dati in self.partecipanti:
             return True
-        # Verifica capienza massima partecipanti come da requisiti
-        if len(self.partecipanti) >= self.maxPartecipanti:
-            print(f"⚠️ Impossibile iscrivere {dati.nome}: corso '{self.titolo}' ha raggiunto la capienza massima ({self.maxPartecipanti} posti).")
+        if self.isCompleto():
+            print(f"⚠️ Impossibile iscrivere {dati.nome}: corso '{self.nome}' ha raggiunto la capienza massima ({self.postiTotali} posti).")
             return False
-            
         self.partecipanti.append(dati)
-        if self not in dati.formazione:
+        self.postiLiberi = max(0, self.postiTotali - len(self.partecipanti))
+        if self not in getattr(dati, "formazione", []):
             dati.formazione.append(self)
         return True
 
-    def aggiungi_partecipante(self, volontario: Volontario):
-        return self.aggiungiIscritto(volontario)
+    # Alias per compatibilità
+    def aggiungiIscritto(self, dati: Volontario) -> bool:
+        return self.aggiungiPartecipante(dati)
 
-    def getIscritti(self) -> List[Volontario]:
-        return self.partecipanti
-
-    def getMonteOre(self) -> None:
-        print(f"Monte Ore per il corso {self.titolo}: {self.mesiValidita * 10} ore")
-
-    def rimuoviIscritto(self, volontario: Volontario) -> bool:
+    def rimuoviPartecipante(self, volontario: Volontario) -> bool:
+        """Rimuove un volontario dal corso (UML)."""
         if volontario in self.partecipanti:
             self.partecipanti.remove(volontario)
-            if self in volontario.formazione:
+            self.postiLiberi = max(0, self.postiTotali - len(self.partecipanti))
+            if self in getattr(volontario, "formazione", []):
                 volontario.formazione.remove(self)
             return True
         return False
 
-    def rimuovi_partecipante(self, volontario: Volontario):
-        self.rimuoviIscritto(volontario)
+    def rimuoviIscritto(self, volontario: Volontario) -> bool:
+        return self.rimuoviPartecipante(volontario)
+
+    def getIscritti(self) -> List[Volontario]:
+        """Restituisce la lista degli iscritti al corso (UML)."""
+        return self.partecipanti
+
+    def getMonteOre(self) -> None:
+        """Stampa il monte ore previsto per il corso (UML)."""
+        print(f"Monte Ore per il corso {self.nome}: {self.mesiValidita * 10} ore")
+
+    @staticmethod
+    def ordinaPerData(corsi: List[Corso]) -> List[Corso]:
+        """Ordina i corsi dal più recente al meno recente (UML VisualizzaCorsi)."""
+        return sorted(corsi, key=lambda c: str(getattr(c, "dataInizio", "")), reverse=True)
 
     def verifica_checklist(self) -> bool:
         return all(item.get("completato", False) for item in self.checklist)
 
     def sta_per_scadere(self) -> bool:
-        from datetime import datetime, timedelta
         try:
             if not self.scadenza:
                 return False
             scadenza_date = datetime.strptime(self.scadenza, "%Y-%m-%d")
-            return scadenza_date - datetime.today() <= timedelta(days=30)
+            return (scadenza_date - datetime.today()).days <= 30
         except Exception as e:
             print(f"Errore nel parsing della data di scadenza: {e}")
             return False
@@ -127,33 +194,36 @@ class Corso:
 
     def to_dict(self) -> dict:
         return {
-            "id": self.id,
-            "dataFine": self.dataFine,
-            "dataInizio": self.dataInizio,
-            "mesiValidita": self.mesiValidita,
-            "qualificaRilasciata": self.qualificaRilasciata,
-            "stato": self.stato,
-            "titolo": self.titolo,
+            "codice": self.codice,
+            "id": self.codice,
             "nome": self.nome,
+            "titolo": self.titolo,
+            "dataInizio": self.dataInizio,
+            "dataFine": self.dataFine,
+            "descrizione": self.descrizione,
+            "direttoreCorso": self.direttoreCorso,
+            "luogo": self.luogo,
+            "orario": self.orario,
+            "postiTotali": self.postiTotali,
+            "postiLiberi": self.postiLiberi,
+            "maxPartecipanti": self.postiTotali,
+            "stato": self.stato,
+            "tipoCorso": self.tipoCorso,
+            "qualificaRilasciata": self.qualificaRilasciata,
+            "mesiValidita": self.mesiValidita,
             "esito": self.esito,
             "checklist": self.checklist,
             "scadenza": self.scadenza,
-            "direttore": getattr(self, "direttore", ""),
-            "luogo": getattr(self, "luogo", ""),
-            "orari": getattr(self, "orari", ""),
-            "requisitiIscrizione": getattr(self, "requisitiIscrizione", ""),
-            "maxPartecipanti": getattr(self, "maxPartecipanti", 20),
+            "requisitiIscrizione": self.requisitiIscrizione,
             "partecipanti_ids": [str(p.cod_fiscale) for p in self.partecipanti if hasattr(p, "cod_fiscale")],
             "certificati_ids": getattr(self, "certificati_ids", [])
         }
 
     def aggiorna_db(self):
-        """Salva lo stato corrente del corso nel database locale JSON."""
         from Sistema import Sistema
         s = Sistema.get_instance()
         if s:
             s.salva_dati()
 
     def aggiorna_firestore(self):
-        """Metodo di compatibilità: salva lo stato nel database locale JSON."""
         self.aggiorna_db()
