@@ -113,11 +113,11 @@ class BackupService:
                 json.dump(payload, f, indent=2, ensure_ascii=False)
 
             cls._ruota_backup(cartella, max_file=15)
-            print(f"💾 [BackupService] Backup completato con successo: {nome_file}")
+            print(f"[BackupService] Backup completato con successo: {nome_file}")
             return True, percorso_completo
 
         except Exception as e:
-            print(f"❌ [BackupService] Errore durante l'esecuzione del backup: {e}")
+            print(f"[BackupService/Errore] Durante l'esecuzione del backup: {e}")
             return False, str(e)
 
     @classmethod
@@ -166,7 +166,7 @@ class BackupService:
 
         cls._thread_periodico = threading.Thread(target=_loop, daemon=True, name="BackupServiceThread")
         cls._thread_periodico.start()
-        print(f"⏱️ [BackupService] Backup automatico periodico avviato (intervallo: {intervallo_secondi}s).")
+        print(f"[BackupService] Backup automatico periodico avviato (intervallo: {intervallo_secondi}s).")
 
     @classmethod
     def ferma_backup_automatico(cls):

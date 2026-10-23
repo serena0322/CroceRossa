@@ -137,7 +137,7 @@ class Corso:
         if dati in self.partecipanti:
             return True
         if self.isCompleto():
-            print(f"⚠️ Impossibile iscrivere {dati.nome}: corso '{self.nome}' ha raggiunto la capienza massima ({self.postiTotali} posti).")
+            print(f"[Corso/Avviso] Impossibile iscrivere {dati.nome}: corso '{self.nome}' ha raggiunto la capienza massima ({self.postiTotali} posti).")
             return False
         self.partecipanti.append(dati)
         self.postiLiberi = max(0, self.postiTotali - len(self.partecipanti))

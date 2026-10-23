@@ -32,7 +32,7 @@ class GestioneTurniController:
             print(f"[GestioneTurniController] annullaPrenotazione turno {t.codice} completato.")
             return True
         except Exception as e:
-            print(f"⚠️ Errore annullaPrenotazione nel database locale: {e}")
+            print(f"[Turni/Errore] annullaPrenotazione nel database locale: {e}")
             return False
 
     def assegnaTurno(self, v: Volontario, t: Turno) -> None:
@@ -53,7 +53,7 @@ class GestioneTurniController:
         ruolo = str(getattr(utente, "ruolo", "")).strip().lower()
         if ruolo == "referente" or hasattr(utente, "settoreGestito"):
             return True
-        print("❌ Operazione negata: solo gli utenti con ruolo 'Referente' possono gestire i turni.")
+        print("[Turni/Errore] Operazione negata: solo gli utenti con ruolo 'Referente' possono gestire i turni.")
         return False
 
     def creaTurno(self, t: Turno, utente=None) -> bool:
@@ -77,7 +77,7 @@ class GestioneTurniController:
             print(f"[GestioneTurniController] creaTurno {t.codice} salvato nel database locale.")
             return True
         except Exception as e:
-            print(f"⚠️ Errore creaTurno nel database locale: {e}")
+            print(f"[Turni/Errore] creaTurno nel database locale: {e}")
             return False
 
     def modificaTurno(self, idTurno: str, t: Turno, utente=None) -> bool:
@@ -91,7 +91,7 @@ class GestioneTurniController:
         # Controllo vincolo di business: Modifica consentita solo se il turno è 'Aperto'
         stato_corrente = str(getattr(t, "stato", "Aperto")).strip().lower()
         if stato_corrente != "aperto":
-            print(f"⚠️ Impossibile modificare il turno {idTurno}: consentita la modifica solo se in stato 'Aperto' (stato attuale: '{getattr(t, 'stato', 'N/D')}').")
+            print(f"[Turni/Avviso] Impossibile modificare il turno {idTurno}: consentita la modifica solo se in stato 'Aperto' (stato attuale: '{getattr(t, 'stato', 'N/D')}').")
             return False
 
         t.codice = idTurno
@@ -110,7 +110,7 @@ class GestioneTurniController:
             print(f"[GestioneTurniController] eliminaTurno {idTurno} rimosso dal database locale.")
             return True
         except Exception as e:
-            print(f"⚠️ Errore eliminaTurno nel database locale: {e}")
+            print(f"[Turni/Errore] eliminaTurno nel database locale: {e}")
             return False
 
     def prenotaTurno(self, idTurno: str, idVolontario: str, ruolo: str = "Soccorritore", sistema: Any = None) -> bool:
@@ -138,7 +138,7 @@ class GestioneTurniController:
             print(f"[GestioneTurniController] prenotaTurno {idTurno} salvato nel database locale.")
             return True
         except Exception as e:
-            print(f"⚠️ Errore prenotaTurno nel database locale: {e}")
+            print(f"[Turni/Errore] prenotaTurno nel database locale: {e}")
             return False
 
     def validaDati(self, t: Turno | None = None) -> bool:
@@ -199,7 +199,7 @@ class GestioneTurniController:
                     a_fin = altro.oraFine.strip()
                     # Condizione necessaria e sufficiente di sovrapposizione tra fasce orarie
                     if max(t_ini, a_ini) < min(t_fin, a_fin):
-                        print(f"⚠️ Sovrapposizione oraria rilevata con turno {altro.codice} ({altro.data} {altro.fascia_oraria})")
+                        print(f"[Turni/Avviso] Sovrapposizione oraria rilevata con turno {altro.codice} ({altro.data} {altro.fascia_oraria})")
                         return False
                 except Exception:
                     pass
@@ -225,7 +225,7 @@ class GestioneTurniController:
         
         totale = ore_giornaliere + durata_nuovo
         if totale > max_ore:
-            print(f"⚠️ Limite ore giornaliere superato: {totale:.1f}h richieste > {max_ore}h massime consentite per il giorno {t.data}")
+            print(f"[Turni/Avviso] Limite ore giornaliere superato: {totale:.1f}h richieste > {max_ore}h massime consentite per il giorno {t.data}")
             return False
         return True
 

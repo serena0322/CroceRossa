@@ -32,14 +32,14 @@ class GestioneUtenteController:
         Verifica prima i formati e poi controlla il database locale JSON.
         """
         if not self.validaFormato(email, password):
-            print("❌ Formato email o password non valido.")
+            print("[Auth/Errore] Formato email o password non valido.")
             return False
         
         try:
             from Sistema import Sistema
             sys_inst = sistema or Sistema.get_instance()
             if not sys_inst:
-                print("❌ Istanza di Sistema non disponibile.")
+                print("[Auth/Errore] Istanza di Sistema non disponibile.")
                 return False
 
             email_clean = email.strip().lower()
@@ -55,17 +55,17 @@ class GestioneUtenteController:
                 if not user_pwd or user_pwd == password or user_pwd == pwd_hash:
                     sys_inst.logged_user = user
                     nome_utente = user.nome or "Volontario"
-                    print(f"✅ Login effettuato con successo. Benvenuto {nome_utente}")
+                    print(f"[Auth] Login effettuato con successo. Benvenuto {nome_utente}")
                     return True
                 else:
-                    print("❌ Password non corretta.")
+                    print("[Auth/Errore] Password non corretta.")
                     return False
             else:
-                print("❌ Profilo utente non trovato nel database.")
+                print("[Auth/Errore] Profilo utente non trovato nel database.")
                 return False
                 
         except Exception as e:
-            print(f"❌ Errore durante l'autenticazione: {e}")
+            print(f"[Auth/Errore] Durante l'autenticazione: {e}")
             return False
 
     def validaDati(self, nome: str, cognome: str, cod_fiscale: str, telefono: str) -> bool:
@@ -201,11 +201,11 @@ class GestioneUtenteController:
         inviata = EmailService.inviaMail(
             destinatario=dest_email,
             messaggio=messaggio,
-            oggetto="🔐 Recupero Credenziali di Accesso — Croce Rossa Italiana"
+            oggetto="Recupero Credenziali di Accesso — Croce Rossa Italiana"
         )
 
         if inviata:
-            print(f"✅ Email di recupero inviata a {dest_email}.")
+            print(f"[Auth] Email di recupero inviata a {dest_email}.")
             return True, f"Istruzioni di ripristino inviate con successo all'indirizzo:\n{dest_email}"
         else:
             return False, "Impossibile inviare l'email di recupero in questo momento. Riprova più tardi."

@@ -20,7 +20,7 @@ class AppController:
             try:
                 cf = session.get("cod_fiscale", "").strip()
                 email = session.get("email", "").strip().lower()
-                print(f"🔄 Ripristino sessione automatica per {cf or email}...")
+                print(f"[Main] Ripristino sessione automatica per {cf or email}...")
 
                 # Carica i dati dal database locale JSON
                 self.sistema.carica_dati()
@@ -34,14 +34,14 @@ class AppController:
 
                 if user:
                     self.sistema.logged_user = user
-                    print(f"✅ Accesso automatico riuscito: {user.getNomeCompleto()} ({user.ruolo})")
+                    print(f"[Main] Accesso automatico riuscito: {user.getNomeCompleto()} ({user.ruolo})")
                     self.apri_main()
                     return
                 else:
-                    print("⚠️ Profilo utente non trovato nel database locale. Richiedo nuovo login.")
+                    print("[Main/Avviso] Profilo utente non trovato nel database locale. Richiedo nuovo login.")
                     clear_session()
             except Exception as e:
-                print(f"⚠️ Errore ripristino sessione: {e}")
+                print(f"[Main/Errore] Ripristino sessione: {e}")
                 clear_session()
 
         # Nessuna sessione valida: mostra la finestra di login

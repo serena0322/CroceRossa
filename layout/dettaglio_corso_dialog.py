@@ -25,7 +25,7 @@ class DettaglioCorsoDialog(QDialog):
         self.controller = controller_formazione
         self.cambiamento_effettuato = False
 
-        self.setWindowTitle(f"🎓 Scheda Corso — {corso.titolo or corso.nome}")
+        self.setWindowTitle(f"Scheda Corso — {corso.titolo or corso.nome}")
         self.resize(580, 520)
         self.setMinimumWidth(500)
 
@@ -65,7 +65,7 @@ class DettaglioCorsoDialog(QDialog):
         head_lay.setSpacing(6)
 
         titolo_box = QHBoxLayout()
-        lbl_titolo = QLabel(f"<h2 style='color: white; margin: 0;'>🎓 {corso.titolo or corso.nome}</h2>")
+        lbl_titolo = QLabel(f"<h2 style='color: white; margin: 0;'>{corso.titolo or corso.nome}</h2>")
         badge_id = QLabel(f"<span style='background-color: #37474f; color: white; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;'>ID: {corso.id}</span>")
         titolo_box.addWidget(lbl_titolo)
         titolo_box.addStretch()
@@ -83,14 +83,14 @@ class DettaglioCorsoDialog(QDialog):
         max_p = getattr(corso, "maxPartecipanti", 20)
 
         lbl_info = QLabel(
-            f"🗓️ <b>Periodo di Svolgimento:</b> dal {corso.dataInizio or 'N/D'} al {corso.dataFine or 'N/D'}<br>"
-            f"🕒 <b>Orari e Luogo:</b> {orari} &nbsp;&nbsp;|&nbsp;&nbsp; 📍 {luogo}<br>"
-            f"👤 <b>Direttore del Corso:</b> {direttore}<br>"
-            f"📋 <b>Requisiti di Iscrizione:</b> {requisiti}<br>"
-            f"👥 <b>Capienza / Posti Disponibili:</b> <b>{iscritti_n} / {max_p}</b> partecipanti<br>"
-            f"🏆 <b>Qualifica / Brevetto:</b> <b style='color: #4fc3f7;'>{qualifica}</b><br>"
-            f"⏱️ <b>Validità formativa:</b> {validita_mesi} mesi &nbsp;&nbsp;|&nbsp;&nbsp; "
-            f"📅 <b>Scadenza:</b> {scadenza}"
+            f"<b>Periodo di Svolgimento:</b> dal {corso.dataInizio or 'N/D'} al {corso.dataFine or 'N/D'}<br>"
+            f"<b>Orari e Luogo:</b> {orari} &nbsp;&nbsp;|&nbsp;&nbsp; {luogo}<br>"
+            f"<b>Direttore del Corso:</b> {direttore}<br>"
+            f"<b>Requisiti di Iscrizione:</b> {requisiti}<br>"
+            f"<b>Capienza / Posti Disponibili:</b> <b>{iscritti_n} / {max_p}</b> partecipanti<br>"
+            f"<b>Qualifica / Brevetto:</b> <b style='color: #4fc3f7;'>{qualifica}</b><br>"
+            f"<b>Validità formativa:</b> {validita_mesi} mesi &nbsp;&nbsp;|&nbsp;&nbsp; "
+            f"<b>Scadenza:</b> {scadenza}"
         )
         head_lay.addWidget(lbl_info)
         layout.addWidget(card_header)
@@ -108,21 +108,21 @@ class DettaglioCorsoDialog(QDialog):
         if self.stato_tipo == "effettuato":
             lbl_badge_stato = QLabel(
                 "<span style='background-color: #2e7d32; color: white; padding: 4px 12px; border-radius: 12px; font-weight: bold; font-size: 13px;'>"
-                "🟢 Corso Effettuato e Superato — Certificazione Conseguita</span>"
+                "● Corso Effettuato e Superato — Certificazione Conseguita</span>"
             )
             lbl_desc_stato = QLabel("Hai completato questo corso con esito positivo e la qualifica è registrata nel tuo curriculum CRI.")
             lbl_desc_stato.setStyleSheet("color: #a5d6a7; font-size: 12px;")
         elif self.stato_tipo == "in_corso":
             lbl_badge_stato = QLabel(
                 "<span style='background-color: #ef6c00; color: white; padding: 4px 12px; border-radius: 12px; font-weight: bold; font-size: 13px;'>"
-                "🟡 Corso da Effettuare — Iscrizione Attiva / In Svolgimento</span>"
+                "● Corso da Effettuare — Iscrizione Attiva / In Svolgimento</span>"
             )
             lbl_desc_stato = QLabel("Sei regolarmente iscritto al corso. Riceverai la certificazione al termine delle sessioni formative.")
             lbl_desc_stato.setStyleSheet("color: #ffe082; font-size: 12px;")
         else:
             lbl_badge_stato = QLabel(
                 "<span style='background-color: #455a64; color: white; padding: 4px 12px; border-radius: 12px; font-weight: bold; font-size: 13px;'>"
-                "⚪ Corso Disponibile a Catalogo — Non Iscritto</span>"
+                "● Corso Disponibile a Catalogo — Non Iscritto</span>"
             )
             lbl_desc_stato = QLabel("Questo corso è disponibile per l'iscrizione formativa dei volontari.")
             lbl_desc_stato.setStyleSheet("color: #b0bec5; font-size: 12px;")
@@ -132,7 +132,7 @@ class DettaglioCorsoDialog(QDialog):
         layout.addWidget(card_stato)
 
         # 3. Moduli Formativi & Checklist Didattica
-        layout.addWidget(QLabel("<b>📋 Obiettivi Formativi e Moduli del Corso:</b>"))
+        layout.addWidget(QLabel("<b>Obiettivi Formativi e Moduli del Corso:</b>"))
         checklist = getattr(corso, "checklist", []) or []
         
         scroll_moduli = QScrollArea()
@@ -147,7 +147,7 @@ class DettaglioCorsoDialog(QDialog):
             for item in checklist:
                 item_testo = item.get("item", "Modulo formativo")
                 fatto = item.get("completato", False)
-                icona = "✅" if (fatto or self.stato_tipo == "effettuato") else "🔘"
+                icona = "✓" if (fatto or self.stato_tipo == "effettuato") else "—"
                 colore = "#a5d6a7" if (fatto or self.stato_tipo == "effettuato") else "#e0e0e0"
                 lbl_item = QLabel(f"{icona} <span style='color: {colore};'>{item_testo}</span>")
                 mod_lay.addWidget(lbl_item)
@@ -158,7 +158,7 @@ class DettaglioCorsoDialog(QDialog):
                 "Modulo 3: Valutazione finale e attestazione competenze"
             ]
             for mod in default_moduli:
-                icona = "✅" if self.stato_tipo == "effettuato" else "🔘"
+                icona = "✓" if self.stato_tipo == "effettuato" else "—"
                 colore = "#a5d6a7" if self.stato_tipo == "effettuato" else "#e0e0e0"
                 lbl_item = QLabel(f"{icona} <span style='color: {colore};'>{mod}</span>")
                 mod_lay.addWidget(lbl_item)
@@ -170,7 +170,7 @@ class DettaglioCorsoDialog(QDialog):
         btn_bar = QHBoxLayout()
 
         if self.stato_tipo == "effettuato":
-            btn_attestato = QPushButton("📜 Scarica Attestato Ufficiale (PDF)")
+            btn_attestato = QPushButton("Scarica Attestato Ufficiale (PDF)")
             btn_attestato.setStyleSheet("""
                 QPushButton {
                     background-color: #0d47a1;
@@ -186,13 +186,13 @@ class DettaglioCorsoDialog(QDialog):
             btn_attestato.clicked.connect(self.scarica_attestato_pdf)  # pyrefly: ignore [missing-attribute]
             btn_bar.addWidget(btn_attestato)
 
-            btn_txt = QPushButton("📄 Esporta Scheda TXT")
+            btn_txt = QPushButton("Esporta Scheda TXT")
             btn_txt.setStyleSheet("background-color: #37474f; color: white; padding: 8px 14px; border-radius: 6px;")
             btn_txt.clicked.connect(self.scarica_scheda_txt)  # pyrefly: ignore [missing-attribute]
             btn_bar.addWidget(btn_txt)
 
         elif self.stato_tipo == "in_corso":
-            btn_disiscrivi = QPushButton("❌ Rinuncia / Disiscriviti dal Corso")
+            btn_disiscrivi = QPushButton("Rinuncia / Disiscriviti dal Corso")
             btn_disiscrivi.setStyleSheet("""
                 QPushButton {
                     background-color: #c62828;
@@ -213,7 +213,7 @@ class DettaglioCorsoDialog(QDialog):
             max_p = getattr(corso, "maxPartecipanti", 20)
             al_completo = (iscritti_n >= max_p)
 
-            btn_iscrivi = QPushButton("🔴 Corso al Completo" if al_completo else "📝 Iscriviti a questo Corso")
+            btn_iscrivi = QPushButton("Corso al Completo" if al_completo else "Iscriviti a questo Corso")
             btn_iscrivi.setEnabled(not al_completo)
             btn_iscrivi.setStyleSheet("""
                 QPushButton {
@@ -323,7 +323,7 @@ class DettaglioCorsoDialog(QDialog):
             QMessageBox.information(
                 self,
                 "Attestato Scaricato",
-                f"✅ Attestato di partecipazione generato con successo in formato PDF:\n{file_path}"
+                f"Attestato di partecipazione generato con successo in formato PDF:\n{file_path}"
             )
         except Exception as e:
             QMessageBox.critical(self, "Errore", f"Impossibile salvare l'attestato PDF: {e}")
@@ -348,7 +348,7 @@ class DettaglioCorsoDialog(QDialog):
                 f.write(f"Qualifica Rilasciata: {getattr(self.corso, 'qualificaRilasciata', '') or self.corso.titolo}\n")
                 f.write(f"Stato Personale: {self.stato_tipo.upper()}\n")
                 f.write(f"Volontario: {self.utente.getNomeCompleto()} ({self.utente.cod_fiscale})\n")
-            QMessageBox.information(self, "Esportato", f"✅ Scheda salvata in:\n{file_path}")
+            QMessageBox.information(self, "Esportato", f"Scheda salvata in:\n{file_path}")
         except Exception as e:
             QMessageBox.critical(self, "Errore", f"Errore durante l'esportazione: {e}")
 
@@ -370,17 +370,17 @@ class DettaglioCorsoDialog(QDialog):
                 self.utente.disiscriviti_dal_corso(self.corso)
 
         self.cambiamento_effettuato = True
-        QMessageBox.information(self, "Disiscrizione Effettuata", f"✅ Ti sei disiscritto con successo dal corso {self.corso.titolo}.")
+        QMessageBox.information(self, "Disiscrizione Effettuata", f"Ti sei disiscritto con successo dal corso {self.corso.titolo}.")
         self.accept()
 
     def azione_iscrivi(self):
         if self.corso.isCompleto():
-            QMessageBox.critical(self, "Corso al Completo", f"❌ Impossibile iscriversi: il corso ha raggiunto la capienza massima consentita ({getattr(self.corso, 'maxPartecipanti', 20)} partecipanti).")
+            QMessageBox.critical(self, "Corso al Completo", f"Impossibile iscriversi: il corso ha raggiunto la capienza massima consentita ({getattr(self.corso, 'maxPartecipanti', 20)} partecipanti).")
             return
         if self.controller:
             ok = self.controller.iscriviVolontario(self.utente, self.corso.id)
             if not ok:
-                QMessageBox.critical(self, "Iscrizione Fallita", "❌ Impossibile completare l'iscrizione (corso al completo o errore).")
+                QMessageBox.critical(self, "Iscrizione Fallita", "Impossibile completare l'iscrizione (corso al completo o errore).")
                 return
         if hasattr(self.utente, "iscriviti_al_corso"):
             self.utente.iscriviti_al_corso(self.corso)
@@ -391,5 +391,5 @@ class DettaglioCorsoDialog(QDialog):
                 pass
 
         self.cambiamento_effettuato = True
-        QMessageBox.information(self, "Iscrizione Confermata", f"✅ Ti sei iscritto con successo al corso {self.corso.titolo}!")
+        QMessageBox.information(self, "Iscrizione Confermata", f"Ti sei iscritto con successo al corso {self.corso.titolo}!")
         self.accept()

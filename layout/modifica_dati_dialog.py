@@ -23,7 +23,7 @@ class ModificaDatiDialog(QDialog):
     def __init__(self, volontario, parent=None):
         super().__init__(parent)
         self.volontario = volontario
-        self.setWindowTitle("👤 Profilo Operativo & Dati Personali — Croce Rossa Italiana")
+        self.setWindowTitle("Profilo Operativo & Dati Personali — Croce Rossa Italiana")
         self.resize(650, 720)
         self.setMinimumSize(480, 520)
 
@@ -97,7 +97,7 @@ class ModificaDatiDialog(QDialog):
         h_lay.setContentsMargins(24, 16, 24, 16)
         h_lay.setSpacing(4)
         
-        lbl_title = QLabel("👤 Profilo Operativo & Dati Personali")
+        lbl_title = QLabel("Profilo Operativo & Dati Personali")
         lbl_title.setStyleSheet("font-size: 18px; font-weight: bold; color: #ffffff;")
         lbl_subtitle = QLabel("Gestisci anagrafica, documento di guida (PDF) ed estrapolazione dati patente")
         lbl_subtitle.setStyleSheet("font-size: 12px; color: #aaaaaa;")
@@ -144,7 +144,7 @@ class ModificaDatiDialog(QDialog):
         inner_layout.setSpacing(16)
 
         # --- SEZIONE 1: Dati Anagrafici & Contatti ---
-        sec1 = self._crea_card("👤 Dati Anagrafici & Recapiti")
+        sec1 = self._crea_card("Dati Anagrafici & Recapiti")
         s1_lay = QGridLayout()
         s1_lay.setSpacing(12)
 
@@ -187,8 +187,8 @@ class ModificaDatiDialog(QDialog):
 
         # Riga 3: Ruolo Operativo
         self.ruolo_combo = QComboBox()
-        self.ruolo_combo.addItem("🚑 Volontario Operativo", "volontario")
-        self.ruolo_combo.addItem("📋 Referente / Coordinatore", "referente")
+        self.ruolo_combo.addItem("Volontario Operativo", "volontario")
+        self.ruolo_combo.addItem("Referente / Coordinatore", "referente")
 
         ruolo_attuale = str(getattr(volontario, "ruolo", "volontario") or "volontario").lower()
         idx_r = self.ruolo_combo.findData(ruolo_attuale)
@@ -202,7 +202,7 @@ class ModificaDatiDialog(QDialog):
         inner_layout.addWidget(sec1)
 
         # --- SEZIONE 2: Patente di Guida ---
-        sec2 = self._crea_card("🚗 Patente di Guida")
+        sec2 = self._crea_card("Patente di Guida")
         s2_lay = QVBoxLayout()
         s2_lay.setSpacing(14)
 
@@ -279,19 +279,19 @@ class ModificaDatiDialog(QDialog):
         inner_layout.addWidget(sec2)
 
         # --- SEZIONE 3: Curriculum Vitae (PDF) ---
-        sec3 = self._crea_card("📄 Curriculum Vitae (PDF)")
+        sec3 = self._crea_card("Curriculum Vitae (PDF)")
         cv_layout = QHBoxLayout()
         cv_layout.setContentsMargins(0, 0, 0, 0)
         cv_layout.setSpacing(10)
         
         has_cv = bool(volontario.curriculum and str(volontario.curriculum).endswith(".pdf"))
-        cv_status = "Stato CV: ✅ Caricato regolarmente" if has_cv else "Stato CV: ⚪ Non caricato"
+        cv_status = "Stato CV: Caricato regolarmente" if has_cv else "Stato CV: Non caricato"
         self.lbl_cv_status = QLabel(cv_status)
         self.lbl_cv_status.setStyleSheet("color: #81c784;" if has_cv else "color: #aaaaaa;")
         cv_layout.addWidget(self.lbl_cv_status)
         cv_layout.addStretch()
 
-        self.btn_carica_cv = QPushButton("📂 Carica CV PDF")
+        self.btn_carica_cv = QPushButton("Carica CV PDF")
         self.btn_carica_cv.setStyleSheet("""
             QPushButton {
                 background-color: #2b2b2b;
@@ -308,7 +308,7 @@ class ModificaDatiDialog(QDialog):
         self.btn_carica_cv.clicked.connect(self.carica_cv_pdf)
         cv_layout.addWidget(self.btn_carica_cv)
         
-        self.btn_view_cv = QPushButton("👁️ Vedi CV PDF")
+        self.btn_view_cv = QPushButton("Visualizza CV PDF")
         self.btn_view_cv.setStyleSheet("""
             QPushButton {
                 background-color: #0288d1;
@@ -330,7 +330,7 @@ class ModificaDatiDialog(QDialog):
         inner_layout.addWidget(sec3)
 
         # --- SEZIONE 4: Comitato e Disponibilità ---
-        sec4 = self._crea_card("🏢 Comitato e Disponibilità Operativa")
+        sec4 = self._crea_card("Comitato e Disponibilità Operativa")
         s4_lay = QVBoxLayout()
         s4_lay.setSpacing(10)
 
@@ -357,7 +357,7 @@ class ModificaDatiDialog(QDialog):
         foot_lay.setContentsMargins(24, 12, 24, 12)
         foot_lay.setSpacing(12)
 
-        lbl_foot_hint = QLabel("💡 Tutte le modifiche vengono sincronizzate con il database centrale CRI")
+        lbl_foot_hint = QLabel("Tutte le modifiche vengono sincronizzate con il database centrale CRI")
         lbl_foot_hint.setStyleSheet("color: #777777; font-size: 12px;")
         foot_lay.addWidget(lbl_foot_hint)
         foot_lay.addStretch()
@@ -381,7 +381,7 @@ class ModificaDatiDialog(QDialog):
         btn_annulla.clicked.connect(self.reject)
         foot_lay.addWidget(btn_annulla)
 
-        self.salva_btn = QPushButton("💾 Salva Dati")
+        self.salva_btn = QPushButton("Salva Dati")
         self.salva_btn.setStyleSheet("""
             QPushButton {
                 background-color: #2e7d32;
@@ -434,10 +434,10 @@ class ModificaDatiDialog(QDialog):
             try:
                 shutil.copy(file_path, dest_path)
                 self.volontario.curriculum = f"curricula_pdf/{self.volontario.cod_fiscale}_curriculum.pdf"
-                self.lbl_cv_status.setText("Stato CV: ✅ Caricato regolarmente")
+                self.lbl_cv_status.setText("Stato CV: Caricato regolarmente")
                 self.lbl_cv_status.setStyleSheet("color: #81c784;")
                 self.btn_view_cv.setVisible(True)
-                QMessageBox.information(self, "Successo", "✅ Curriculum Vitae PDF caricato correttamente.")
+                QMessageBox.information(self, "Successo", "Curriculum Vitae PDF caricato correttamente.")
             except Exception as e:
                 QMessageBox.critical(self, "Errore", f"Impossibile salvare il file: {e}")
 
@@ -480,7 +480,7 @@ class ModificaDatiDialog(QDialog):
             if not self.ha_pdf_valido(pat):
                 risp = QMessageBox.question(
                     self,
-                    "📂 Documento Richiesto",
+                    "Documento Richiesto",
                     f"Per abilitare la patente '<b>{pat}</b>' è necessario allegare il relativo documento PDF.\n\n"
                     f"Desideri selezionare il file PDF adesso?",
                     QMessageBox.Yes | QMessageBox.No,
@@ -502,11 +502,11 @@ class ModificaDatiDialog(QDialog):
         has_pdf = self.ha_pdf_valido()
         num_pat = getattr(self.volontario, "numero_patente", "") or (self.edit_numero_patente.text().strip() if hasattr(self, "edit_numero_patente") else "")
         if has_pdf:
-            status_text = f"Documento: ✅ PDF Patente allegato (N. {num_pat or 'Registrato'})"
+            status_text = f"Documento: ● PDF Patente allegato (N. {num_pat or 'Registrato'})"
             self.lbl_pdf_status.setText(status_text)
             self.lbl_pdf_status.setStyleSheet("color: #00e676; font-size: 12px; font-weight: bold;")
         else:
-            status_text = "Documento: ⚠️ Nessun PDF allegato. Clicca su 'Allega PDF' per caricare il file."
+            status_text = "Documento: ● Nessun PDF allegato. Clicca su 'Allega PDF' per caricare il file."
             self.lbl_pdf_status.setText(status_text)
             self.lbl_pdf_status.setStyleSheet("color: #ff9800; font-size: 12px;")
         if hasattr(self, "btn_view_pdf"):
@@ -522,7 +522,7 @@ class ModificaDatiDialog(QDialog):
             QMessageBox.critical(
                 self,
                 "File Non Valido",
-                "❌ Il file selezionato deve avere estensione .pdf."
+                "Il file selezionato deve avere estensione .pdf."
             )
             return False
 
@@ -548,11 +548,11 @@ class ModificaDatiDialog(QDialog):
             QMessageBox.information(
                 self,
                 "Documento Caricato",
-                f"✅ Documento PDF patente allegato con successo:\n{dest_filename}"
+                f"Documento PDF patente allegato con successo:\n{dest_filename}"
             )
             return True
         except Exception as e:
-            QMessageBox.critical(self, "Errore", f"❌ Errore durante il caricamento del file: {e}")
+            QMessageBox.critical(self, "Errore", f"Errore durante il caricamento del file: {e}")
             return False
 
     def visualizza_pdf_patente(self):
@@ -622,7 +622,7 @@ class ModificaDatiDialog(QDialog):
                     from PyQt5.QtWidgets import QInputDialog
                     pin_input, ok = QInputDialog.getText(
                         self,
-                        "🔒 Autorizzazione Referente Richiesta",
+                        "Autorizzazione Referente Richiesta",
                         "Per abilitare i privilegi di Referente / Coordinatore,\n"
                         "inserisci il PIN di sicurezza CRI del Comitato:",
                         QLineEdit.Password
@@ -631,7 +631,7 @@ class ModificaDatiDialog(QDialog):
                         QMessageBox.critical(
                             self,
                             "Autorizzazione Negata",
-                            "❌ PIN di sicurezza errato o non fornito.\n\n"
+                            "PIN di sicurezza errato o non fornito.\n\n"
                             "L'auto-promozione a Referente è stata bloccata per motivi di sicurezza."
                         )
                         idx_prev = self.ruolo_combo.findData(ruolo_attuale)
@@ -658,4 +658,4 @@ class ModificaDatiDialog(QDialog):
             # Non mostrare popup modale di successo (richiesta di semplificazione UI)
             self.accept()
         except Exception as e:
-            QMessageBox.critical(self, "Errore", f"❌ Errore nel salvataggio: {e}")
+            QMessageBox.critical(self, "Errore", f"Errore nel salvataggio: {e}")

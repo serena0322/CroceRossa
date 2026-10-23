@@ -27,7 +27,7 @@ class GestioneFlottaController:
         ruolo = str(getattr(utente, "ruolo", "")).strip().lower()
         if ruolo == "referente" or hasattr(utente, "settoreGestito"):
             return True
-        print("❌ Operazione negata: solo gli utenti con ruolo 'Referente' possono gestire la flotta.")
+        print("[Flotta/Errore] Operazione negata: solo gli utenti con ruolo 'Referente' possono gestire la flotta.")
         return False
 
     def aggiungiMezzo(self, m: Mezzo, utente=None) -> bool:
@@ -53,7 +53,7 @@ class GestioneFlottaController:
             print(f"[GestioneFlottaController] aggiungiMezzo {m.targa} salvato nel database locale.")
             return True
         except Exception as e:
-            print(f"⚠️ Errore aggiungiMezzo nel database locale: {e}")
+            print(f"[Flotta/Errore] aggiungiMezzo nel database locale: {e}")
             return False
 
     def assegnaMezzoATurno(self, m: Mezzo | None, t: Turno, utente=None) -> bool:
@@ -83,7 +83,7 @@ class GestioneFlottaController:
                 s.salva_dati()
             return True
         except Exception as e:
-            print(f"⚠️ Errore assegnaMezzoATurno nel database locale: {e}")
+            print(f"[Flotta/Errore] assegnaMezzoATurno nel database locale: {e}")
             return False
 
     def compilaChecklist(self, c: Checklist) -> bool:
@@ -101,7 +101,7 @@ class GestioneFlottaController:
             print(f"[GestioneFlottaController] compilaChecklist {c.id} salvata nel database locale.")
             return True
         except Exception as e:
-            print(f"⚠️ Errore compilaChecklist nel database locale: {e}")
+            print(f"[Flotta/Errore] compilaChecklist nel database locale: {e}")
             return False
 
     def creaResoconto(self, targa: str = "", km: int = 0, note: str = "") -> bool:
@@ -123,7 +123,7 @@ class GestioneFlottaController:
             print(f"[GestioneFlottaController] creaResoconto {rep_id} salvato nel database locale.")
             return True
         except Exception as e:
-            print(f"⚠️ Errore creaResoconto nel database locale: {e}")
+            print(f"[Flotta/Errore] creaResoconto nel database locale: {e}")
             return False
 
     def richiediControlli(self, ruolo: str, c: Checklist | None = None) -> List[str]:

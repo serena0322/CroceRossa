@@ -787,7 +787,7 @@ class TestGestioneUtenteController(unittest.TestCase):
         self.assertIsNotNone(item_ruolo)
         assert item_ruolo is not None
         self.assertIn("Autista Tipo A", item_ruolo.text())
-        self.assertIn("🚗", item_ruolo.text())
+        self.assertEqual("Autista Tipo A", item_ruolo.text())
 
 
     def test_compila_resoconto_km_risultanti(self):
@@ -861,7 +861,7 @@ class TestGestioneUtenteController(unittest.TestCase):
 
         # 2. Seleziona la riga del turno e verifica che il pulsante segnali che è già completata
         win.tbl_miei_turni.selectRow(0)
-        self.assertEqual(win.btn_checklist.text(), "✅ Checklist Completata")
+        self.assertEqual(win.btn_checklist.text(), "Checklist Completata")
 
         # 3. Tentativo di avviare la compilazione: deve essere intercettato dal controllo bloccante
         with patch.object(QMessageBox, "information") as mock_info, \
@@ -899,7 +899,7 @@ class TestGestioneUtenteController(unittest.TestCase):
             # 1. Test ModificaDatiDialog con Sticky Footer e ScrollArea
             dlg_modifica = ModificaDatiDialog(v)
             self.assertIsNotNone(dlg_modifica.salva_btn)
-            self.assertEqual(dlg_modifica.salva_btn.text(), "💾 Salva Dati")
+            self.assertEqual(dlg_modifica.salva_btn.text(), "Salva Dati")
             self.assertTrue(dlg_modifica.salva_btn.isEnabled())
 
             # 2. Test caricamento file PDF patente

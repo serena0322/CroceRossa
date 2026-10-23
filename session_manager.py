@@ -26,10 +26,10 @@ def save_session(user) -> bool:
         with open(SESSION_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)
 
-        print(f"🔒 [SessionManager] Sessione persistente salvata per {cf or email}")
+        print(f"[SessionManager] Sessione persistente salvata per {cf or email}")
         return True
     except Exception as e:
-        print(f"⚠️ [SessionManager] Errore salvataggio sessione: {e}")
+        print(f"[SessionManager/Errore] Salvataggio sessione: {e}")
         return False
 
 def load_session() -> dict | None:
@@ -42,7 +42,7 @@ def load_session() -> dict | None:
         if data.get("cod_fiscale") or data.get("email"):
             return data
     except Exception as e:
-        print(f"⚠️ [SessionManager] Errore caricamento sessione: {e}")
+        print(f"[SessionManager/Errore] Caricamento sessione: {e}")
     return None
 
 def clear_session() -> bool:
@@ -50,8 +50,8 @@ def clear_session() -> bool:
     try:
         if os.path.exists(SESSION_FILE):
             os.remove(SESSION_FILE)
-            print("🔓 [SessionManager] Sessione eliminata.")
+            print("[SessionManager] Sessione eliminata.")
         return True
     except Exception as e:
-        print(f"⚠️ [SessionManager] Errore rimozione sessione: {e}")
+        print(f"[SessionManager/Errore] Rimozione sessione: {e}")
         return False

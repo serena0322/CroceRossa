@@ -27,7 +27,7 @@ def registra_utente(cod_fiscale: str, email: str, password: str, nome: str, ruol
     utente = costruisci_utente(dati)
     s.volontari.append(utente)
     s.salva_dati()
-    print("✅ Registrazione completata nel database locale.")
+    print("[Auth] Registrazione completata nel database locale.")
     return True
 
 def utente_gia_registrato(email: str, cod_fiscale: str) -> bool:
@@ -86,5 +86,5 @@ def send_password_reset_email(email: str) -> bool:
     return EmailService.inviaMail(
         destinatario=email,
         messaggio=f"Gentile {nome},\nUtilizza questo messaggio per confermare il ripristino della tua password.",
-        oggetto="🔐 Reset Password CRI"
+        oggetto="Reset Password — Croce Rossa Italiana"
     )

@@ -211,17 +211,17 @@ class Volontario(Utente):
         if not self.turni_assegnati:
             print(f"{self.nome} non ha turni assegnati.")
             return
-        print(f"📅 Turni assegnati a {self.nome}:")
+        print(f"Turni assegnati a {self.nome}:")
         for turno in self.turni_assegnati:
-            print(f" - {turno.data} ({turno.fascia_oraria}) in {turno.luogo}")
+            print(f" • {turno.data} ({turno.fascia_oraria}) in {turno.luogo}")
 
     def visualizza_rubrica(self, colleghi: List[Volontario]):
         if not colleghi:
             print("Rubrica vuota.")
             return
-        print("📘 Rubrica volontari:")
+        print("Rubrica volontari:")
         for volontario in colleghi:
-            print(f" - {volontario.getNomeCompleto()} | 📧 {volontario.email} | 📞 {volontario.telefono}")
+            print(f" • {volontario.getNomeCompleto()} | Email: {volontario.email} | Tel: {volontario.telefono}")
 
     def apri_modifica_dati(self):
         from layout.modifica_dati_dialog import ModificaDatiDialog

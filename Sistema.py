@@ -358,10 +358,10 @@ class Sistema:
 
                 self.turni.append(t)
 
-            print(f"🔄 Database locale JSON caricato: {len(self.volontari)} utenti, {len(self.turni)} turni, {len(self.mezzi)} mezzi, {len(self.corsi)} corsi.")
+            print(f"[Sistema] Database locale JSON caricato: {len(self.volontari)} utenti, {len(self.turni)} turni, {len(self.mezzi)} mezzi, {len(self.corsi)} corsi.")
             return True
         except Exception as e:
-            print(f"⚠️ Errore durante il caricamento del database JSON: {e}")
+            print(f"[Sistema] [ERRORE] Caricamento database JSON fallito: {e}")
             return False
 
     def salva_dati(self, file_path: str = "database.json") -> bool:
@@ -444,7 +444,7 @@ class Sistema:
                 json.dump(data, f, indent=2, ensure_ascii=False)
             return True
         except Exception as e:
-            print(f"⚠️ Errore salvataggio dati su {file_path}: {e}")
+            print(f"[Sistema] [ERRORE] Salvataggio dati su {file_path} fallito: {e}")
             return False
 
     def sincronizza_con_firebase(self):
@@ -502,10 +502,10 @@ class Sistema:
         turno = next((t for t in self.turni if t.codice == str(id_turno)), None)
 
         if not volontario:
-            print("⚠️ Volontario non trovato.")
+            print("[Sistema] [AVVISO] Volontario non trovato.")
             return
         if not turno:
-            print("⚠️ Turno non trovato.")
+            print("[Sistema] [AVVISO] Turno non trovato.")
             return
 
         turno.aggiungiVolontario(volontario)
@@ -532,7 +532,7 @@ class Sistema:
                         "oggetto": corso
                     }
                     avvisi.append(avviso)
-                    print(f"⚠️ Corso '{corso.nome}' in scadenza!")
+                    print(f"[Sistema] [AVVISO] Corso '{corso.nome}' in scadenza.")
             except Exception:
                 pass
         return avvisi
@@ -568,7 +568,7 @@ class Sistema:
                     "oggetto": turno
                 }
                 avvisi.append(avviso)
-                print(f"⚠️ Turno {turno.codice} ancora scoperto (iscritti: {iscritti}/{persone_richieste})")
+                print(f"[Sistema] [AVVISO] Turno {turno.codice} ancora scoperto (iscritti: {iscritti}/{persone_richieste})")
         return avvisi
 
     def invia_promemoria_servizi_24h(self) -> list[dict]:
@@ -607,11 +607,11 @@ class Sistema:
                         testo = (
                             f"Gentile {nome_vol},\n\n"
                             f"ti ricordiamo che nelle prossime 24 ore hai in programma il seguente servizio CRI:\n\n"
-                            f"📌 Tipologia: {servizio}\n"
-                            f"📅 Data: {turno.data}\n"
-                            f"⏰ Orario: {orario}\n"
-                            f"📍 Tratta / Luogo: {luogo}\n"
-                            f"🚑 Mezzo assegnato: {turno.mezzo_targa or 'Da definire'}\n\n"
+                            f"• Tipologia       : {servizio}\n"
+                            f"• Data            : {turno.data}\n"
+                            f"• Orario          : {orario}\n"
+                            f"• Tratta / Luogo  : {luogo}\n"
+                            f"• Mezzo assegnato : {turno.mezzo_targa or 'Da definire'}\n\n"
                             f"Ricordati di verificare la checklist del mezzo e i presidi sanitari prima della partenza.\n\n"
                             f"Comitato Croce Rossa Italiana"
                         )
@@ -619,7 +619,7 @@ class Sistema:
                         EmailService.inviaMail(
                             destinatario=email,
                             messaggio=testo,
-                            oggetto=f"⏰ Promemoria Servizio CRI: {servizio} del {turno.data}"
+                            oggetto=f"Promemoria Servizio CRI: {servizio} del {turno.data}"
                         )
                         self.promemoria_inviati.add(chiave_notifica)
                         notifiche.append({
@@ -631,7 +631,7 @@ class Sistema:
                             "email": email,
                             "data": data_t
                         })
-                        print(f"📧 [RNF4 Promemoria] Inviato promemoria turno a {email} per il {data_t}")
+                        print(f"[RNF4 Promemoria] Inviato promemoria turno a {email} per il {data_t}")
         return notifiche
 
     def esegui_backup(self, base_dir: str = "backups") -> tuple[bool, str]:
@@ -688,7 +688,7 @@ class Sistema:
     def visualizza_stato_mezzi(self):
         for mezzo in self.mezzi:
             stato = "disponibile" if mezzo.disponibile else "non disponibile"
-            print(f"🚐 Mezzo {mezzo.targa} - {stato}")
+            print(f"Mezzo {mezzo.targa} - {stato}")
 
     # --- Checklist (opzionale) ---
     def aggiungi_checklist(self, item: Checklist):
@@ -710,32 +710,32 @@ class Sistema:
     def stampa_report_volontario(self, cod_fiscale: str) -> str:
         volontario = self.get_volontario(cod_fiscale)
         if not volontario:
-            return "⚠️ Volontario non trovato."
+            return "Volontario non trovato."
 
         report = []
-        report.append(f"🧾 REPORT VOLONTARIO: {volontario.nome} {volontario.cognome}")
+        report.append(f"REPORT VOLONTARIO: {volontario.nome} {volontario.cognome}")
         report.append("-" * 40)
         report.append(f"Codice fiscale : {volontario.cod_fiscale}")
-        report.append(f"Email : {volontario.email}")
-        report.append(f"Totale ore : {volontario.getMonteOre():.2f} h")
+        report.append(f"Email          : {volontario.email}")
+        report.append(f"Totale ore     : {volontario.getMonteOre():.2f} h")
 
         if not volontario.turni_assegnati:
             report.append("\nNessun turno assegnato.")
             return "\n".join(report)
 
-        report.append("\n🗓️ Turni assegnati:")
+        report.append("\nTurni assegnati:")
         for turno in volontario.turni_assegnati:
             ore = volontario.ore_lavorate.get(turno.codice, 0.0)
-            report.append(f"- {turno.data} | {turno.fascia_oraria} | Servizio: {turno.tipoServizio} | Ore: {ore:.2f}")
+            report.append(f"• {turno.data} | {turno.fascia_oraria} | Servizio: {turno.tipoServizio} | Ore: {ore:.2f}")
 
         return "\n".join(report)
 
     def riepilogo_testuale(self) -> str:
         return (
-            f"📋 Riepilogo Sistema:\n\n"
-            f"👥 Volontari: {len(self.volontari)}\n"
-            f"🎓 Corsi: {len(self.corsi)}\n"
-            f"📅 Turni: {len(self.turni)}\n"
-            f"🚐 Mezzi: {len(self.mezzi)}\n"
-            f"✅ Checklist: {len(self.checklist)}"
+            f"Riepilogo Sistema:\n\n"
+            f"• Volontari : {len(self.volontari)}\n"
+            f"• Corsi     : {len(self.corsi)}\n"
+            f"• Turni     : {len(self.turni)}\n"
+            f"• Mezzi     : {len(self.mezzi)}\n"
+            f"• Checklist : {len(self.checklist)}"
         )

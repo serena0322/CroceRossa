@@ -154,7 +154,7 @@ class RecuperoCredenzialiDialog(QDialog):
     """Finestra modale per la richiesta di recupero credenziali / reset password."""
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("🔐 Recupero Credenziali — Croce Rossa Italiana")
+        self.setWindowTitle("Recupero Credenziali — Croce Rossa Italiana")
         self.setFixedWidth(460)
         self.setStyleSheet("""
             QDialog {
@@ -181,7 +181,7 @@ class RecuperoCredenzialiDialog(QDialog):
         layout.setContentsMargins(24, 24, 24, 24)
         layout.setSpacing(14)
 
-        lbl_titolo = QLabel("<h3 style='margin:0; color: white;'>🔐 Recupera Password / Account</h3>")
+        lbl_titolo = QLabel("<h3 style='margin:0; color: white;'>Recupera Password / Account</h3>")
         layout.addWidget(lbl_titolo)
 
         lbl_desc = QLabel(
@@ -242,7 +242,7 @@ class RecuperoCredenzialiDialog(QDialog):
     def _invia_recupero(self):
         val = self.txt_identificativo.text().strip()
         if not val:
-            self.lbl_feedback.setText("<span style='color: #ff5252;'>⚠️ Inserisci la tua email o codice fiscale.</span>")
+            self.lbl_feedback.setText("<span style='color: #ff5252;'>Inserisci la tua email o codice fiscale.</span>")
             self.lbl_feedback.show()
             return
 
@@ -251,10 +251,10 @@ class RecuperoCredenzialiDialog(QDialog):
         successo, messaggio = ctrl.recuperaCredenziali(val)
 
         if successo:
-            QMessageBox.information(self, "Email di Recupero Inviata", f"✅ {messaggio}")
+            QMessageBox.information(self, "Email di Recupero Inviata", f"{messaggio}")
             self.accept()
         else:
-            self.lbl_feedback.setText(f"<span style='color: #ff5252;'>❌ {messaggio}</span>")
+            self.lbl_feedback.setText(f"<span style='color: #ff5252;'>{messaggio}</span>")
             self.lbl_feedback.show()
 
 
@@ -328,7 +328,7 @@ class LoginWindow(QWidget):
                 font-size: 44px;
             }
         """)
-        cross_label.setText("🏥")
+        cross_label.setText("✚")
         layout.addWidget(cross_label, alignment=Qt.AlignLeft)  # type: ignore[attr-defined]
 
         layout.addSpacing(36)
@@ -357,10 +357,10 @@ class LoginWindow(QWidget):
 
         # Features list
         for icon, text in [
-            ("📅", "Gestione turni di servizio"),
-            ("🚐", "Monitoraggio flotta"),
-            ("🎓", "Formazione e certificazioni"),
-            ("📊", "Reportistica attività"),
+            ("•", "Gestione turni di servizio"),
+            ("•", "Monitoraggio flotta"),
+            ("•", "Formazione e certificazioni"),
+            ("•", "Reportistica attività"),
         ]:
             row = QHBoxLayout()
             row.setSpacing(10)
@@ -392,7 +392,7 @@ class LoginWindow(QWidget):
         layout.setSpacing(0)
 
         # Intestazione
-        h_label = QLabel("Bentornato 👋")
+        h_label = QLabel("Bentornato")
         h_label.setStyleSheet("font-size: 26px; font-weight: 700; color: #fff;")
         layout.addWidget(h_label)
         layout.addSpacing(4)
@@ -481,8 +481,8 @@ class LoginWindow(QWidget):
         self._reg_tel    = ModernInput("Telefono", parent=self)
         
         self._reg_ruolo  = ModernComboBox(parent=self)
-        self._reg_ruolo.addItem("🚑 Ruolo: Volontario Operativo", "volontario")
-        self._reg_ruolo.addItem("📋 Ruolo: Referente / Coordinatore", "referente")
+        self._reg_ruolo.addItem("Ruolo: Volontario Operativo", "volontario")
+        self._reg_ruolo.addItem("Ruolo: Referente / Coordinatore", "referente")
 
         self._reg_pin = ModernInput("PIN Autorizzazione Referente (CRI)", is_password=True, parent=self)
         self._reg_pin.hide()
@@ -553,7 +553,7 @@ class LoginWindow(QWidget):
             self.close()
         else:
             QMessageBox.warning(self, "Accesso Negato",
-                "❌ Credenziali non corrette o account non trovato.\n"
+                "Credenziali non corrette o account non trovato.\n"
                 "Verifica email e password e riprova.")
             self._shake(self._login_email)
 
@@ -572,7 +572,7 @@ class LoginWindow(QWidget):
         pwd     = self._reg_pwd.text().strip()
 
         if not all([email, nome, cognome, cf, dob, tel, pwd]):
-            QMessageBox.warning(self, "Campi Mancanti", "⚠️ Compila tutti i campi obbligatori.")
+            QMessageBox.warning(self, "Campi Mancanti", "Compila tutti i campi obbligatori.")
             return
 
         if ruolo == "referente":
@@ -582,7 +582,7 @@ class LoginWindow(QWidget):
                 QMessageBox.critical(
                     self,
                     "Accesso Negato — PIN Referente Richiesto",
-                    "❌ Codice di Autorizzazione Referente non valido o mancante.\n\n"
+                    "Codice di Autorizzazione Referente non valido o mancante.\n\n"
                     "Per registrarsi come Referente è obbligatorio inserire il PIN di sicurezza CRI.\n"
                     "Se non possiedi il codice, seleziona 'Volontario Operativo'."
                 )
@@ -608,12 +608,12 @@ class LoginWindow(QWidget):
             save_session(nuovo)
             # Per il referente non viene mostrato il messaggio modale "Account Creato"
             if ruolo != "referente":
-                QMessageBox.information(self, "Benvenuto!", "✅ Account Volontario creato con successo. Benvenuto!")
+                QMessageBox.information(self, "Benvenuto!", "Account Volontario creato con successo. Benvenuto!")
             self.callback_login_success()
             self.close()
         else:
             QMessageBox.warning(self, "Registrazione Fallita",
-                "❌ Impossibile creare l'account.\n"
+                "Impossibile creare l'account.\n"
                 "Verifica che il Codice Fiscale (16 caratteri) e il telefono siano corretti.")
 
 

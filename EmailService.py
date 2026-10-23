@@ -40,13 +40,13 @@ class EmailService:
                     server.send_message(msg)
 
                 record["inviata_realmente"] = True
-                print(f"📧 [EmailService] Email inviata con successo a {destinatario}")
+                print(f"[EmailService] Email inviata con successo a {destinatario}")
             except Exception as e:
-                print(f"⚠️ [EmailService] Errore invio SMTP a {destinatario}: {e}")
+                print(f"[EmailService/Errore] Invio SMTP a {destinatario}: {e}")
                 record["errore"] = str(e)
         else:
             # Modalità simulazione / test
-            print(f"📧 [EmailService] (Simulazione) Inviata a {destinatario} | Oggetto: {oggetto} | Testo: {messaggio[:60]}...")
+            print(f"[EmailService] (Simulazione) Inviata a {destinatario} | Oggetto: {oggetto} | Testo: {messaggio[:60]}...")
 
         EmailService.sent_emails.append(record)
         return True

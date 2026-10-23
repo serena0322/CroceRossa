@@ -16,7 +16,7 @@ class GestioneFormazioneController:
 
     def attestaPartecipazione(self, s: str, volontari: List[Volontario]) -> None:
         if not s:
-            print("⚠️ Errore: Corso ID vuoto.")
+            print("[Formazione/Errore] Corso ID vuoto.")
             return
         try:
             from Sistema import Sistema
@@ -36,9 +36,9 @@ class GestioneFormazioneController:
                         if c_obj in v.formazione:
                             v.formazione.remove(c_obj)
                 sys_inst.salva_dati()
-            print(f"[GestioneFormazioneController] attestaPartecipazione per corso {s} completato.")
+            print(f"[Formazione] attestaPartecipazione per corso {s} completato.")
         except Exception as e:
-            print(f"⚠️ Errore attestaPartecipazione nel database locale: {e}")
+            print(f"[Formazione/Errore] attestaPartecipazione nel database locale: {e}")
 
     def creaCorso(self, c: Corso) -> bool:
         if not c.id:
@@ -53,10 +53,10 @@ class GestioneFormazioneController:
                 if not existing:
                     sys_inst.corsi.append(c)
                 sys_inst.salva_dati()
-            print(f"[GestioneFormazioneController] creaCorso {c.id} salvato nel database locale.")
+            print(f"[Formazione] creaCorso {c.id} salvato nel database locale.")
             return True
         except Exception as e:
-            print(f"⚠️ Errore creaCorso nel database locale: {e}")
+            print(f"[Formazione/Errore] creaCorso nel database locale: {e}")
             return False
 
     def eliminaCorso(self, s: str) -> bool:
@@ -66,10 +66,10 @@ class GestioneFormazioneController:
             if sys_inst:
                 sys_inst.corsi = [c for c in sys_inst.corsi if str(c.id) != str(s)]
                 sys_inst.salva_dati()
-            print(f"[GestioneFormazioneController] eliminaCorso {s} cancellato dal database locale.")
+            print(f"[Formazione] eliminaCorso {s} cancellato dal database locale.")
             return True
         except Exception as e:
-            print(f"⚠️ Errore eliminaCorso nel database locale: {e}")
+            print(f"[Formazione/Errore] eliminaCorso nel database locale: {e}")
             return False
 
     def iscriviVolontario(self, v: Volontario, s: Any, sistema=None) -> bool:
@@ -81,12 +81,12 @@ class GestioneFormazioneController:
         # 1. Verifica capienza su oggetto corso diretto
         if c_obj is not None:
             if c_obj.isCompleto() and v not in c_obj.partecipanti:
-                print(f"⚠️ Impossibile iscriversi: corso '{c_obj.titolo or c_obj.nome}' al completo ({c_obj.maxPartecipanti} posti).")
+                print(f"[Formazione/Avviso] Impossibile iscriversi: corso '{c_obj.titolo or c_obj.nome}' al completo ({c_obj.maxPartecipanti} posti).")
                 return False
             try:
                 c_obj.aggiungiIscritto(v)
             except ValueError as e:
-                print(f"⚠️ {e}")
+                print(f"[Formazione/Avviso] {e}")
                 return False
 
         # 2. Verifica capienza su oggetto in memoria se presente in sistema
@@ -94,12 +94,12 @@ class GestioneFormazioneController:
             c_mem = next((c for c in sys_inst.corsi if str(c.id) == s_id), None)
             if c_mem:
                 if c_mem.isCompleto() and v not in c_mem.partecipanti:
-                    print(f"⚠️ Impossibile iscriversi: corso '{c_mem.titolo or c_mem.nome}' al completo ({c_mem.maxPartecipanti} posti).")
+                    print(f"[Formazione/Avviso] Impossibile iscriversi: corso '{c_mem.titolo or c_mem.nome}' al completo ({c_mem.maxPartecipanti} posti).")
                     return False
                 try:
                     c_mem.aggiungiIscritto(v)
                 except ValueError as e:
-                    print(f"⚠️ {e}")
+                    print(f"[Formazione/Avviso] {e}")
                     return False
 
         if sys_inst:

@@ -56,13 +56,13 @@ class Mezzo:
         self.turni_assegnati.append(turno)
         self.stato = "Assegnato"
         self._disponibile = False
-        print(f"✅ Il mezzo {self.targa} è stato assegnato al turno del {turno.data}.")
+        print(f"[Mezzo] Il mezzo {self.targa} è stato assegnato al turno del {turno.data}.")
 
     def libera_mezzo(self):
         """Ripristina la disponibilità del mezzo al termine del servizio."""
         self.stato = "Disponibile"
         self._disponibile = True
-        print(f"🟢 Il mezzo {self.targa} è ora disponibile.")
+        print(f"[Mezzo] Il mezzo {self.targa} è ora disponibile.")
 
     def aggiornaKm(self, kmPercorsi: int) -> None:
         """
@@ -71,9 +71,9 @@ class Mezzo:
         """
         if kmPercorsi >= self.chilometraggioTotale:
             self.chilometraggioTotale = kmPercorsi
-            print(f"📈 Chilometraggio aggiornato a {self.chilometraggioTotale} km.")
+            print(f"[Mezzo] Chilometraggio aggiornato a {self.chilometraggioTotale} km.")
         else:
-            print("⚠️ Errore: il chilometraggio inserito è inferiore a quello attuale.")
+            print("[Mezzo/Avviso] Il chilometraggio inserito è inferiore a quello attuale.")
 
     def aggiorna_km(self, nuovi_km: int):
         """Alias snake_case per aggiornaKm."""
@@ -88,13 +88,13 @@ class Mezzo:
         """Registra il rientro del mezzo dall'officina e lo rende nuovamente utilizzabile."""
         self.stato = "Disponibile"
         self._disponibile = True
-        print(f"🔧 Riparazione terminata per il mezzo {self.targa}. Ora disponibile.")
+        print(f"[Mezzo] Riparazione terminata per il mezzo {self.targa}. Ora disponibile.")
 
     def inviaInOfficina(self) -> None:
         """Imposta lo stato del mezzo 'In Manutenzione' escludendolo dai servizi prenotabili."""
         self.stato = "In Manutenzione"
         self._disponibile = False
-        print(f"🔧 Mezzo {self.targa} inviato in officina.")
+        print(f"[Mezzo] Mezzo {self.targa} inviato in officina.")
 
     def isDismesso(self, limite_km: int = 400000) -> bool:
         """
@@ -108,7 +108,7 @@ class Mezzo:
         """Dismette permanentemente il mezzo dal parco flotta CRI."""
         self.stato = "Dismesso"
         self._disponibile = False
-        print(f"🗑️ Veicolo {self.targa} radiato.")
+        print(f"[Mezzo] Veicolo {self.targa} radiato.")
 
     def to_dict(self) -> dict:
         return {
