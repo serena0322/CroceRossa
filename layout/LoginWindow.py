@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QPushButton,
     QMessageBox, QSizePolicy, QDialog, QLabel, QDateEdit,
     QGraphicsDropShadowEffect, QFrame, QSpacerItem, QStackedWidget,
-    QComboBox
+    QComboBox, QScrollArea
 )
 from PyQt5.QtCore import (
     QDate, Qt, QPropertyAnimation, QEasingCurve,
@@ -265,7 +265,8 @@ class LoginWindow(QWidget):
     def __init__(self, sistema: Sistema, callback_login_success):
         super().__init__()
         self.setWindowTitle("Croce Rossa Italiana — Accesso")
-        self.setFixedSize(860, 580)
+        self.setMinimumSize(720, 560)  # dimensione minima garantita
+        self.resize(860, 660)          # dimensione iniziale preferita
         self.sistema = sistema
         self.callback_login_success = callback_login_success
         self.controller = GestioneUtenteController()
@@ -281,6 +282,7 @@ class LoginWindow(QWidget):
 
         # ── Pannello sinistro ─────────────────────────────
         left = self._build_left_panel()
+        left.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)  # type: ignore[attr-defined]
         root.addWidget(left, stretch=5)
 
         # ── Pannello destro (form) ────────────────────────
@@ -293,6 +295,7 @@ class LoginWindow(QWidget):
         right_wrapper.setStyleSheet("""
             QWidget#rightPanel { background: #0f0f0f; }
         """)
+        right_wrapper.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)  # type: ignore[attr-defined]
         rw_layout = QVBoxLayout(right_wrapper)
         rw_layout.setContentsMargins(0, 0, 0, 0)
         rw_layout.addWidget(self._stack)
@@ -459,7 +462,30 @@ class LoginWindow(QWidget):
 
     # ── PANNELLO REGISTRAZIONE ────────────────────────────────
     def _build_register_panel(self) -> QWidget:
+        # Pannello esterno che ospita lo scroll
+        outer = QWidget()
+        outer_layout = QVBoxLayout(outer)
+        outer_layout.setContentsMargins(0, 0, 0, 0)
+        outer_layout.setSpacing(0)
+
+        # Area di scorrimento per evitare sovrapposizioni con molti campi
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)  # type: ignore[attr-defined]
+        scroll.setStyleSheet("""
+            QScrollArea { background: transparent; border: none; }
+            QScrollBar:vertical {
+                background: #1a1a1a; width: 6px; border-radius: 3px;
+            }
+            QScrollBar::handle:vertical {
+                background: #444; border-radius: 3px; min-height: 20px;
+            }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0px; }
+        """)
+
         panel = QWidget()
+        panel.setStyleSheet("background: transparent;")
         layout = QVBoxLayout(panel)
         layout.setContentsMargins(48, 36, 48, 28)
         layout.setSpacing(0)
@@ -523,8 +549,11 @@ class LoginWindow(QWidget):
         """)
         switch.clicked.connect(lambda: self._stack.setCurrentIndex(0))  # pyrefly: ignore [missing-attribute]
         layout.addWidget(switch, alignment=Qt.AlignCenter)  # type: ignore[attr-defined]
+        layout.addSpacing(8)
 
-        return panel
+        scroll.setWidget(panel)
+        outer_layout.addWidget(scroll)
+        return outer
 
     # ── ANIMAZIONE FADE-IN ────────────────────────────────────
     def _fade_in(self):

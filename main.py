@@ -1,5 +1,12 @@
 # main.py
 import sys
+from dotenv import load_dotenv
+
+# Carica le variabili d'ambiente da .env (se presente) prima di qualsiasi import applicativo.
+# In produzione o CI/CD le variabili possono essere iniettate direttamente dall'ambiente host
+# senza dipendere dal file .env.
+load_dotenv()
+
 from PyQt5.QtWidgets import QApplication
 from Sistema import Sistema
 from layout.MainWindow import MainWindow

@@ -4,7 +4,8 @@ from PyQt5.QtWidgets import (
     QApplication, QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout,
     QMessageBox, QTabWidget, QTableWidget, QTableWidgetItem, QHeaderView,
     QFormLayout, QLineEdit, QComboBox, QDialog, QCheckBox, QInputDialog,
-    QAbstractItemView, QFrame, QTextEdit, QFileDialog, QSpinBox, QDoubleSpinBox
+    QAbstractItemView, QFrame, QTextEdit, QFileDialog, QSpinBox, QDoubleSpinBox,
+    QSizePolicy
 )
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QColor, QFont
@@ -1648,13 +1649,14 @@ class MainWindow(QWidget):
         # Action Button: Refresh Data
         btn_refresh = QPushButton("Aggiorna Dati")
         btn_refresh.setToolTip("Ricarica i dati dal database locale JSON")
+        btn_refresh.setMinimumWidth(110)
         btn_refresh.setStyleSheet("""
             QPushButton {
                 background-color: #2b3548;
                 border: 1px solid #3d4f6e;
                 color: #90caf9;
                 font-weight: bold;
-                padding: 6px 12px;
+                padding: 6px 16px;
                 border-radius: 5px;
             }
             QPushButton:hover {
@@ -1667,13 +1669,14 @@ class MainWindow(QWidget):
 
         # Edit Profile Button
         btn_modifica_dati = QPushButton("Profilo")
+        btn_modifica_dati.setMinimumWidth(70)
         btn_modifica_dati.setStyleSheet("""
             QPushButton {
                 background-color: #333333;
                 border: 1px solid #555;
                 color: #eee;
                 font-weight: bold;
-                padding: 6px 12px;
+                padding: 6px 16px;
                 border-radius: 5px;
             }
             QPushButton:hover {
@@ -1685,12 +1688,13 @@ class MainWindow(QWidget):
 
         # Logout Button
         btn_logout = QPushButton("Esci")
+        btn_logout.setMinimumWidth(60)
         btn_logout.setStyleSheet("""
             QPushButton {
                 background-color: #b71c1c;
                 color: white;
                 font-weight: bold;
-                padding: 6px 14px;
+                padding: 6px 16px;
                 border-radius: 5px;
             }
             QPushButton:hover {
@@ -1704,6 +1708,16 @@ class MainWindow(QWidget):
         
         # Tab Widget
         self.tab_widget = QTabWidget()
+        self.tab_widget.setStyleSheet("""
+            QTabBar::tab {
+                min-width: 120px;
+                padding: 8px 16px;
+                font-size: 13px;
+            }
+        """)
+        # Impedisce il troncamento del testo nelle tab (es. "Volontari e Rubrica")
+        self.tab_widget.tabBar().setElideMode(Qt.ElideNone)  # type: ignore[attr-defined]
+        self.tab_widget.tabBar().setExpanding(False)
         self.main_layout.addWidget(self.tab_widget)
         
         self.setLayout(self.main_layout)
@@ -3763,10 +3777,11 @@ class MainWindow(QWidget):
         top_bar.addWidget(lbl_info)
         top_bar.addStretch()
 
-        # Barra di ricerca
+        # Barra di ricerca — si espande con la finestra
         self.txt_cerca_volontario = QLineEdit()
         self.txt_cerca_volontario.setPlaceholderText("Cerca per nome, cognome, CF o ruolo...")
-        self.txt_cerca_volontario.setFixedWidth(280)
+        self.txt_cerca_volontario.setMinimumWidth(200)
+        self.txt_cerca_volontario.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)  # type: ignore[attr-defined]
         self.txt_cerca_volontario.setStyleSheet("""
             QLineEdit {
                 background-color: #2b2b2b;

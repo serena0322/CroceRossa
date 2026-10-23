@@ -13,6 +13,10 @@ env/
 # Sicurezza e Chiavi del Database
 *firebase-adminsdk*.json
 
+# Variabili d'ambiente locali (credenziali SMTP, chiavi segrete)
+# Usare .env.example come template — NON committare il .env reale
+.env
+
 # Sessione locale utente (Auto-login)
 .session.json
 

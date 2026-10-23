@@ -1,14 +1,14 @@
 {
   "utenti": [
     {
-      "cod_fiscale": "RSSMRA85M01H501Z",
-      "nome": "Mario",
-      "cognome": "Rossi",
-      "email": "",
-      "data_nascita": "",
-      "telefono": "",
+      "cod_fiscale": "GLNSRN03A62I156Z",
+      "nome": "Serena",
+      "cognome": "Giuliani",
+      "email": "serena@test.it",
+      "data_nascita": "22/01/2003",
+      "telefono": "3317477516",
       "ruolo": "volontario",
-      "password": "",
+      "password": "001fc73a92e0f339c0b74b2b8afda1cb00f4dbad8cf58769b4a58ff304ee97b5",
       "comitato": "",
       "comitato_appartenenza": "",
       "monteOreTotale": 0,
@@ -28,68 +28,8 @@
       "formazione_ids": []
     }
   ],
-  "mezzi": [
-    {
-      "targa": "CRI 777 XY",
-      "tipo": "Ambulanza Tipo A",
-      "chilometraggioTotale": 0,
-      "stato": "Disponibile",
-      "dataScadenzaAssicurazione": "",
-      "disponibile": true
-    }
-  ],
+  "mezzi": [],
   "corsi": [],
-  "turni": [
-    {
-      "id": "T_12H_1",
-      "codice": "T_12H_1",
-      "data": "2026-11-25",
-      "luogoDestinazione": "",
-      "luogoPrelevamento": "",
-      "oraInizio": "08:00",
-      "oraFine": "16:00",
-      "patenteRichiesta": "",
-      "paziente": "",
-      "paziente_nome": "",
-      "paziente_cognome": "",
-      "paziente_cf": "",
-      "personeRichieste": 2,
-      "persone_richieste": {
-        "volontario": 2
-      },
-      "stato": "Aperto",
-      "tipoServizio": "",
-      "mezzo_targa": "",
-      "checklist": false,
-      "volontari_ids": [
-        "RSSMRA85M01H501Z"
-      ],
-      "volontari_ruoli": {}
-    },
-    {
-      "id": "T_12H_2",
-      "codice": "T_12H_2",
-      "data": "2026-11-25",
-      "luogoDestinazione": "",
-      "luogoPrelevamento": "",
-      "oraInizio": "17:00",
-      "oraFine": "22:00",
-      "patenteRichiesta": "",
-      "paziente": "",
-      "paziente_nome": "",
-      "paziente_cognome": "",
-      "paziente_cf": "",
-      "personeRichieste": 2,
-      "persone_richieste": {
-        "volontario": 2
-      },
-      "stato": "Aperto",
-      "tipoServizio": "",
-      "mezzo_targa": "",
-      "checklist": false,
-      "volontari_ids": [],
-      "volontari_ruoli": {}
-    }
-  ],
+  "turni": [],
   "checklists": []
 }
