@@ -1204,9 +1204,6 @@ class SchedaVolontarioDialog(QDialog):
             btn_view_pat.setStyleSheet("background-color: #17a2b8; color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px;")
             btn_view_pat.clicked.connect(lambda _, p=pdf_path_to_open: self.apri_pdf(p))
             pat_lay.addWidget(btn_view_pat)
-        elif getattr(volontario, "patenti", []):
-            lbl_no_pdf = QLabel("<span style='color: #ff9800; font-size: 11px;'>Nessun PDF allegato</span>")
-            pat_lay.addWidget(lbl_no_pdf)
         pat_lay.addStretch()
         form.addRow("Patenti CRI:", patenti_widget)
 
@@ -1355,48 +1352,6 @@ class SchedaVolontarioDialog(QDialog):
         if ok_v and valore.strip():
             valore_clean = valore.strip()
             if tipo == "Patente":
-                import os
-                import shutil
-
-                file_path, _ = QFileDialog.getOpenFileName(
-                    self,
-                    f"Seleziona Documento PDF Patente '{valore_clean}'",
-                    "",
-                    "File PDF (*.pdf)"
-                )
-                if not file_path:
-                    QMessageBox.warning(
-                        self,
-                        "Operazione Annullata",
-                        f"Aggiunta patente annullata: per registrare la patente '{valore_clean}' è necessario allegare il relativo documento PDF."
-                    )
-                    return
-
-                if not file_path.lower().endswith(".pdf"):
-                    QMessageBox.critical(
-                        self,
-                        "File Non Valido",
-                        "Il file selezionato deve avere estensione .pdf."
-                    )
-                    return
-
-                dest_dir = os.path.abspath("patenti_pdf")
-                if not os.path.exists(dest_dir):
-                    os.makedirs(dest_dir)
-                dest_filename = f"{self.volontario.cod_fiscale}_patente_{valore_clean}.pdf"
-                dest_path = os.path.join(dest_dir, dest_filename)
-                try:
-                    shutil.copy(file_path, dest_path)
-                except Exception as e:
-                    QMessageBox.critical(self, "Errore", f"Errore salvataggio del file PDF: {e}")
-                    return
-
-                rel_path = f"patenti_pdf/{dest_filename}"
-                if not hasattr(self.volontario, "patenti_pdf") or self.volontario.patenti_pdf is None:
-                    self.volontario.patenti_pdf = {}
-                self.volontario.patenti_pdf[valore_clean] = rel_path
-                self.volontario.patente_pdf_path = rel_path
-
                 if not hasattr(self.volontario, "patenti") or self.volontario.patenti is None:
                     self.volontario.patenti = []
                 if valore_clean not in self.volontario.patenti:

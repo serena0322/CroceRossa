@@ -99,7 +99,7 @@ class ModificaDatiDialog(QDialog):
         
         lbl_title = QLabel("Profilo Operativo & Dati Personali")
         lbl_title.setStyleSheet("font-size: 18px; font-weight: bold; color: #ffffff;")
-        lbl_subtitle = QLabel("Gestisci anagrafica, documento di guida (PDF) ed estrapolazione dati patente")
+        lbl_subtitle = QLabel("Gestisci anagrafica, recapiti e patenti di guida")
         lbl_subtitle.setStyleSheet("font-size: 12px; color: #aaaaaa;")
         h_lay.addWidget(lbl_title)
         h_lay.addWidget(lbl_subtitle)
@@ -473,30 +473,8 @@ class ModificaDatiDialog(QDialog):
         return False
 
     def on_patente_toggled(self, pat: str, cb: QCheckBox, checked: bool):
-        if getattr(self, "_updating_checkbox", False):
-            return
-
-        if checked:
-            if not self.ha_pdf_valido(pat):
-                risp = QMessageBox.question(
-                    self,
-                    "Documento Richiesto",
-                    f"Per abilitare la patente '<b>{pat}</b>' è necessario allegare il relativo documento PDF.\n\n"
-                    f"Desideri selezionare il file PDF adesso?",
-                    QMessageBox.Yes | QMessageBox.No,
-                    QMessageBox.Yes
-                )
-                if risp == QMessageBox.Yes:
-                    caricato = self.carica_pdf_patente(patente_target=pat)
-                    if not caricato:
-                        self._updating_checkbox = True
-                        cb.setChecked(False)
-                        self._updating_checkbox = False
-                else:
-                    self._updating_checkbox = True
-                    cb.setChecked(False)
-                    self._updating_checkbox = False
-        self.aggiorna_stato_pdf()
+        # Nessuna verifica PDF richiesta per spuntare il tipo di patente
+        pass
 
     def aggiorna_stato_pdf(self):
         has_pdf = self.ha_pdf_valido()

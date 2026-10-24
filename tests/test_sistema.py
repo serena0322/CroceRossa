@@ -918,6 +918,37 @@ class TestGestioneUtenteController(unittest.TestCase):
             if os.path.exists(tmp_pdf):
                 os.remove(tmp_pdf)
 
+    def test_spunta_patente_senza_pdf(self):
+        from PyQt5.QtWidgets import QApplication, QMessageBox
+        from layout.modifica_dati_dialog import ModificaDatiDialog
+        from Volontario import Volontario
+        from unittest.mock import patch
+
+        app = QApplication.instance() or QApplication([])
+        v = Volontario(
+            cod_fiscale="GLNSRN03A62I156Z",
+            nome="Serena",
+            cognome="Giuliani",
+            email="serena.giuliani@gmail.com",
+            patenti=[]
+        )
+        dlg = ModificaDatiDialog(v)
+
+        # Spunta patente B e C senza che ci siano PDF
+        with patch.object(QMessageBox, "question") as mock_quest:
+            dlg.patente_checkboxes["B"].setChecked(True)
+            dlg.patente_checkboxes["C"].setChecked(True)
+            # Nessun popup di richiesta PDF deve essere mostrato
+            mock_quest.assert_not_called()
+
+        self.assertTrue(dlg.patente_checkboxes["B"].isChecked())
+        self.assertTrue(dlg.patente_checkboxes["C"].isChecked())
+
+        with patch("PyQt5.QtWidgets.QMessageBox.information"), patch.object(v, "aggiorna_firestore"):
+            dlg.salva_dati()
+            self.assertIn("B", v.patenti)
+            self.assertIn("C", v.patenti)
+
     def test_turni_al_completo_esclusi_da_turni_disponibili(self):
         from PyQt5.QtWidgets import QApplication
         from layout.MainWindow import MainWindow
