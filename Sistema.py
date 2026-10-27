@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Optional, TYPE_CHECKING
+from datetime import datetime, timedelta
 
 if TYPE_CHECKING:
     from Utente import Utente
@@ -547,11 +548,20 @@ class Sistema:
             volontario.prenotaTurno(turno)
             turno.aggiungiVolontario(volontario)
 
-    def annulla_turno(self, cod_fiscale: str, turno: Turno):
+    def annulla_turno(self, cod_fiscale: str, turno: Turno, forza: bool = False) -> bool:
+        """Annulla la prenotazione di un volontario al turno (rispetta la regola delle 24h prima dell'inizio)."""
+        if not forza and hasattr(turno, "isAnnullabile") and not turno.isAnnullabile(delta_ore=24.0):
+            print(f"[Sistema/Avviso] Annullamento non consentito: mancano meno di 24 ore all'inizio del turno {turno.codice}.")
+            return False
         volontario = self.get_volontario(cod_fiscale)
         if volontario:
             volontario.annullaPrenotazione(turno)
             turno.rimuoviVolontario(volontario)
+            if hasattr(turno, "volontari_ruoli") and cod_fiscale in turno.volontari_ruoli:
+                del turno.volontari_ruoli[cod_fiscale]
+            self.salva_dati()
+            return True
+        return False
 
     def notifica_turni_scoperti(self) -> list[dict]:
         avvisi = []
@@ -633,6 +643,87 @@ class Sistema:
                         })
                         print(f"[RNF4 Promemoria] Inviato promemoria turno a {email} per il {data_t}")
         return notifiche
+
+    def aggiorna_stati_attivita_automatico(self, data_ora_rif: Optional[datetime] = None) -> dict:
+        """
+        Regola Tesina UML (Attore Tempo / Ciclo di vita stati):
+        Aggiornamento automatico degli stati per Turni e Corsi:
+        PROGRAMMATO / Aperto -> IN_CORSO -> CONCLUSO.
+        
+        Calcola la transizione di stato confrontando la data e le fasce orarie con il tempo corrente.
+        Restituisce un dizionario con i conteggi e le attività modificate.
+        """
+        now = data_ora_rif or datetime.now()
+        modifiche = {"turni": [], "corsi": []}
+
+        # 1. Turni
+        for t in self.turni:
+            stato_attuale = str(getattr(t, "stato", "")).strip().upper()
+            if stato_attuale in ["ANNULLATO", "NON SVOLTO"]:
+                continue
+
+            dt_inizio = None
+            dt_fine = None
+            try:
+                dt_inizio = datetime.strptime(f"{t.data} {t.oraInizio}", "%Y-%m-%d %H:%M")
+                dt_fine = datetime.strptime(f"{t.data} {t.oraFine}", "%Y-%m-%d %H:%M")
+                # Se l'orario di fine è precedente o uguale a quello di inizio, attraversa la mezzanotte
+                if dt_fine <= dt_inizio:
+                    dt_fine += timedelta(days=1)
+            except Exception:
+                continue
+
+            nuovo_stato = None
+            if now >= dt_fine:
+                if stato_attuale != "CONCLUSO":
+                    nuovo_stato = "CONCLUSO"
+            elif now >= dt_inizio:
+                if stato_attuale != "IN_CORSO":
+                    nuovo_stato = "IN_CORSO"
+            else:
+                # Prima dell'inizio: se non aperto/programmato, resta PROGRAMMATO
+                if stato_attuale not in ["PROGRAMMATO", "APERTO", "COMPLETO", "PROPOSTO"]:
+                    nuovo_stato = "PROGRAMMATO"
+
+            if nuovo_stato and nuovo_stato != stato_attuale:
+                t.stato = nuovo_stato
+                modifiche["turni"].append((t.codice, stato_attuale, nuovo_stato))
+
+        # 2. Corsi
+        for c in self.corsi:
+            stato_attuale = str(getattr(c, "stato", "")).strip().upper()
+            if stato_attuale in ["ANNULLATO"]:
+                continue
+
+            dt_ini = c.getDataInizioDt() if hasattr(c, "getDataInizioDt") else None
+            dt_fin = None
+            if getattr(c, "dataFine", ""):
+                for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%Y/%m/%d"):
+                    try:
+                        dt_fin = datetime.strptime(str(c.dataFine).strip(), fmt)
+                        break
+                    except Exception:
+                        pass
+            if not dt_fin and dt_ini:
+                dt_fin = dt_ini + timedelta(days=1)
+
+            nuovo_stato_c = None
+            if dt_fin and now.date() > dt_fin.date():
+                if stato_attuale != "CONCLUSO":
+                    nuovo_stato_c = "CONCLUSO"
+            elif dt_ini and now.date() >= dt_ini.date():
+                if stato_attuale != "IN_CORSO":
+                    nuovo_stato_c = "IN_CORSO"
+
+            if nuovo_stato_c and nuovo_stato_c != stato_attuale:
+                c.stato = nuovo_stato_c
+                modifiche["corsi"].append((c.id, stato_attuale, nuovo_stato_c))
+
+        if modifiche["turni"] or modifiche["corsi"]:
+            self.salva_dati()
+            print(f"[Attore Tempo UML] Aggiornati automaticamente {len(modifiche['turni'])} turni e {len(modifiche['corsi'])} corsi.")
+
+        return modifiche
 
     def esegui_backup(self, base_dir: str = "backups") -> tuple[bool, str]:
         """Esegue il backup periodico automatico di sistema (RF23)."""

@@ -100,9 +100,10 @@ class TestSistema(unittest.TestCase):
         self.assertEqual(v.nome, "Mario")
 
     def test_prenota_e_annulla_turno(self):
+        data_futura = (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")
         turno = Turno(
             id="T_200",
-            data="2026-10-20",
+            data=data_futura,
             oraInizio="14:00",
             oraFine="20:00",
             tipoServizio="Trasporto Sanitario"
@@ -1280,6 +1281,88 @@ class TestGestioneUtenteController(unittest.TestCase):
         self.assertTrue(turni_ctrl.creaTurno(t, utente=referente))
         self.assertTrue(flotta_ctrl.aggiungiMezzo(m, utente=referente))
         self.assertTrue(turni_ctrl.eliminaTurno(t.codice, utente=referente))
+
+    def test_vincolo_annullamento_turno_24h(self):
+        """Tesina UML: Annullamento turni consentito fino a 24 ore prima dell'inizio."""
+        turni_ctrl = GestioneTurniController()
+        vol = Volontario(cod_fiscale="CF_ANN_24H", nome="Test", cognome="Annulla")
+
+        # Turno tra meno di 24h (es. tra 5 ore)
+        data_oggi = datetime.now().strftime("%Y-%m-%d")
+        ora_tra_5h = (datetime.now() + timedelta(hours=5)).strftime("%H:%M")
+        ora_tra_9h = (datetime.now() + timedelta(hours=9)).strftime("%H:%M")
+        t_imminente = Turno(id="T_IMM", data=data_oggi, oraInizio=ora_tra_5h, oraFine=ora_tra_9h)
+        t_imminente.aggiungiVolontario(vol)
+
+        self.assertFalse(t_imminente.isAnnullabile(delta_ore=24.0))
+        self.assertFalse(turni_ctrl.annullaPrenotazione(t_imminente, v=vol))
+        # Con forza=True (es. override amministrativo) deve essere consentito
+        self.assertTrue(turni_ctrl.annullaPrenotazione(t_imminente, v=vol, forza=True))
+
+        # Turno tra 5 giorni (pienamente annullabile)
+        data_futura = (datetime.now() + timedelta(days=5)).strftime("%Y-%m-%d")
+        t_futuro = Turno(id="T_FUT", data=data_futura, oraInizio="10:00", oraFine="16:00")
+        t_futuro.aggiungiVolontario(vol)
+        self.assertTrue(t_futuro.isAnnullabile(delta_ore=24.0))
+        self.assertTrue(turni_ctrl.annullaPrenotazione(t_futuro, v=vol))
+
+    def test_vincolo_annullamento_corso_2_giorni(self):
+        """Tesina UML: Annullamento corsi consentito fino a 2 giorni prima dell'inizio."""
+        form_ctrl = GestioneFormazioneController()
+        vol = Volontario(cod_fiscale="CF_ANN_CORSO", nome="Test", cognome="Corso")
+
+        # Corso domani (meno di 2 giorni)
+        data_domani = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+        c_domani = Corso(id="C_DOMANI", titolo="Primo Soccorso", dataInizio=data_domani)
+        c_domani.aggiungiPartecipante(vol)
+        self.assertFalse(c_domani.isAnnullabile(delta_giorni=2))
+        self.assertFalse(form_ctrl.disiscriviVolontario(vol, c_domani.id))
+        self.assertTrue(form_ctrl.disiscriviVolontario(vol, c_domani.id, forza=True))
+
+        # Corso tra 10 giorni
+        data_10g = (datetime.now() + timedelta(days=10)).strftime("%Y-%m-%d")
+        c_lontano = Corso(id="C_10G", titolo="BLSD", dataInizio=data_10g)
+        c_lontano.aggiungiPartecipante(vol)
+        self.assertTrue(c_lontano.isAnnullabile(delta_giorni=2))
+        self.assertTrue(form_ctrl.disiscriviVolontario(vol, c_lontano.id))
+
+    def test_vincolo_ultimo_posto_e_patente(self):
+        """Tesina UML: Se manca il guidatore idoneo, l'ultimo posto resta riservato a chi ha la patente richiesta."""
+        turni_ctrl = GestioneTurniController()
+        t = Turno(id="T_PAT_RES", data="2026-11-20", oraInizio="08:00", oraFine="14:00", personeRichieste=2, postiTotali=2, patenteRichiesta="B")
+
+        vol_senza_pat = Volontario(cod_fiscale="CF_NO_PAT", nome="No", cognome="Patente", patenti=[])
+        vol_autista = Volontario(cod_fiscale="CF_AUTISTA", nome="Si", cognome="Patente", patenti=["B"])
+
+        # Il primo volontario senza patente può iscriversi come soccorritore ordinario (posti liberi = 2 > 1)
+        self.assertTrue(turni_ctrl.verificaUltimoPostoPatente(t, vol_senza_pat))
+        t.aggiungiVolontario(vol_senza_pat, ruolo="Soccorritore")
+
+        # Ora è rimasto 1 solo posto libero e manca ancora l'autista!
+        # Un secondo volontario senza patente NON deve potersi iscrivere
+        vol_senza_pat_2 = Volontario(cod_fiscale="CF_NO_PAT_2", nome="No2", cognome="Patente2", patenti=[])
+        self.assertFalse(turni_ctrl.verificaUltimoPostoPatente(t, vol_senza_pat_2))
+
+        # L'autista invece può accedere occupando l'ultimo posto riservato
+        self.assertTrue(turni_ctrl.verificaUltimoPostoPatente(t, vol_autista))
+
+    def test_aggiornamento_automatico_stati_attore_tempo(self):
+        """Tesina UML (Attore Tempo): Aggiornamento automatico programmato -> in corso -> concluso."""
+        sistema = Sistema()
+        sistema.turni = []
+        sistema.corsi = []
+
+        ieri = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+        domani = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+        oggi = datetime.now().strftime("%Y-%m-%d")
+
+        t_passato = Turno(id="T_PASS", data=ieri, oraInizio="08:00", oraFine="12:00", stato="Aperto")
+        t_futuro = Turno(id="T_FUT", data=domani, oraInizio="14:00", oraFine="18:00", stato="Aperto")
+        sistema.turni.extend([t_passato, t_futuro])
+
+        modifiche = sistema.aggiorna_stati_attivita_automatico()
+        self.assertEqual(t_passato.stato, "CONCLUSO")
+        self.assertIn(t_futuro.stato, ["PROGRAMMATO", "Aperto"])
 
 
 if __name__ == "__main__":

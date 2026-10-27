@@ -128,6 +128,25 @@ class Corso:
         """Imposta il numero di posti liberi rimasti per il corso (UML)."""
         self.postiLiberi = max(0, int(val))
 
+    def getDataInizioDt(self) -> datetime | None:
+        """Restituisce la data d'inizio del corso come oggetto datetime."""
+        for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%Y/%m/%d"):
+            try:
+                return datetime.strptime(str(self.dataInizio).strip(), fmt)
+            except Exception:
+                continue
+        return None
+
+    def isAnnullabile(self, delta_giorni: int = 2) -> bool:
+        """
+        Regola Tesina UML: L'annullamento dell'iscrizione al corso è consentito fino a 2 giorni prima del suo inizio.
+        """
+        dt_ini = self.getDataInizioDt()
+        if not dt_ini:
+            return True
+        diff_giorni = (dt_ini.date() - datetime.today().date()).days
+        return diff_giorni >= delta_giorni
+
     def isCompleto(self) -> bool:
         """Verifica se il corso ha raggiunto la capienza massima (UML)."""
         return len(self.partecipanti) >= self.postiTotali

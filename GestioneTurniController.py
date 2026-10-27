@@ -14,17 +14,27 @@ class GestioneTurniController:
     def __init__(self):
         pass
 
-    def annullaPrenotazione(self, t: Turno) -> bool:
+    def annullaPrenotazione(self, t: Turno, v: Optional[Volontario] = None, forza: bool = False) -> bool:
         """
-        Rimuove l'assegnazione dei volontari dal turno specificato e aggiorna il database locale JSON.
-        Garantisce la consistenza rimuovendo sia gli ID che i ruoli associati.
+        Rimuove l'assegnazione dei volontari (o del singolo volontario specificato) dal turno.
+        Regola Tesina UML: L'annullamento è consentito fino a 24 ore prima dell'inizio del turno (a meno di 'forza=True').
         """
+        if not forza and hasattr(t, "isAnnullabile") and not t.isAnnullabile(delta_ore=24.0):
+            print(f"[Turni/Avviso] Impossibile annullare la prenotazione al turno {t.codice}: mancano meno di 24 ore all'inizio del servizio.")
+            return False
+
         try:
-            for v in list(t.volontari_assegnati):
-                if hasattr(v, "turni_assegnati") and t in v.turni_assegnati:
-                    v.turni_assegnati.remove(t)
-            t.volontari_assegnati = []
-            t.volontari_ruoli = {}
+            target_list = [v] if v is not None else list(t.volontari_assegnati)
+            for vol in target_list:
+                if hasattr(vol, "turni_assegnati") and t in vol.turni_assegnati:
+                    vol.turni_assegnati.remove(t)
+                if vol in t.volontari_assegnati:
+                    t.volontari_assegnati.remove(vol)
+                cf = getattr(vol, "cod_fiscale", "")
+                if hasattr(t, "volontari_ruoli") and cf in t.volontari_ruoli:
+                    del t.volontari_ruoli[cf]
+
+            t.setPostiLiberi()
             from Sistema import Sistema
             s = Sistema.get_instance()
             if s:
@@ -113,10 +123,46 @@ class GestioneTurniController:
             print(f"[Turni/Errore] eliminaTurno nel database locale: {e}")
             return False
 
+    def verificaUltimoPostoPatente(self, t: Turno, v: Volontario) -> bool:
+        """
+        Regola Tesina UML (Ultimo posto e patente):
+        Se manca un guidatore idoneo per il servizio con patente/guida richiesta,
+        l'ultimo posto resta riservato a chi ha la patente richiesta valida alla data del turno.
+        """
+        if not t or not getattr(t, "patenteRichiesta", None):
+            return True
+        req_pat = str(t.patenteRichiesta).strip().upper()
+        if not req_pat or req_pat in ["NESSUNA", "NON RICHIESTA", "TUTTI"]:
+            return True
+
+        tot_posti = getattr(t, "postiTotali", getattr(t, "personeRichieste", 1))
+        assegnati = list(getattr(t, "volontari_assegnati", []))
+
+        # Se il volontario è già iscritto, non si applica la riserva all'ingresso
+        if v in assegnati:
+            return True
+
+        # Verifica se tra i già iscritti c'è almeno un guidatore idoneo con patente valida
+        ha_guidatore = False
+        for iscritto in assegnati:
+            if self.verificaCoperturaPatente(iscritto, t):
+                ha_guidatore = True
+                break
+
+        posti_liberi = tot_posti - len(assegnati)
+        # Se manca il guidatore ed è rimasto solo 1 posto (l'ultimo posto):
+        if not ha_guidatore and posti_liberi <= 1:
+            # L'ultimo posto è riservato esclusivamente a chi possiede la patente richiesta
+            if not self.verificaCoperturaPatente(v, t):
+                print(f"[Turni/Avviso] Ultimo posto riservato: il turno {t.codice} richiede patente {req_pat} e non ha ancora un autista assegnato.")
+                return False
+
+        return True
+
     def prenotaTurno(self, idTurno: str, idVolontario: str, ruolo: str = "Soccorritore", sistema: Any = None) -> bool:
         """
         Iscrive un volontario al turno specificato.
-        Verifica preventivamente il limite delle 12 ore massime giornaliere.
+        Verifica preventivamente il limite delle 12 ore massime giornaliere e la riserva dell'ultimo posto per autista idoneo.
         """
         from Sistema import Sistema
         s = sistema or Sistema.get_instance()
@@ -126,6 +172,8 @@ class GestioneTurniController:
                 vol_obj = next((v for v in getattr(s, "volontari", []) if v.cod_fiscale.upper() == idVolontario.upper()), None)
                 if turno_obj and vol_obj:
                     if not self.verificaLimiteOreGiornaliere(vol_obj, turno_obj):
+                        return False
+                    if not self.verificaUltimoPostoPatente(turno_obj, vol_obj):
                         return False
                     if vol_obj not in turno_obj.volontari_assegnati:
                         turno_obj.volontari_assegnati.append(vol_obj)

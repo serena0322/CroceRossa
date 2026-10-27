@@ -19,6 +19,7 @@ class PrenotazioneTurnoDialog(QDialog):
         self.turno = turno
         self.volontario = volontario
         self.turni_controller = turni_controller
+        self.controller = turni_controller
         self.ruolo_selezionato = None
 
         self.setWindowTitle(f"Iscrizione Turno — {turno.codice}")
@@ -304,6 +305,16 @@ class PrenotazioneTurnoDialog(QDialog):
         if self.ha_superamento_12_ore:
             self.btn_conferma.setEnabled(False)
             self.lbl_stato_iscrizione.setText("Impossibile procedere: superamento del vincolo di 12 ore quotidiane (RF19).")
+            self.lbl_stato_iscrizione.setStyleSheet("background-color: rgba(198, 40, 40, 0.2); color: #ff5252; padding: 8px; border-radius: 6px;")
+            return
+
+        # Vincolo Tesina UML: Ultimo posto riservato all'autista se manca guidatore idoneo
+        if hasattr(self.controller, "verificaUltimoPostoPatente") and not self.controller.verificaUltimoPostoPatente(self.turno, self.volontario):
+            self.btn_conferma.setEnabled(False)
+            self.lbl_stato_iscrizione.setText(
+                f"L'ultimo posto è riservato a un autista con patente '{getattr(self.turno, 'patenteRichiesta', 'B')}'. "
+                "Non hai i requisiti di guida richiesti per questo turno."
+            )
             self.lbl_stato_iscrizione.setStyleSheet("background-color: rgba(198, 40, 40, 0.2); color: #ff5252; padding: 8px; border-radius: 6px;")
             return
 

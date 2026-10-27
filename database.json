@@ -1,18 +1,20 @@
 {
   "utenti": [
     {
-      "cod_fiscale": "GLNSRN03A62I156Z",
-      "nome": "Serena",
-      "cognome": "Giuliani",
-      "email": "serena@test.it",
-      "data_nascita": "22/01/2003",
-      "telefono": "3317477516",
+      "cod_fiscale": "RSSMRA85M01H501Z",
+      "nome": "Mario",
+      "cognome": "Rossi",
+      "email": "mario@cri.it",
+      "data_nascita": "",
+      "telefono": "",
       "ruolo": "volontario",
-      "password": "001fc73a92e0f339c0b74b2b8afda1cb00f4dbad8cf58769b4a58ff304ee97b5",
+      "password": "",
       "comitato": "",
       "comitato_appartenenza": "",
       "monteOreTotale": 0,
-      "patenti": [],
+      "patenti": [
+        "B"
+      ],
       "qualifiche": [],
       "disponibilita": [],
       "curriculum": "",
@@ -30,6 +32,31 @@
   ],
   "mezzi": [],
   "corsi": [],
-  "turni": [],
+  "turni": [
+    {
+      "id": "T_200",
+      "codice": "T_200",
+      "data": "2026-11-25",
+      "luogoDestinazione": "",
+      "luogoPrelevamento": "",
+      "oraInizio": "14:00",
+      "oraFine": "20:00",
+      "patenteRichiesta": "",
+      "paziente": "",
+      "paziente_nome": "",
+      "paziente_cognome": "",
+      "paziente_cf": "",
+      "personeRichieste": 1,
+      "persone_richieste": {
+        "volontario": 1
+      },
+      "stato": "Aperto",
+      "tipoServizio": "Trasporto Sanitario",
+      "mezzo_targa": "",
+      "checklist": false,
+      "volontari_ids": [],
+      "volontari_ruoli": {}
+    }
+  ],
   "checklists": []
 }

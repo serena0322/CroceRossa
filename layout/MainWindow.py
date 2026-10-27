@@ -1418,6 +1418,26 @@ class MainWindow(QWidget):
         except Exception as e:
             print(f"[RNF4 Warning] Impossibile verificare promemoria turni 24h: {e}")
 
+        # Attore Tempo UML: Aggiornamento automatico transizioni di stato (Programmato -> In Corso -> Concluso)
+        try:
+            modifiche_stati = self.sistema.aggiorna_stati_attivita_automatico()
+            n_t = len(modifiche_stati.get("turni", []))
+            n_c = len(modifiche_stati.get("corsi", []))
+            if n_t > 0 or n_c > 0:
+                print(f"[Attore Tempo UML] Allineati stati operativi: {n_t} turni, {n_c} corsi.")
+        except Exception as e:
+            print(f"[Attore Tempo Warning] Impossibile aggiornare stati automatici: {e}")
+
+        # Timer periodico (ogni 60 secondi) per l'attore Tempo durante l'esecuzione dell'app
+        try:
+            from PyQt5.QtCore import QTimer
+            self.timer_tempo = QTimer(self)
+            self.timer_tempo.setInterval(60000)  # 60s
+            self.timer_tempo.timeout.connect(self._tick_attore_tempo)
+            self.timer_tempo.start()
+        except Exception as e:
+            print(f"[Timer Warning] Impossibile avviare QTimer tempo: {e}")
+
         # Window configuration
         self.setWindowTitle("Gestione Volontari — Croce Rossa Italiana")
         self.resize(980, 680)
@@ -2575,8 +2595,16 @@ class MainWindow(QWidget):
         turno = next((t for t in self.sistema.turni if str(t.codice) == id_turno), None)
         
         if turno:
-            # Delega al controller (nessun popup di conferma bloccante)
-            self.turni_controller.annullaPrenotazione(turno)
+            # Verifica vincolo di business Tesina: annullamento consentito fino a 24 ore prima
+            esito = self.turni_controller.annullaPrenotazione(turno, v=self.sistema.logged_user)
+            if not esito:
+                QMessageBox.warning(
+                    self,
+                    "Annullamento Non Consentito",
+                    f"Non è possibile annullare il turno {turno.codice} a meno di 24 ore dal suo inizio."
+                )
+                return
+
             self.sistema.logged_user.annullaPrenotazione(turno)
             turno.rimuoviVolontario(self.sistema.logged_user)
             if str(self.sistema.logged_user.cod_fiscale) in getattr(turno, "volontari_ruoli", {}):
@@ -2589,6 +2617,15 @@ class MainWindow(QWidget):
 
             self.update_ui()
             self.mostra_toast(f"Iscrizione al turno {turno.codice} annullata.", tipo="info")
+
+    def _tick_attore_tempo(self):
+        """Callback del timer periodico per l'attore Tempo UML: aggiorna stati operativi in tempo reale."""
+        try:
+            modifiche = self.sistema.aggiorna_stati_attivita_automatico()
+            if modifiche.get("turni") or modifiche.get("corsi"):
+                self.update_ui()
+        except Exception as e:
+            print(f"[Attore Tempo Tick Warning]: {e}")
 
     def azione_volontario_cambia_mezzo(self):
         """Consente all'autista o volontario di abbinare o cambiare il mezzo del proprio turno."""
@@ -3425,7 +3462,14 @@ class MainWindow(QWidget):
             QMessageBox.No
         )
         if risposta == QMessageBox.Yes:
-            self.formazione_controller.disiscriviVolontario(self.sistema.logged_user, c.id)
+            esito = self.formazione_controller.disiscriviVolontario(self.sistema.logged_user, c.id)
+            if not esito:
+                QMessageBox.warning(
+                    self,
+                    "Rinuncia Non Consentita",
+                    f"Non è possibile annullare l'iscrizione al corso '{c.titolo or c.nome}' a meno di 2 giorni dall'inizio."
+                )
+                return
             self.mostra_toast(f"Disiscritto dal corso {c.titolo}", tipo="info")
             self.update_ui()
 

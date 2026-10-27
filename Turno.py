@@ -222,6 +222,16 @@ class Turno:
         except Exception:
             return None
 
+    def isAnnullabile(self, delta_ore: float = 24.0) -> bool:
+        """
+        Regola Tesina UML: L'annullamento della prenotazione è consentito fino a 24 ore prima dell'inizio del turno.
+        """
+        dt_inizio = self.getDataOraInizio()
+        if not dt_inizio:
+            return True
+        diff_ore = (dt_inizio - datetime.now()).total_seconds() / 3600.0
+        return diff_ore >= delta_ore
+
     def soddisfaCriterio(self, criterio: str = "") -> bool:
         """Verifica se il turno soddisfa un criterio di ricerca (UML RicercaTurno)."""
         if not criterio:

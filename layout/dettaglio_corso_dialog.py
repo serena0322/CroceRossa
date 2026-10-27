@@ -364,8 +364,22 @@ class DettaglioCorsoDialog(QDialog):
             return
 
         if self.controller:
-            self.controller.disiscriviVolontario(self.utente, self.corso.id)
+            esito = self.controller.disiscriviVolontario(self.utente, self.corso.id)
+            if not esito:
+                QMessageBox.warning(
+                    self,
+                    "Rinuncia Non Consentita",
+                    f"Non è possibile annullare l'iscrizione al corso '{self.corso.titolo or self.corso.nome}' a meno di 2 giorni dall'inizio."
+                )
+                return
         else:
+            if hasattr(self.corso, "isAnnullabile") and not self.corso.isAnnullabile(delta_giorni=2):
+                QMessageBox.warning(
+                    self,
+                    "Rinuncia Non Consentita",
+                    f"Non è possibile annullare l'iscrizione a meno di 2 giorni dall'inizio."
+                )
+                return
             if hasattr(self.utente, "disiscriviti_dal_corso"):
                 self.utente.disiscriviti_dal_corso(self.corso)
 

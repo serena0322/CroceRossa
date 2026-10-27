@@ -106,17 +106,29 @@ class GestioneFormazioneController:
             sys_inst.salva_dati()
         return True
 
-    def disiscriviVolontario(self, v: Volontario, s: str) -> bool:
-        """Rimuove l'iscrizione del volontario a un corso non ancora completato."""
+    def disiscriviVolontario(self, v: Volontario, s: str, forza: bool = False) -> bool:
+        """
+        Rimuove l'iscrizione del volontario a un corso non ancora completato.
+        Regola Tesina UML: L'annullamento è consentito fino a 2 giorni prima dell'inizio del corso.
+        """
         if not v or not s:
             return False
 
         from Sistema import Sistema
         sys_inst = Sistema.get_instance()
+        c_target = None
         if sys_inst:
-            c_mem = next((c for c in sys_inst.corsi if str(c.id) == str(s)), None)
-            if c_mem and v in c_mem.partecipanti:
-                c_mem.partecipanti.remove(v)
+            c_target = next((c for c in sys_inst.corsi if str(c.id) == str(s)), None)
+        if not c_target and hasattr(v, "formazione"):
+            c_target = next((c for c in v.formazione if str(c.id) == str(s)), None)
+
+        if not forza and c_target and hasattr(c_target, "isAnnullabile") and not c_target.isAnnullabile(delta_giorni=2):
+            print(f"[Formazione/Avviso] Impossibile annullare l'iscrizione al corso '{c_target.nome or c_target.titolo}': mancano meno di 2 giorni all'inizio.")
+            return False
+
+        if sys_inst:
+            if c_target and v in c_target.partecipanti:
+                c_target.partecipanti.remove(v)
             c_obj = next((c for c in getattr(v, "formazione", []) if str(c.id) == str(s)), None)
             if c_obj:
                 v.disiscriviti_dal_corso(c_obj)
