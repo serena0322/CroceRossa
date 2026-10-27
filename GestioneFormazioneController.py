@@ -210,3 +210,155 @@ class GestioneFormazioneController:
             "tutti": tutti_corsi
         }
 
+    # ==========================================================
+    # CASI D'USO UML (UML Gestione Corsi)
+    # ==========================================================
+
+    def visualizzaCatalogoCorsi(self, sistema=None) -> List[Corso]:
+        """
+        Caso d'uso UML: VisualizzaCatalogoCorsi.
+        Restituisce i corsi a catalogo per i volontari.
+        """
+        return self.visualizzaCatalog(sistema=sistema)
+
+    def visualizzaDettagliCorso(self, c: Corso) -> dict:
+        """
+        Caso d'uso UML: VisualizzaDettagliCorso («extend» VisualizzaCatalogoCorsi).
+        Restituisce i dettagli completi del corso.
+        """
+        if not c:
+            return {}
+        return c.getDati() if hasattr(c, "getDati") else {
+            "codice": getattr(c, "codice", getattr(c, "id", "")),
+            "nome": getattr(c, "nome", getattr(c, "titolo", "")),
+            "dataInizio": getattr(c, "dataInizio", ""),
+            "dataFine": getattr(c, "dataFine", ""),
+            "luogo": getattr(c, "luogo", ""),
+            "direttoreCorso": getattr(c, "direttoreCorso", getattr(c, "direttore", "")),
+            "postiLiberi": getattr(c, "postiLiberi", 0),
+            "postiTotali": getattr(c, "postiTotali", getattr(c, "maxPartecipanti", 20)),
+            "stato": getattr(c, "stato", "")
+        }
+
+    def filtraCorsi(self, corsi: List[Corso], criterio: str = "", solo_disponibili: bool = False) -> List[Corso]:
+        """
+        Caso d'uso UML: FiltraCorsi («extend» VisualizzaCatalogoCorsi).
+        Filtra l'elenco dei corsi per titolo/nome, qualifica rilasciata o disponibilità.
+        """
+        risultati = list(corsi)
+        if solo_disponibili:
+            risultati = [c for c in risultati if not (c.isCompleto() if hasattr(c, "isCompleto") else len(getattr(c, "partecipanti", [])) >= getattr(c, "postiTotali", 20))]
+        if criterio:
+            crit = criterio.strip().lower()
+            risultati = [
+                c for c in risultati
+                if crit in str(getattr(c, "nome", "")).lower()
+                or crit in str(getattr(c, "titolo", "")).lower()
+                or crit in str(getattr(c, "tipoCorso", "")).lower()
+                or crit in str(getattr(c, "luogo", "")).lower()
+            ]
+        return risultati
+
+    def iscriviCorso(self, v: Volontario, c: Any, sistema=None) -> bool:
+        """
+        Caso d'uso UML: IscriviCorso («include» VisualizzaCatalogoCorsi).
+        Iscrive il volontario al corso prescelto.
+        """
+        return self.iscriviVolontario(v, c, sistema=sistema)
+
+    def visualizzaIscrizioni(self, v: Volontario) -> List[Corso]:
+        """
+        Caso d'uso UML: VisualizzaIscrizioni.
+        Restituisce i corsi a cui il volontario è attualmente iscritto.
+        """
+        if not v:
+            return []
+        return list(getattr(v, "formazione", []))
+
+    def annullaIscrizioneCorso(self, v: Volontario, id_corso: str, forza: bool = False) -> bool:
+        """
+        Caso d'uso UML: AnnullaIscrizioneCorso («extend» VisualizzaIscrizioni).
+        Cancella l'iscrizione del volontario al corso nel rispetto del preavviso di 2 giorni.
+        """
+        return self.disiscriviVolontario(v, id_corso, forza=forza)
+
+    def visualizzaCorsi(self, sistema=None) -> List[Corso]:
+        """
+        Caso d'uso UML: VisualizzaCorsi (Referente).
+        Restituisce tutti i corsi gestiti nel sistema CRI.
+        """
+        from Sistema import Sistema
+        sys_inst = sistema or Sistema.get_instance()
+        if sys_inst and getattr(sys_inst, "corsi", None):
+            return list(sys_inst.corsi)
+        return []
+
+    def visualizzaIscrittiCorso(self, c: Corso) -> List[Volontario]:
+        """
+        Caso d'uso UML: VisualizzaIscrittiCorso («extend» VisualizzaCorsi).
+        Restituisce la lista degli iscritti al corso.
+        """
+        if not c:
+            return []
+        return c.getIscritti() if hasattr(c, "getIscritti") else list(getattr(c, "partecipanti", []))
+
+    def ricercaCorso(self, criterio: str, sistema=None) -> List[Corso]:
+        """
+        Caso d'uso UML: RicercaCorso («include» in CUDCorso e in GestioneSistema).
+        Cerca tra i corsi del sistema per identificativo, titolo, luogo o qualifica.
+        """
+        from Sistema import Sistema
+        sys_inst = sistema or Sistema.get_instance()
+        if not sys_inst or not getattr(sys_inst, "corsi", None):
+            return []
+        if not criterio:
+            return list(sys_inst.corsi)
+        crit = str(criterio).strip().lower()
+        return [
+            c for c in sys_inst.corsi
+            if crit in str(getattr(c, "codice", getattr(c, "id", ""))).lower()
+            or crit in str(getattr(c, "nome", getattr(c, "titolo", ""))).lower()
+            or crit in str(getattr(c, "tipoCorso", "")).lower()
+            or crit in str(getattr(c, "luogo", "")).lower()
+        ]
+
+    def cudCorso(self, operazione: str, corso_o_id, dati: dict | None = None) -> bool:
+        """
+        Caso d'uso UML: CUDCorso («include» RicercaCorso).
+        Gestisce Creazione, Modifica/Update ed Eliminazione dei corsi di formazione CRI.
+        """
+        from Corso import Corso
+        op = operazione.strip().upper()
+        if op in ["C", "CREATE", "CREA"]:
+            if isinstance(corso_o_id, Corso):
+                return self.creaCorso(corso_o_id)
+            elif isinstance(dati, dict):
+                c = Corso(**dati)
+                return self.creaCorso(c)
+            return False
+
+        elif op in ["U", "UPDATE", "MODIFICA"]:
+            id_c = str(getattr(corso_o_id, "id", getattr(corso_o_id, "codice", corso_o_id)))
+            from Sistema import Sistema
+            s = Sistema.get_instance()
+            c_obj = next((c for c in getattr(s, "corsi", []) if str(c.id) == id_c or str(c.codice) == id_c), None) if s else None
+            if not c_obj and isinstance(corso_o_id, Corso):
+                c_obj = corso_o_id
+            if c_obj:
+                if dati:
+                    if hasattr(c_obj, "setDati"):
+                        c_obj.setDati(**dati)
+                    else:
+                        for k, v in dati.items():
+                            if hasattr(c_obj, k):
+                                setattr(c_obj, k, v)
+                return self.modificaCorso(id_c, c_obj)
+            return False
+
+        elif op in ["D", "DELETE", "ELIMINA"]:
+            id_c = str(getattr(corso_o_id, "id", getattr(corso_o_id, "codice", corso_o_id)))
+            return self.eliminaCorso(id_c)
+
+        return False
+
+

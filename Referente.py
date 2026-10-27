@@ -39,6 +39,7 @@ class Referente(Volontario):
     ):
         comitato = comitato_appartenenza or kwargs.get("compagnia_appartenenza", "")
         ore = monteOreTotale if monteOreTotale is not None else oreServizio
+        kwargs.pop("ruolo", None)
         super().__init__(
             cod_fiscale=cod_fiscale,
             nome=nome,

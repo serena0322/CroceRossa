@@ -279,6 +279,7 @@ class GestioneTurniController:
 
     def visualizzaTurniDisponibili(self, sistema=None) -> List[Turno]:
         """
+        Caso d'uso UML: VisualizzaTurniDisponibili.
         Restituisce i turni aperti e con posti ancora scoperti dal database locale.
         """
         from Sistema import Sistema
@@ -290,3 +291,124 @@ class GestioneTurniController:
                 and len(getattr(t, "volontari_assegnati", [])) < getattr(t, "personeRichieste", 1)
             ]
         return []
+
+    def visualizzaDettagliTurno(self, t: Turno) -> dict:
+        """
+        Caso d'uso UML: VisualizzaDettagliTurno («extend» VisualizzaTurniDisponibili).
+        Fornisce l'insieme completo delle informazioni operative del turno.
+        """
+        if not t:
+            return {}
+        return t.getDati() if hasattr(t, "getDati") else {
+            "codice": getattr(t, "codice", ""),
+            "data": getattr(t, "data", ""),
+            "fascia_oraria": getattr(t, "fascia_oraria", f"{getattr(t, 'oraInizio', '')} - {getattr(t, 'oraFine', '')}"),
+            "luogo": getattr(t, "luogo", ""),
+            "tipoServizio": getattr(t, "tipoServizio", ""),
+            "patenteRichiesta": getattr(t, "patenteRichiesta", ""),
+            "postiLiberi": getattr(t, "postiLiberi", 0),
+            "stato": getattr(t, "stato", "")
+        }
+
+    def filtraTurni(self, turni: List[Turno], criterio: str = "", solo_disponibili: bool = False) -> List[Turno]:
+        """
+        Caso d'uso UML: FiltraTurni («extend» VisualizzaTurniDisponibili).
+        Filtra l'elenco dei turni in base a criteri di ricerca (tipo servizio, data, luogo, autista).
+        """
+        risultati = list(turni)
+        if solo_disponibili:
+            risultati = [t for t in risultati if len(getattr(t, "volontari_assegnati", [])) < getattr(t, "personeRichieste", 1)]
+        if criterio:
+            crit = criterio.strip().lower()
+            risultati = [t for t in risultati if (hasattr(t, "soddisfaCriterio") and t.soddisfaCriterio(crit)) or (crit in str(getattr(t, "tipoServizio", "")).lower() or crit in str(getattr(t, "luogo", "")).lower() or crit in str(getattr(t, "data", "")).lower())]
+        return risultati
+
+    def visualizzaPrenotazioni(self, v: Volontario) -> List[Turno]:
+        """
+        Caso d'uso UML: VisualizzaPrenotazioni.
+        Restituisce l'elenco dei turni prenotati o assegnati al volontario.
+        """
+        if not v:
+            return []
+        return list(getattr(v, "turni_assegnati", []))
+
+    def ricercaTurno(self, criterio: str, sistema=None) -> List[Turno]:
+        """
+        Caso d'uso UML: RicercaTurno («include» in CUDTurno e in GestioneSistema).
+        Cerca tra tutti i turni presenti a sistema per codice, servizio, data o luogo.
+        """
+        from Sistema import Sistema
+        s = sistema or Sistema.get_instance()
+        if not s or not getattr(s, "turni", None):
+            return []
+        if not criterio:
+            return list(s.turni)
+        crit = str(criterio).strip().lower()
+        return [
+            t for t in s.turni
+            if (hasattr(t, "soddisfaCriterio") and t.soddisfaCriterio(crit))
+            or crit in str(getattr(t, "codice", "")).lower()
+            or crit in str(getattr(t, "tipoServizio", "")).lower()
+            or crit in str(getattr(t, "luogo", "")).lower()
+            or crit in str(getattr(t, "data", "")).lower()
+        ]
+
+    def cudTurno(self, operazione: str, turno_o_id, dati: dict | None = None, utente=None) -> bool:
+        """
+        Caso d'uso UML: CUDTurno («include» RicercaTurno).
+        Gestisce le operazioni di Creazione (C), Modifica/Update (U) ed Eliminazione (D) dei turni.
+        """
+        from Turno import Turno
+        op = operazione.strip().upper()
+        if op in ["C", "CREATE", "CREA"]:
+            if isinstance(turno_o_id, Turno):
+                return self.creaTurno(turno_o_id, utente=utente)
+            elif isinstance(dati, dict):
+                t = Turno(**dati)
+                return self.creaTurno(t, utente=utente)
+            return False
+
+        elif op in ["U", "UPDATE", "MODIFICA"]:
+            id_t = str(getattr(turno_o_id, "codice", turno_o_id))
+            from Sistema import Sistema
+            s = Sistema.get_instance()
+            t_obj = next((t for t in getattr(s, "turni", []) if str(t.codice) == id_t), None) if s else None
+            if not t_obj and isinstance(turno_o_id, Turno):
+                t_obj = turno_o_id
+            if t_obj:
+                if dati:
+                    if hasattr(t_obj, "setDati"):
+                        t_obj.setDati(**dati)
+                    else:
+                        for k, v in dati.items():
+                            if hasattr(t_obj, k):
+                                setattr(t_obj, k, v)
+                return self.modificaTurno(id_t, t_obj, utente=utente)
+            return False
+
+        elif op in ["D", "DELETE", "ELIMINA"]:
+            id_t = str(getattr(turno_o_id, "codice", turno_o_id))
+            return self.eliminaTurno(id_t, utente=utente)
+
+        return False
+
+    def visualizzaTurni(self, sistema=None) -> List[Turno]:
+        """
+        Caso d'uso UML: VisualizzaTurni (Referente).
+        Restituisce la lista di tutti i turni registrati nel sistema.
+        """
+        from Sistema import Sistema
+        s = sistema or Sistema.get_instance()
+        if s and getattr(s, "turni", None):
+            return list(s.turni)
+        return []
+
+    def visualizzaPrenotatiTurno(self, t: Turno) -> List[Volontario]:
+        """
+        Caso d'uso UML: VisualizzaPrenotatiTurno («extend» VisualizzaTurni).
+        Restituisce l'elenco dei volontari attualmente iscritti/assegnati al turno.
+        """
+        if not t:
+            return []
+        return list(getattr(t, "volontari_assegnati", []))
+

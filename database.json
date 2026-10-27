@@ -1,20 +1,18 @@
 {
   "utenti": [
     {
-      "cod_fiscale": "RSSMRA85M01H501Z",
-      "nome": "Mario",
-      "cognome": "Rossi",
-      "email": "mario@cri.it",
+      "cod_fiscale": "VRDGPP75C10H501K",
+      "nome": "Giuseppe",
+      "cognome": "Verdi",
+      "email": "giuseppe.verdi@cri.it",
       "data_nascita": "",
-      "telefono": "",
-      "ruolo": "volontario",
-      "password": "",
+      "telefono": "3335566778",
+      "ruolo": "referente",
+      "password": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
       "comitato": "",
       "comitato_appartenenza": "",
       "monteOreTotale": 0,
-      "patenti": [
-        "B"
-      ],
+      "patenti": [],
       "qualifiche": [],
       "disponibilita": [],
       "curriculum": "",
@@ -27,36 +25,14 @@
       "punti_patente": 30,
       "app_io_certificato_id": "",
       "corsi_frequentati_ids": [],
-      "formazione_ids": []
+      "formazione_ids": [],
+      "area_gestita": "",
+      "settoreGestito": "",
+      "codiceAutorizzazione": "1234"
     }
   ],
   "mezzi": [],
   "corsi": [],
-  "turni": [
-    {
-      "id": "T_200",
-      "codice": "T_200",
-      "data": "2026-11-25",
-      "luogoDestinazione": "",
-      "luogoPrelevamento": "",
-      "oraInizio": "14:00",
-      "oraFine": "20:00",
-      "patenteRichiesta": "",
-      "paziente": "",
-      "paziente_nome": "",
-      "paziente_cognome": "",
-      "paziente_cf": "",
-      "personeRichieste": 1,
-      "persone_richieste": {
-        "volontario": 1
-      },
-      "stato": "Aperto",
-      "tipoServizio": "Trasporto Sanitario",
-      "mezzo_targa": "",
-      "checklist": false,
-      "volontari_ids": [],
-      "volontari_ruoli": {}
-    }
-  ],
+  "turni": [],
   "checklists": []
 }

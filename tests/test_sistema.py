@@ -1365,8 +1365,206 @@ class TestGestioneUtenteController(unittest.TestCase):
         self.assertIn(t_futuro.stato, ["PROGRAMMATO", "Aperto"])
 
 
+class TestUMLUseCases(unittest.TestCase):
+    """Verifica e convalida di tutti i casi d'uso definiti nei diagrammi UML."""
+
+    def setUp(self):
+        from GestioneUtenteController import GestioneUtenteController
+        from GestioneTurniController import GestioneTurniController
+        from GestioneFormazioneController import GestioneFormazioneController
+
+        self.sistema = Sistema()
+        self.sistema.volontari = []
+        self.sistema.turni = []
+        self.sistema.corsi = []
+        self.sistema.mezzi = []
+        self.utente_ctrl = GestioneUtenteController()
+        self.turni_ctrl = GestioneTurniController()
+        self.corsi_ctrl = GestioneFormazioneController()
+
+    def test_uc_gestione_utente(self):
+        # 1. CreaAccountVolontario
+        v = Volontario(
+            cod_fiscale="BNCMRC90A01H501Z",
+            nome="Marco",
+            cognome="Bianchi",
+            email="marco.bianchi@cri.it",
+            telefono="3331122334"
+        )
+        ok = self.utente_ctrl.creaAccountVolontario(v, "password123")
+        self.assertTrue(ok)
+        self.assertIn(v, self.sistema.volontari)
+
+        # 2. Login
+        login_ok = self.utente_ctrl.login("marco.bianchi@cri.it", "password123", sistema=self.sistema)
+        self.assertTrue(login_ok)
+        self.assertEqual(self.sistema.logged_user, v)
+
+        # 3. RecuperaCredenziali («extend» Login)
+        ok_recup, msg_recup = self.utente_ctrl.recuperaCredenziali("marco.bianchi@cri.it")
+        self.assertTrue(ok_recup)
+
+        # 4. ModificaDati
+        v.telefono = "3339988776"
+        mod_ok = self.utente_ctrl.modificaDati(v)
+        self.assertTrue(mod_ok)
+        self.assertEqual(v.telefono, "3339988776")
+
+        # 5. CUDPatenti («include» RicercaPatente) e VisualizzaPatenti
+        cud_ok = self.utente_ctrl.cudPatenti(v, "CREATE", {"tipo": "B", "numero_patente": "CRI123", "scadenza_patente": "2030-01-01"})
+        self.assertTrue(cud_ok)
+        patenti = self.utente_ctrl.visualizzaPatenti(v)
+        self.assertIn("B", [str(p).upper() for p in patenti])
+
+        trovati = self.utente_ctrl.ricercaPatente(v, "B")
+        self.assertEqual(len(trovati), 1)
+
+        # 6. VisualizzaCarriera
+        carriera = self.utente_ctrl.visualizzaCarriera(v)
+        self.assertEqual(carriera["cod_fiscale"], "BNCMRC90A01H501Z")
+        self.assertIn("B", carriera["patenti"])
+
+        # 7. CreaAccountReferente
+        ref = Referente(
+            cod_fiscale="VRDGPP75C10H501K",
+            nome="Giuseppe",
+            cognome="Verdi",
+            email="giuseppe.verdi@cri.it",
+            telefono="3335566778"
+        )
+        ok_ref = self.utente_ctrl.creaAccountReferente(ref, "password123", codice_autorizzazione="1234")
+        self.assertTrue(ok_ref)
+        self.assertIn(ref, self.sistema.volontari)
+
+        # 8. EliminaAccount
+        del_ok = self.utente_ctrl.eliminaAccount("BNCMRC90A01H501Z")
+        self.assertTrue(del_ok)
+        self.assertIsNone(self.sistema.get_volontario("BNCMRC90A01H501Z"))
+
+    def test_uc_gestione_turni(self):
+        ref = Referente(cod_fiscale="VRDGPP75C10H501K", nome="Giuseppe", telefono="3331234567", ruolo="referente")
+        vol = Volontario(cod_fiscale="RSSMRA85M01H501Z", nome="Mario", telefono="3339876543", patenti=["B"])
+        self.sistema.volontari.extend([ref, vol])
+
+        # 1. CUDTurno (Create con «include» RicercaTurno)
+        t = Turno(codice="T_UML_1", data="2026-11-20", oraInizio="08:00", oraFine="14:00", luogo="Centrale", tipoServizio="118", personeRichieste=2)
+        ok_c = self.turni_ctrl.cudTurno("CREATE", t, utente=ref)
+        self.assertTrue(ok_c)
+        self.assertIn(t, self.sistema.turni)
+
+        # 2. RicercaTurno
+        trovati = self.turni_ctrl.ricercaTurno("T_UML_1", sistema=self.sistema)
+        self.assertEqual(len(trovati), 1)
+
+        # 3. VisualizzaTurniDisponibili
+        disp = self.turni_ctrl.visualizzaTurniDisponibili(sistema=self.sistema)
+        self.assertIn(t, disp)
+
+        # 4. VisualizzaDettagliTurno («extend»)
+        dettagli = self.turni_ctrl.visualizzaDettagliTurno(t)
+        self.assertEqual(dettagli["codice"], "T_UML_1")
+
+        # 5. FiltraTurni («extend»)
+        filtrati = self.turni_ctrl.filtraTurni(disp, criterio="118")
+        self.assertEqual(len(filtrati), 1)
+
+        # 6. PrenotaTurno («include» VisualizzaTurniDisponibili)
+        pren_ok = self.turni_ctrl.prenotaTurno(t.codice, vol.cod_fiscale, sistema=self.sistema)
+        self.assertTrue(pren_ok)
+        self.assertIn(vol, t.volontari_assegnati)
+
+        # 7. VisualizzaPrenotazioni
+        mie_pren = self.turni_ctrl.visualizzaPrenotazioni(vol)
+        self.assertIn(t, mie_pren)
+
+        # 8. VisualizzaTurni e VisualizzaPrenotatiTurno (Referente)
+        tutti = self.turni_ctrl.visualizzaTurni(sistema=self.sistema)
+        self.assertIn(t, tutti)
+        prenotati = self.turni_ctrl.visualizzaPrenotatiTurno(t)
+        self.assertIn(vol, prenotati)
+
+        # 9. AnnullaPrenotazione («extend» VisualizzaPrenotazioni)
+        annulla_ok = self.turni_ctrl.annullaPrenotazione(t, vol, forza=True)
+        self.assertTrue(annulla_ok)
+        self.assertNotIn(vol, t.volontari_assegnati)
+
+    def test_uc_gestione_corsi(self):
+        ref = Referente(cod_fiscale="VRDGPP75C10H501K", nome="Giuseppe", telefono="3331234567", ruolo="referente")
+        vol = Volontario(cod_fiscale="RSSMRA85M01H501Z", nome="Mario", telefono="3339876543")
+        self.sistema.volontari.extend([ref, vol])
+
+        # 1. CUDCorso (Create con «include» RicercaCorso)
+        c = Corso(codice="C_UML_1", nome="Corso BLSD", dataInizio="2026-11-25", dataFine="2026-11-26", postiTotali=10)
+        ok_c = self.corsi_ctrl.cudCorso("CREATE", c)
+        self.assertTrue(ok_c)
+        self.assertIn(c, self.sistema.corsi)
+
+        # 2. RicercaCorso
+        trovati = self.corsi_ctrl.ricercaCorso("BLSD", sistema=self.sistema)
+        self.assertEqual(len(trovati), 1)
+
+        # 3. VisualizzaCatalogoCorsi
+        cat = self.corsi_ctrl.visualizzaCatalogoCorsi(sistema=self.sistema)
+        self.assertIn(c, cat)
+
+        # 4. VisualizzaDettagliCorso («extend»)
+        dettagli = self.corsi_ctrl.visualizzaDettagliCorso(c)
+        self.assertEqual(dettagli["codice"], "C_UML_1")
+
+        # 5. FiltraCorsi («extend»)
+        filtrati = self.corsi_ctrl.filtraCorsi(cat, criterio="BLSD")
+        self.assertEqual(len(filtrati), 1)
+
+        # 6. IscriviCorso («include» VisualizzaCatalogoCorsi)
+        iscr_ok = self.corsi_ctrl.iscriviCorso(vol, c, sistema=self.sistema)
+        self.assertTrue(iscr_ok)
+        self.assertIn(vol, c.partecipanti)
+
+        # 7. VisualizzaIscrizioni
+        mie_iscr = self.corsi_ctrl.visualizzaIscrizioni(vol)
+        self.assertIn(c, mie_iscr)
+
+        # 8. VisualizzaCorsi e VisualizzaIscrittiCorso (Referente)
+        tutti = self.corsi_ctrl.visualizzaCorsi(sistema=self.sistema)
+        self.assertIn(c, tutti)
+        iscritti = self.corsi_ctrl.visualizzaIscrittiCorso(c)
+        self.assertIn(vol, iscritti)
+
+        # 9. AttestaPartecipazione («include» VisualizzaCorsi)
+        self.corsi_ctrl.attestaPartecipazione(c.codice, [vol])
+        self.assertIn(c, vol.corsi_frequentati)
+
+        # 10. AnnullaIscrizioneCorso («extend» VisualizzaIscrizioni)
+        ann_ok = self.corsi_ctrl.annullaIscrizioneCorso(vol, c.codice, forza=True)
+        self.assertTrue(ann_ok)
+        self.assertNotIn(vol, c.partecipanti)
+
+    def test_uc_gestione_sistema(self):
+        # 1. Backup (Attore Tempo)
+        esito, msg = self.sistema.backup()
+        self.assertTrue(esito)
+
+        # 2. InviaPromemoriaTurno (Attore Tempo)
+        prom = self.sistema.inviaPromemoriaTurno()
+        self.assertIsInstance(prom, list)
+
+        # 3. AggiornaStatoTurno e AggiornaStatoCorso (Attore Tempo con «include» RicercaTurno / RicercaCorso)
+        turni_agg = self.sistema.aggiornaStatoTurno()
+        self.assertIsInstance(turni_agg, list)
+        corsi_agg = self.sistema.aggiornaStatoCorso()
+        self.assertIsInstance(corsi_agg, list)
+
+        # 4. GestisciStatistiche (Referente)
+        stats = self.sistema.gestisciStatistiche()
+        self.assertIn("totale_volontari", stats)
+        self.assertIn("totale_turni", stats)
+        self.assertIn("totale_corsi", stats)
+        self.assertIn("tasso_copertura_turni", stats)
+
+
 if __name__ == "__main__":
     unittest.main()
+
 
 
 

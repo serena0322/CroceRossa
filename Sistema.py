@@ -732,6 +732,82 @@ class Sistema:
         from BackupService import BackupService
         return BackupService.esegui_backup(self, base_dir=base_dir)
 
+    # ==========================================================
+    # CASI D'USO UML (UML Gestione Sistema)
+    # ==========================================================
+
+    def backup(self, base_dir: str = "backups") -> tuple[bool, str]:
+        """
+        Caso d'uso UML: Backup (attivato dall'attore Tempo).
+        Alias formale UML di esegui_backup.
+        """
+        return self.esegui_backup(base_dir=base_dir)
+
+    def aggiornaStatoTurno(self, data_ora_rif: Optional[datetime] = None) -> list:
+        """
+        Caso d'uso UML: AggiornaStatoTurno («include» RicercaTurno from Gestione Turni, attore Tempo).
+        Aggiorna gli stati dei turni operativi (PROGRAMMATO -> IN_CORSO -> CONCLUSO).
+        """
+        modifiche = self.aggiorna_stati_attivita_automatico(data_ora_rif=data_ora_rif)
+        return modifiche.get("turni", [])
+
+    def inviaPromemoriaTurno(self) -> list[dict]:
+        """
+        Caso d'uso UML: InviaPromemoriaTurno (attivato dall'attore Tempo).
+        Notifica i volontari con email di promemoria 24 ore prima dell'inizio del turno.
+        """
+        return self.invia_promemoria_servizi_24h()
+
+    def aggiornaStatoCorso(self, data_ora_rif: Optional[datetime] = None) -> list:
+        """
+        Caso d'uso UML: AggiornaStatoCorso («include» RicercaCorso from Gestione Corsi, attore Tempo).
+        Aggiorna gli stati dei corsi di formazione (PROGRAMMATO -> IN_CORSO -> CONCLUSO).
+        """
+        modifiche = self.aggiorna_stati_attivita_automatico(data_ora_rif=data_ora_rif)
+        return modifiche.get("corsi", [])
+
+    def gestisciStatistiche(self) -> dict:
+        """
+        Caso d'uso UML: GestisciStatistiche (attivato dal Referente).
+        Fornisce statistiche e indicatori aggregati di sistema:
+        - Totale volontari, referenti e monte ore complessivo
+        - Turni totali per stato (Aperti, In Corso, Conclusi)
+        - Corsi di formazione attivi, completati e iscritti
+        - Tasso di copertura dei turni
+        """
+        tot_volontari = len(self.volontari)
+        tot_referenti = sum(1 for v in self.volontari if str(getattr(v, "ruolo", "")).lower() == "referente" or hasattr(v, "settoreGestito"))
+        monte_ore_tot = sum(getattr(v, "oreServizio", 0) for v in self.volontari)
+
+        turni_per_stato = {}
+        for t in self.turni:
+            st = str(getattr(t, "stato", "Aperto")).strip().upper()
+            turni_per_stato[st] = turni_per_stato.get(st, 0) + 1
+
+        turni_coperti = sum(1 for t in self.turni if len(getattr(t, "volontari_assegnati", [])) >= getattr(t, "personeRichieste", 1))
+        tasso_copertura = (turni_coperti / len(self.turni) * 100.0) if self.turni else 100.0
+
+        corsi_per_stato = {}
+        for c in self.corsi:
+            st = str(getattr(c, "stato", "PROGRAMMATO")).strip().upper()
+            corsi_per_stato[st] = corsi_per_stato.get(st, 0) + 1
+
+        tot_partecipanti_corsi = sum(len(getattr(c, "partecipanti", [])) for c in self.corsi)
+
+        return {
+            "totale_volontari": tot_volontari,
+            "totale_referenti": tot_referenti,
+            "monte_ore_complessivo": monte_ore_tot,
+            "totale_turni": len(self.turni),
+            "turni_coperti": turni_coperti,
+            "tasso_copertura_turni": round(tasso_copertura, 2),
+            "turni_per_stato": turni_per_stato,
+            "totale_corsi": len(self.corsi),
+            "corsi_per_stato": corsi_per_stato,
+            "totale_partecipanti_corsi": tot_partecipanti_corsi,
+            "totale_mezzi": len(self.mezzi)
+        }
+
     def get_avvisi_sistema(self) -> list[dict]:
         avvisi = []
         avvisi.extend(self.notifica_turni_scoperti())
