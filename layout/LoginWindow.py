@@ -181,12 +181,13 @@ class RecuperoCredenzialiDialog(QDialog):
         layout.setContentsMargins(24, 24, 24, 24)
         layout.setSpacing(14)
 
-        lbl_titolo = QLabel("<h3 style='margin:0; color: white;'>Recupera Password / Account</h3>")
+        lbl_titolo = QLabel("<h3 style='margin:0; color: white;'>Recupero Credenziali (Illustrativo)</h3>")
         layout.addWidget(lbl_titolo)
 
         lbl_desc = QLabel(
-            "Inserisci l'indirizzo <b>Email</b> o il <b>Codice Fiscale</b> associato al tuo profilo CRI.<br>"
-            "Riceverai un'email con le istruzioni e il collegamento per reimpostare la tua password."
+            "<b>Funzionalità a scopo puramente illustrativo:</b><br>"
+            "In ambiente reale la procedura coinvolge il server di posta aziendale.<br>"
+            "Inserisci la tua email o codice fiscale per visualizzare la simulazione del flusso UML."
         )
         lbl_desc.setStyleSheet("color: #b0bec5; font-size: 13px;")
         lbl_desc.setWordWrap(True)
@@ -202,7 +203,7 @@ class RecuperoCredenzialiDialog(QDialog):
         layout.addWidget(self.lbl_feedback)
 
         btn_box = QHBoxLayout()
-        btn_invia = QPushButton("Invia Link di Ripristino")
+        btn_invia = QPushButton("Simula Invio")
         btn_invia.setStyleSheet("""
             QPushButton {
                 background-color: #c62828;
@@ -251,7 +252,7 @@ class RecuperoCredenzialiDialog(QDialog):
         successo, messaggio = ctrl.recuperaCredenziali(val)
 
         if successo:
-            QMessageBox.information(self, "Email di Recupero Inviata", f"{messaggio}")
+            QMessageBox.information(self, "Simulazione Recupero Credenziali", f"{messaggio}")
             self.accept()
         else:
             self.lbl_feedback.setText(f"<span style='color: #ff5252;'>{messaggio}</span>")
