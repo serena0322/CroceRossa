@@ -47,7 +47,8 @@ class Turno(Programmabile):
             "mezzo": self.__mezzo,
             "materialeNecessario": self.__materialeNecessario,
             "stato": self.__stato,
-            "numeroPrenotazioni": len(self.__prenotazioni)
+            "numeroPrenotazioni": len(self.__prenotazioni),
+            "numeroPrenotati": len(self.__prenotazioni)
         }
 
     def getStato(self) -> StatoAttivita:

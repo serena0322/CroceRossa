@@ -43,6 +43,7 @@ class Corso(Programmabile):
             "postiLiberi": self.__postiLiberi,
             "stato": self.__stato,
             "numeroIscrizioni": len(self.__iscrizioni),
+            "numeroIscritti": len(self.__iscrizioni),
             "numeroSuperati": sum(1 for i in self.__iscrizioni if i.getSuperato())
         }
 
