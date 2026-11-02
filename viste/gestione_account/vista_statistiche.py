@@ -40,7 +40,7 @@ class VistaStatistiche(QWidget):
         # Contenitore dinamico delle statistiche
         self.content_widget = QWidget(self)
         self.content_layout = QVBoxLayout(self.content_widget)
-        self.content_layout.setContentsMargins(0, 8, 0, 0)
+        self.content_layout.setContentsMargins(0, 0, 0, 0)
         self.content_layout.setSpacing(10)
         main_layout.addWidget(self.content_widget, 1)
 
