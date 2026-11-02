@@ -1,5 +1,5 @@
 """VistaAttestaPartecipazione (GestioneCorsi): AttestaPartecipazione."""
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QListView, QPushButton, QMessageBox
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QListView, QPushButton
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PyQt5.QtCore import Qt
 from attivita.corso import Corso
@@ -48,8 +48,5 @@ class VistaAttestaPartecipazione(QWidget):
                 superati.append(item.data(Qt.UserRole))
 
         Corso().selezionaSuperati(self.corso, superati)
-        QMessageBox.information(
-            self, "Attestazione",
-            f"Attestazione registrata per {len(superati)} volontari superati su {modello.rowCount()}."
-        )
         self.close()
+

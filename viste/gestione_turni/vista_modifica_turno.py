@@ -1,12 +1,28 @@
-"""VistaModificaTurno (GestioneTurni) secondo le specifiche del PDF e mockup (pag. 9)."""
+"""VistaModificaTurno (GestioneTurni) secondo le specifiche del PDF e mockup (pag. 105).
+Layout a due colonne:
+- Titolo 'Modifica turno <codice>'
+- Form:
+  - Data (QDateEdit)
+  - Ora inizio (QTimeEdit) | Ora fine (QTimeEdit) affiancati
+  - Luogo
+  - Tipo di servizio
+  - Numero posti
+  - Patente richiesta
+  - Corsi richiesti
+  - Mezzo previsto
+  - Materiale necessario
+  - Dati paziente
+- Banner errore (es. 'Il numero di posti è inferiore ai Volontari prenotati (X).')
+- Pulsante 'Salva modifiche' centrato in basso
+"""
 from datetime import date, time
 from PyQt5.QtWidgets import (
-    QWidget, QVBoxLayout, QLabel, QLineEdit,
-    QComboBox, QDateEdit, QTimeEdit, QPushButton,
-    QMessageBox
+    QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel,
+    QLineEdit, QDateEdit, QTimeEdit, QPushButton
 )
 from PyQt5.QtCore import QDate, QTime
 from attivita.turno import Turno
+from supporto.stile import crea_label_errore, mostra_errore, nascondi_errore
 
 
 class VistaModificaTurno(QWidget):
@@ -17,74 +33,101 @@ class VistaModificaTurno(QWidget):
         self.qlines: dict[str, QLineEdit] = {}
 
         d = self.turno.getDati()
-        self.setWindowTitle(f"Modifica turno {d['codice']}")
-        self.resize(460, 520)
+        codice = d.get("codice", "")
+        self.setWindowTitle(f"Modifica turno {codice}")
+        self.resize(520, 560)
 
-        self.v_layout = QVBoxLayout(self)
-        self.v_layout.addWidget(QLabel(f"<b>Codice:</b> {d['codice']}"))
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(12)
 
-        self.add_info_text("datiPaziente", "Dati paziente (se presente)")
-        self.qlines["datiPaziente"].setText(d.get("datiPaziente", ""))
+        # Intestazione come mockup pag. 105: "Modifica turno T-170"
 
-        self.v_layout.addWidget(QLabel("Data:"))
+        grid = QGridLayout()
+        grid.setHorizontalSpacing(16)
+        grid.setVerticalSpacing(8)
+        grid.setColumnStretch(0, 0)
+        grid.setColumnStretch(1, 1)
+
+        row = 0
+
+        def add_row(key: str, label_text: str, default_val: str = ""):
+            nonlocal row
+            lbl = QLabel(label_text)
+            lbl.setStyleSheet("font-size: 13px; font-weight: 500;")
+            txt = QLineEdit(self)
+            txt.setText(str(default_val))
+            self.qlines[key] = txt
+            grid.addWidget(lbl, row, 0)
+            grid.addWidget(txt, row, 1)
+            row += 1
+
+        # Data
+        lbl_data = QLabel("Data")
+        lbl_data.setStyleSheet("font-size: 13px; font-weight: 500;")
+        grid.addWidget(lbl_data, row, 0)
+
         self.data = QDateEdit(self)
         dt = d["data"]
         self.data.setDate(QDate(dt.year, dt.month, dt.day))
         self.data.setCalendarPopup(True)
-        self.v_layout.addWidget(self.data)
+        grid.addWidget(self.data, row, 1)
+        row += 1
 
-        self.v_layout.addWidget(QLabel("Ora inizio:"))
+        # Ora inizio & Ora fine affiancati
+        lbl_orari = QLabel("Ora inizio")
+        lbl_orari.setStyleSheet("font-size: 13px; font-weight: 500;")
+        grid.addWidget(lbl_orari, row, 0)
+
+        orari_layout = QHBoxLayout()
+        orari_layout.setSpacing(12)
+
         self.ora_inizio = QTimeEdit(self)
         ti = d["oraInizio"]
         self.ora_inizio.setTime(QTime(ti.hour, ti.minute))
-        self.v_layout.addWidget(self.ora_inizio)
+        orari_layout.addWidget(self.ora_inizio, 1)
 
-        self.v_layout.addWidget(QLabel("Ora fine:"))
+        lbl_fine = QLabel("Ora fine")
+        lbl_fine.setStyleSheet("font-size: 13px; font-weight: 500;")
+        orari_layout.addWidget(lbl_fine)
+
         self.ora_fine = QTimeEdit(self)
         tf = d["oraFine"]
         self.ora_fine.setTime(QTime(tf.hour, tf.minute))
-        self.v_layout.addWidget(self.ora_fine)
+        orari_layout.addWidget(self.ora_fine, 1)
 
-        self.add_info_text("luogo", "Luogo")
-        self.qlines["luogo"].setText(d.get("luogo", ""))
+        grid.addLayout(orari_layout, row, 1)
+        row += 1
 
-        self.v_layout.addWidget(QLabel("Tipo di servizio:"))
-        self.combo = QComboBox(self)
-        self.combo.addItems(["Trasporto infermi", "Emergenza 118", "Assistenza manifestazioni", "Protezione Civile"])
-        self.combo.setCurrentText(d.get("tipoServizio", "Trasporto infermi"))
-        self.v_layout.addWidget(self.combo)
+        add_row("luogo", "Luogo", d.get("luogo", ""))
+        add_row("tipoServizio", "Tipo di servizio", d.get("tipoServizio", ""))
+        add_row("postiTotali", "Numero posti", d.get("postiTotali", 3))
+        add_row("patenteRichiesta", "Patente richiesta", d.get("patenteRichiesta") or "")
+        add_row("corsiRichiesti", "Corsi richiesti", d.get("corsiRichiesti", ""))
+        add_row("mezzo", "Mezzo previsto", d.get("mezzo", ""))
+        add_row("materialeNecessario", "Materiale necessario", d.get("materialeNecessario", ""))
+        add_row("datiPaziente", "Dati paziente", d.get("datiPaziente", ""))
 
-        self.add_info_text("postiTotali", "Numero di posti")
-        self.qlines["postiTotali"].setText(str(d.get("postiTotali", 3)))
+        main_layout.addLayout(grid)
 
-        self.v_layout.addWidget(QLabel("Patente richiesta:"))
-        self.combo_patente = QComboBox(self)
-        self.combo_patente.addItems(["Nessuna", "CRI 1", "CRI 2", "CRI 3", "CRI 4", "CRI 5", "B"])
-        self.combo_patente.setCurrentText(d.get("patenteRichiesta") or "Nessuna")
-        self.v_layout.addWidget(self.combo_patente)
+        # Banner errore
+        self.lbl_errore = crea_label_errore(self)
+        main_layout.addWidget(self.lbl_errore)
 
-        self.add_info_text("corsiRichiesti", "Corsi richiesti")
-        self.qlines["corsiRichiesti"].setText(d.get("corsiRichiesti", ""))
-
-        self.add_info_text("mezzo", "Mezzo previsto")
-        self.qlines["mezzo"].setText(d.get("mezzo", ""))
-
-        self.add_info_text("materialeNecessario", "Materiale necessario")
-        self.qlines["materialeNecessario"].setText(d.get("materialeNecessario", ""))
-
+        # Pulsante centrato "Salva modifiche"
+        btn_layout = QHBoxLayout()
+        btn_layout.addStretch()
         btn = QPushButton("Salva modifiche")
+        btn.setFixedWidth(200)
         btn.clicked.connect(self.salva_modifiche)
-        self.v_layout.addWidget(btn)
+        btn_layout.addWidget(btn)
+        btn_layout.addStretch()
+        main_layout.addLayout(btn_layout)
 
-        self.setLayout(self.v_layout)
-
-    def add_info_text(self, chiave: str, etichetta: str) -> None:
-        self.v_layout.addWidget(QLabel(f"{etichetta}:"))
-        txt = QLineEdit(self)
-        self.qlines[chiave] = txt
-        self.v_layout.addWidget(txt)
+        self.setLayout(main_layout)
 
     def salva_modifiche(self) -> None:
+        nascondi_errore(self.lbl_errore)
         paziente = self.qlines["datiPaziente"].text().strip()
         qd = self.data.date()
         d = date(qd.year(), qd.month(), qd.day())
@@ -93,15 +136,15 @@ class VistaModificaTurno(QWidget):
         ora_i = time(qi.hour(), qi.minute())
         ora_f = time(qf.hour(), qf.minute())
         luogo = self.qlines["luogo"].text().strip()
-        tipo_servizio = self.combo.currentText()
+        tipo_servizio = self.qlines["tipoServizio"].text().strip()
         try:
             posti = int(self.qlines["postiTotali"].text().strip())
         except ValueError:
-            QMessageBox.critical(self, "Errore", "Il numero di posti deve essere un numero intero positivo.")
+            mostra_errore(self.lbl_errore, "Il numero di posti deve essere un numero intero positivo.")
             return
 
-        patente = self.combo_patente.currentText()
-        if patente == "Nessuna":
+        patente = self.qlines["patenteRichiesta"].text().strip()
+        if patente.lower() == "nessuna":
             patente = ""
 
         corsi = self.qlines["corsiRichiesti"].text().strip()
@@ -114,11 +157,12 @@ class VistaModificaTurno(QWidget):
                 tipo_servizio, posti, patente, corsi, mezzo, materiale
             )
             if ok:
-                QMessageBox.information(self, "Modifiche salvate", "Turno aggiornato e volontari notificati.")
                 if self.callback:
                     self.callback()
                 self.close()
             else:
-                QMessageBox.critical(self, "Errore", "Posti inferiori ai Volontari già prenotati.")
+                prenotati = len(self.turno.getPrenotazioni()) if hasattr(self.turno, 'getPrenotazioni') else 0
+                msg = f"Il numero di posti è inferiore ai Volontari prenotati ({prenotati})." if prenotati else "Posti inferiori ai Volontari già prenotati."
+                mostra_errore(self.lbl_errore, msg)
         except ValueError as e:
-            QMessageBox.critical(self, "Errore", str(e))
+            mostra_errore(self.lbl_errore, str(e))

@@ -1,40 +1,59 @@
-"""VistaCarriera (GestioneAccount) secondo le specifiche del PDF e mockup (pag. 6)."""
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QListView, QMessageBox
-from PyQt5.QtCore import QStringListModel
+"""VistaCarriera (GestioneAccount) secondo le specifiche del PDF e mockup (pag. 104).
+Layout:
+- Intestazione 'Carriera'
+- Sezione 'Corsi superati': tabella con colonna 'Corso'
+- Sezione 'Turni svolti': tabella con colonne 'Data' e 'Codice'
+- Totale ore di servizio: 'Ore di servizio totali: <ore>'
+"""
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel
 from utenti.volontario import Volontario
+from supporto.tabella import crea_tabella, popola_riga
 
 
 class VistaCarriera(QWidget):
     def __init__(self, volontario: Volontario, parent=None):
         super(VistaCarriera, self).__init__(parent)
         self.volontario = volontario
-        self.setWindowTitle("La mia carriera")
-        self.resize(460, 360)
+        self.setWindowTitle("Carriera")
+        self.resize(520, 480)
 
-        self.list_view = QListView(self)
-        layout = QVBoxLayout(self)
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(12)
+
+        # Intestazione come mockup pag. 104: "Carriera"
 
         d = self.volontario.visualizzaCarriera()
         corsi = d.get("corsiSuperati", [])
         turni = d.get("turniSvolti", [])
         ore = d.get("oreServizio", 0.0)
 
-        layout.addWidget(QLabel("<b>Corsi superati</b>"))
-        lbl_corsi = QLabel("\n".join(corsi) if corsi else "Nessun corso superato.")
-        layout.addWidget(lbl_corsi)
+        lbl_corsi = QLabel("<b>Corsi superati</b>")
+        lbl_corsi.setStyleSheet("font-size: 13px; font-weight: bold; color: #2D3748;")
+        main_layout.addWidget(lbl_corsi)
 
-        layout.addWidget(QLabel("<b>Turni svolti</b>"))
-        layout.addWidget(self.list_view)
+        self.tabella_corsi = crea_tabella(["Corso"], self)
+        main_layout.addWidget(self.tabella_corsi)
 
-        layout.addWidget(QLabel(f"<b>Totale ore di servizio:</b> {ore:.1f}"))
+        lbl_turni = QLabel("<b>Turni svolti</b>")
+        lbl_turni.setStyleSheet("font-size: 13px; font-weight: bold; color: #2D3748;")
+        main_layout.addWidget(lbl_turni)
 
-        self.setLayout(layout)
-        self.load_carriera(turni)
+        self.tabella_turni = crea_tabella(["Data", "Codice"], self)
+        main_layout.addWidget(self.tabella_turni)
 
-    def load_carriera(self, turni: list) -> None:
-        model = QStringListModel()
-        righe = [f"Data: {data:%d/%m/%Y} | Turno: {cod}" for data, cod in turni]
-        if not righe:
-            righe = ["Nessun turno svolto."]
-        model.setStringList(righe)
-        self.list_view.setModel(model)
+        lbl_ore = QLabel(f"<b>Ore di servizio totali:</b> {ore:g}")
+        lbl_ore.setStyleSheet("font-size: 13px; font-weight: bold; color: #1A202C;")
+        main_layout.addWidget(lbl_ore)
+
+        self.setLayout(main_layout)
+        self.load_carriera(corsi, turni)
+
+    def load_carriera(self, corsi: list, turni: list) -> None:
+        self.tabella_corsi.setRowCount(len(corsi))
+        for r, c in enumerate(corsi):
+            popola_riga(self.tabella_corsi, r, [c])
+
+        self.tabella_turni.setRowCount(len(turni))
+        for r, (data, cod) in enumerate(turni):
+            popola_riga(self.tabella_turni, r, [f"{data:%d/%m/%Y}", cod])

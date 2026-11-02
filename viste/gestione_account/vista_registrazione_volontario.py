@@ -1,40 +1,91 @@
-"""VistaRegistrazioneVolontario (GestioneAccount) secondo le specifiche del PDF e mockup (pag. 5)."""
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QMessageBox
+"""VistaRegistrazioneVolontario (GestioneAccount) secondo le specifiche del PDF e mockup (pag. 104).
+Layout a due colonne:
+- Titolo 'Registrazione Volontario'
+- Campi:
+    Nome
+    Cognome
+    Codice fiscale
+    E-mail
+    Telefono
+    Comitato
+    Password (con dicitura 'Almeno 6 caratteri alfanumerici')
+- Banner di errore (es. 'E-mail già usata da un altro account.')
+- Pulsante 'Registrati' centrato
+"""
+from PyQt5.QtWidgets import (
+    QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel,
+    QLineEdit, QPushButton
+)
 from utenti.volontario import Volontario
+from supporto.stile import crea_label_errore, mostra_errore, nascondi_errore
 
 
 class VistaRegistrazioneVolontario(QWidget):
     def __init__(self, parent=None):
         super(VistaRegistrazioneVolontario, self).__init__(parent)
         self.setWindowTitle("Registrazione Volontario")
-        self.resize(400, 380)
+        self.resize(520, 500)
 
         self.qlines: dict[str, QLineEdit] = {}
-        self.v_layout = QVBoxLayout(self)
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(12)
 
-        self.add_info_text("nome", "Nome")
-        self.add_info_text("cognome", "Cognome")
-        self.add_info_text("codiceFiscale", "Codice fiscale")
-        self.add_info_text("email", "E-mail")
-        self.add_info_text("telefono", "Telefono")
-        self.add_info_text("comitato", "Comitato")
-        self.add_info_text("password", "Password (almeno 6 caratteri alfanumerici)")
+        # Intestazione come mockup pag. 104: "Registrazione Volontario"
 
+        grid = QGridLayout()
+        grid.setHorizontalSpacing(16)
+        grid.setVerticalSpacing(8)
+        grid.setColumnStretch(0, 0)
+        grid.setColumnStretch(1, 1)
+
+        row = 0
+
+        def add_row(key: str, label_text: str, default_val: str = "", is_pwd: bool = False):
+            nonlocal row
+            lbl = QLabel(label_text)
+            lbl.setStyleSheet("font-size: 13px; font-weight: 500;")
+            txt = QLineEdit(self)
+            txt.setText(str(default_val))
+            if is_pwd:
+                txt.setEchoMode(QLineEdit.Password)
+            self.qlines[key] = txt
+            grid.addWidget(lbl, row, 0)
+            grid.addWidget(txt, row, 1)
+            row += 1
+
+        add_row("nome", "Nome", "")
+        add_row("cognome", "Cognome", "")
+        add_row("codiceFiscale", "Codice fiscale", "")
+        add_row("email", "E-mail", "")
+        add_row("telefono", "Telefono", "")
+        add_row("comitato", "Comitato", "Ancona")
+        add_row("password", "Password", "", is_pwd=True)
+
+        main_layout.addLayout(grid)
+
+        lbl_sotto_pwd = QLabel("Almeno 6 caratteri alfanumerici.")
+        lbl_sotto_pwd.setStyleSheet("font-size: 11px; color: #718096;")
+        main_layout.addWidget(lbl_sotto_pwd)
+
+        # Banner errore
+        self.lbl_errore = crea_label_errore(self)
+        main_layout.addWidget(self.lbl_errore)
+
+        # Pulsante centrato "Registrati"
+        btn_layout = QHBoxLayout()
+        btn_layout.addStretch()
         btn = QPushButton("Registrati")
+        btn.setFixedWidth(200)
         btn.clicked.connect(self.registra_click)
-        self.v_layout.addWidget(btn)
+        btn_layout.addWidget(btn)
+        btn_layout.addStretch()
+        main_layout.addLayout(btn_layout)
 
-        self.setLayout(self.v_layout)
-
-    def add_info_text(self, chiave: str, etichetta: str) -> None:
-        self.v_layout.addWidget(QLabel(f"{etichetta}:"))
-        txt = QLineEdit(self)
-        if chiave == "password":
-            txt.setEchoMode(QLineEdit.Password)
-        self.qlines[chiave] = txt
-        self.v_layout.addWidget(txt)
+        self.setLayout(main_layout)
 
     def registra_click(self) -> None:
+        nascondi_errore(self.lbl_errore)
         nome = self.qlines["nome"].text().strip()
         cognome = self.qlines["cognome"].text().strip()
         cf = self.qlines["codiceFiscale"].text().strip()
@@ -45,7 +96,6 @@ class VistaRegistrazioneVolontario(QWidget):
 
         ok = Volontario().inserisciInformazioni(nome, cognome, cf, em, tel, com, pwd)
         if ok:
-            QMessageBox.information(self, "Registrazione", "Account Volontario creato con successo.")
             self.close()
         else:
-            QMessageBox.critical(self, "Errore", "Informazioni non valide (verificare dati, formato CF/email, password o e-mail già usata).")
+            mostra_errore(self.lbl_errore, "E-mail già usata da un altro account o dati non validi.")

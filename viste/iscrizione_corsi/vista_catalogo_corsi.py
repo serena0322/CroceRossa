@@ -1,12 +1,20 @@
-"""VistaCatalogoCorsi (IscrizioneCorsi) secondo le specifiche del PDF e mockup (pag. 14)."""
+"""VistaCatalogoCorsi (IscrizioneCorsi) secondo le specifiche del PDF e mockup (catalogo_corsi.png).
+Layout:
+- Intestazione 'Catalogo corsi'
+- Riga filtro: 'Tipo di corso' [QLineEdit testo libero]  [Pulsante Filtra]
+- Tabella colonne: Codice | Nome | Posti liberi
+- Due pulsanti: 'Dettagli' e 'Iscriviti' affiancati
+- Banner di errore: 'Sei già iscritto a questo corso.'
+"""
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QComboBox, QListView, QPushButton, QMessageBox
+    QLineEdit, QPushButton
 )
-from PyQt5.QtCore import QStringListModel
 from utenti.volontario import Volontario
 from attivita.corso import Corso
 from attivita.iscrizione import Iscrizione
+from supporto.stile import crea_label_errore, mostra_errore, nascondi_errore
+from supporto.tabella import crea_tabella, popola_riga
 
 
 class VistaCatalogoCorsi(QWidget):
@@ -17,35 +25,56 @@ class VistaCatalogoCorsi(QWidget):
         self.vista_dettagli = None
 
         self.setWindowTitle("Catalogo corsi")
-        self.resize(550, 400)
+        self.resize(600, 440)
 
-        layout = QVBoxLayout(self)
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(14)
 
+        # Intestazione come mockup: "Catalogo corsi"
+
+        # Riga filtro: Tipo di corso [QLineEdit]   [Filtra]
         filtro_row = QHBoxLayout()
-        filtro_row.addWidget(QLabel("Tipo di corso:"))
-        self.combo_tipo = QComboBox(self)
-        self.combo_tipo.addItems(["Tutti", "Base", "Sanitario", "Soccorso", "Protezione Civile"])
-        filtro_row.addWidget(self.combo_tipo)
+        filtro_row.setSpacing(12)
+
+        lbl_tipo = QLabel("Tipo di corso")
+        lbl_tipo.setStyleSheet("font-size: 13px; font-weight: 500;")
+        filtro_row.addWidget(lbl_tipo)
+
+        self.txt_tipo = QLineEdit(self)
+        self.txt_tipo.setPlaceholderText("Es. Sanitario, Base...")
+        filtro_row.addWidget(self.txt_tipo, 1)
 
         btn_filtra = QPushButton("Filtra")
+        btn_filtra.setFixedWidth(160)
         btn_filtra.clicked.connect(self.filtra_corsi_click)
         filtro_row.addWidget(btn_filtra)
-        layout.addLayout(filtro_row)
 
-        self.list_view = QListView(self)
-        layout.addWidget(self.list_view)
+        main_layout.addLayout(filtro_row)
 
+        # Tabella colonne da mockup: Codice | Nome | Posti liberi
+        self.tabella = crea_tabella(["Codice", "Nome", "Posti liberi"], self)
+        main_layout.addWidget(self.tabella)
+
+        # Pulsanti [Dettagli] e [Iscriviti] affiancati
         btn_row = QHBoxLayout()
+        btn_row.setSpacing(12)
+
         btn_dett = QPushButton("Dettagli")
         btn_dett.clicked.connect(self.show_selected_info)
-        btn_row.addWidget(btn_dett)
+        btn_row.addWidget(btn_dett, 1)
 
         btn_iscr = QPushButton("Iscriviti")
         btn_iscr.clicked.connect(self.iscrivi_click)
-        btn_row.addWidget(btn_iscr)
-        layout.addLayout(btn_row)
+        btn_row.addWidget(btn_iscr, 1)
 
-        self.setLayout(layout)
+        main_layout.addLayout(btn_row)
+
+        # Banner errore (es. 'Sei già iscritto a questo corso.')
+        self.lbl_errore = crea_label_errore(self)
+        main_layout.addWidget(self.lbl_errore)
+
+        self.setLayout(main_layout)
         self.load_corsi()
 
     def load_corsi(self) -> None:
@@ -53,51 +82,52 @@ class VistaCatalogoCorsi(QWidget):
         self.update_ui()
 
     def filtra_corsi_click(self) -> None:
-        tipo = self.combo_tipo.currentText()
-        if tipo == "Tutti":
+        nascondi_errore(self.lbl_errore)
+        tipo = self.txt_tipo.text().strip()
+        if not tipo or tipo.lower() == "tutti":
             self.corsi = Corso().visualizzaCatalogoCorsi()
         else:
             self.corsi = Corso().filtraCorsi(tipo)
         if not self.corsi:
-            QMessageBox.information(self, "Catalogo corsi", "Nessun corso trovato con il filtro specificato.")
+            mostra_errore(self.lbl_errore, "Nessun corso trovato con il filtro specificato.")
         self.update_ui()
 
     def update_ui(self) -> None:
-        model = QStringListModel()
-        righe = []
-        for c in self.corsi:
+        self.tabella.setRowCount(len(self.corsi))
+        for r, c in enumerate(self.corsi):
             d = c.getDati()
-            righe.append(
-                f"{d['codice']} | {d['nome']} ({d['tipoCorso']}) | "
-                f"Dal {d['dataInizio']:%d/%m/%Y} al {d['dataFine']:%d/%m/%Y} | Posti liberi: {d['postiLiberi']}"
-            )
-        model.setStringList(righe)
-        self.list_view.setModel(model)
+            popola_riga(self.tabella, r, [
+                d.get("codice", ""),
+                d.get("nome", ""),
+                str(d.get("postiLiberi", 0))
+            ])
 
-    def _get_selected_corso(self) -> Corso | None:
-        idx = self.list_view.currentIndex().row()
-        if 0 <= idx < len(self.corsi):
-            return self.corsi[idx]
-        return None
+        if not self.corsi:
+            mostra_errore(self.lbl_errore, "Nessun corso disponibile a catalogo.")
+        else:
+            nascondi_errore(self.lbl_errore)
 
     def show_selected_info(self) -> None:
-        corso = self._get_selected_corso()
-        if not corso:
-            QMessageBox.warning(self, "Attenzione", "Selezionare un corso dall'elenco.")
+        nascondi_errore(self.lbl_errore)
+        idx = self.tabella.currentRow()
+        if not (0 <= idx < len(self.corsi)):
+            mostra_errore(self.lbl_errore, "Selezionare un corso dall'elenco.")
             return
         from viste.iscrizione_corsi.vista_dettagli_corso import VistaDettagliCorso
-        self.vista_dettagli = VistaDettagliCorso(corso)
+        self.vista_dettagli = VistaDettagliCorso(self.corsi[idx])
         self.vista_dettagli.show()
 
     def iscrivi_click(self) -> None:
-        corso = self._get_selected_corso()
-        if not corso:
-            QMessageBox.warning(self, "Attenzione", "Selezionare un corso dall'elenco.")
+        nascondi_errore(self.lbl_errore)
+        idx = self.tabella.currentRow()
+        if not (0 <= idx < len(self.corsi)):
+            mostra_errore(self.lbl_errore, "Selezionare un corso dall'elenco.")
             return
 
+        corso = self.corsi[idx]
         ok = Iscrizione().iscriviCorso(corso, self.volontario)
         if ok:
-            QMessageBox.information(self, "Iscrizione", "Iscrizione al corso completata con successo.")
+            nascondi_errore(self.lbl_errore)
             self.load_corsi()
         else:
-            QMessageBox.critical(self, "Errore", "Impossibile iscriversi: già iscritto o nessun posto libero.")
+            mostra_errore(self.lbl_errore, "Sei già iscritto a questo corso.")

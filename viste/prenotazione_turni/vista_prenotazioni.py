@@ -1,11 +1,17 @@
-"""VistaPrenotazioni (PrenotazioneTurni) secondo le specifiche del PDF e mockup (pag. 13)."""
+"""VistaPrenotazioni (PrenotazioneTurni) secondo le specifiche del PDF e mockup (pag. 106).
+Layout:
+- Intestazione 'Le mie prenotazioni'
+- Tabella (Data, Orario, Codice turno)
+- Pulsante 'Annulla prenotazione' centrato in basso
+- Banner di errore (es. 'Mancano meno di 24 ore all'inizio del turno.')
+"""
 from PyQt5.QtWidgets import (
-    QWidget, QVBoxLayout, QLabel, QListView,
-    QPushButton, QMessageBox
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton
 )
-from PyQt5.QtCore import QStringListModel
 from utenti.volontario import Volontario
 from attivita.prenotazione import Prenotazione
+from supporto.stile import crea_label_errore, mostra_errore, nascondi_errore
+from supporto.tabella import crea_tabella, popola_riga
 
 
 class VistaPrenotazioni(QWidget):
@@ -15,19 +21,33 @@ class VistaPrenotazioni(QWidget):
         self.prenotazioni: list[Prenotazione] = []
 
         self.setWindowTitle("Le mie prenotazioni")
-        self.resize(500, 360)
+        self.resize(550, 400)
 
-        layout = QVBoxLayout(self)
-        layout.addWidget(QLabel("<b>Prenotazioni attive:</b>"))
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(14)
 
-        self.list_view = QListView(self)
-        layout.addWidget(self.list_view)
+        # Intestazione come nel mockup di pagina 106: "Le mie prenotazioni"
 
+        # Tabella colonne da mockup: Data | Orario | Codice turno
+        self.tabella = crea_tabella(["Data", "Orario", "Codice turno"], self)
+        main_layout.addWidget(self.tabella)
+
+        # Pulsante centrato "Annulla prenotazione"
+        btn_layout = QHBoxLayout()
+        btn_layout.addStretch()
         btn_annulla = QPushButton("Annulla prenotazione")
+        btn_annulla.setFixedWidth(220)
         btn_annulla.clicked.connect(self.annulla_prenotazione_click)
-        layout.addWidget(btn_annulla)
+        btn_layout.addWidget(btn_annulla)
+        btn_layout.addStretch()
+        main_layout.addLayout(btn_layout)
 
-        self.setLayout(layout)
+        # Banner d'errore
+        self.lbl_errore = crea_label_errore(self)
+        main_layout.addWidget(self.lbl_errore)
+
+        self.setLayout(main_layout)
         self.load_prenotazioni()
 
     def load_prenotazioni(self) -> None:
@@ -35,27 +55,31 @@ class VistaPrenotazioni(QWidget):
         self.update_ui()
 
     def update_ui(self) -> None:
-        model = QStringListModel()
-        righe = []
-        for p in self.prenotazioni:
+        self.tabella.setRowCount(len(self.prenotazioni))
+        for r, p in enumerate(self.prenotazioni):
             d = p.getDatiTurno()
-            righe.append(
-                f"Data: {d['data']:%d/%m/%Y} | Ore: {d['oraInizio']:%H:%M}-{d['oraFine']:%H:%M} | "
-                f"Codice turno: {d['codice']} | Luogo: {d['luogo']}"
-            )
-        model.setStringList(righe)
-        self.list_view.setModel(model)
+            popola_riga(self.tabella, r, [
+                f"{d['data']:%d/%m/%Y}",
+                f"{d['oraInizio']:%H:%M}-{d['oraFine']:%H:%M}",
+                d.get("codice", "")
+            ])
+
+        if not self.prenotazioni:
+            mostra_errore(self.lbl_errore, "Nessuna prenotazione attiva presente.")
+        else:
+            nascondi_errore(self.lbl_errore)
 
     def annulla_prenotazione_click(self) -> None:
-        idx = self.list_view.currentIndex().row()
+        nascondi_errore(self.lbl_errore)
+        idx = self.tabella.currentRow()
         if not (0 <= idx < len(self.prenotazioni)):
-            QMessageBox.warning(self, "Attenzione", "Selezionare una prenotazione dall'elenco.")
+            mostra_errore(self.lbl_errore, "Selezionare una prenotazione dall'elenco.")
             return
 
         prenotazione = self.prenotazioni[idx]
         ok = self.volontario.annullaPrenotazione(prenotazione)
         if ok:
-            QMessageBox.information(self, "Annullamento", "Prenotazione annullata con successo.")
+            nascondi_errore(self.lbl_errore)
             self.load_prenotazioni()
         else:
-            QMessageBox.critical(self, "Annullamento non consentito", "Non è possibile annullare una prenotazione a meno di 24 ore dall'inizio del turno.")
+            mostra_errore(self.lbl_errore, "Mancano meno di 24 ore all'inizio del turno.")

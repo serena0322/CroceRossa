@@ -112,12 +112,35 @@ QPushButton:disabled {
 }
 
 /* Liste e visualizzazioni tabellari */
-QListView, QListWidget, QTableView {
-    border: 1px solid #CBD5E0;
-    border-radius: 4px;
+QListView, QListWidget, QTableView, QTableWidget {
+    border: 1.5px solid #2D3748;
     background-color: #FFFFFF;
-    alternate-background-color: #F7FAFC;
-    padding: 4px;
+    gridline-color: #CBD5E0;
+    font-size: 13px;
+    color: #2D3748;
+    selection-background-color: #FED7D7;
+    selection-color: #742A2A;
+}
+
+QHeaderView::section {
+    background-color: #D9D9D9;
+    color: #1A202C;
+    font-weight: bold;
+    padding: 6px 8px;
+    border: 1px solid #718096;
+    border-top: none;
+    font-size: 13px;
+}
+
+QTableWidget::item, QTableView::item {
+    padding: 6px 8px;
+    border-bottom: 1px solid #EDF2F7;
+}
+
+QTableWidget::item:selected, QTableView::item:selected {
+    background-color: #FED7D7;
+    color: #742A2A;
+    font-weight: 500;
 }
 
 QListView::item, QListWidget::item {
@@ -126,7 +149,7 @@ QListView::item, QListWidget::item {
     border-radius: 2px;
 }
 
-QListView::item:hover, QListWidget::item:hover {
+QListView::item:hover, QListWidget::item:hover, QTableWidget::item:hover, QTableView::item:hover {
     background-color: #FFF5F5;
 }
 
@@ -172,9 +195,44 @@ QScrollBar::handle:vertical {
 QScrollBar::handle:vertical:hover {
     background: #A0AEC0;
 }
+
+QLabel[error_banner="true"], .ErrorBanner {
+    background-color: #FED7D7;
+    color: #9B2C2C;
+    border: 1px solid #FEB2B2;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 500;
+}
 """
 
 
 def applica_tema(app):
     """Applica il tema grafico all'applicazione PyQt5."""
     app.setStyleSheet(FOGLIO_DI_STILE)
+
+
+def crea_label_errore(parent=None) -> "QLabel":
+    """Crea una QLabel stilizzata come banner di errore rosso, inizialmente nascosta."""
+    from PyQt5.QtWidgets import QLabel
+    lbl = QLabel(parent)
+    lbl.setProperty("error_banner", "true")
+    lbl.setWordWrap(True)
+    lbl.hide()
+    return lbl
+
+
+def mostra_errore(label, testo: str) -> None:
+    """Mostra un messaggio d'errore nel banner rosso."""
+    if label is not None:
+        label.setText(testo)
+        label.show()
+
+
+def nascondi_errore(label) -> None:
+    """Nasconde il banner rosso di errore."""
+    if label is not None:
+        label.setText("")
+        label.hide()
+

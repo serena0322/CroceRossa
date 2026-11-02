@@ -1,10 +1,20 @@
-"""VistaGestisciCorsi (GestioneCorsi) secondo le specifiche del PDF e mockup (pag. 10)."""
+"""VistaGestisciCorsi (GestioneCorsi) secondo le specifiche del PDF e mockup (pag. 107).
+Layout:
+- Intestazione 'Gestisci corsi'
+- Tabella (Codice, Nome, Data Inizio, Stato, Posti liberi)
+- Riga con due pulsanti affiancati: 'Visualizza iscritti' e 'Attesta partecipazione'
+- Banner errore orizzontale ('Il corso non è concluso o non ha iscritti.')
+- Sezione 'Gestisci un corso':
+    - Riga 'Codice corso' con QLineEdit
+    - Tre pulsanti affiancati: 'Inserisci', 'Modifica', 'Rimuovi'
+"""
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QLineEdit, QListView, QPushButton, QMessageBox
+    QLineEdit, QPushButton
 )
-from PyQt5.QtCore import QStringListModel
 from attivita.corso import Corso
+from supporto.stile import crea_label_errore, mostra_errore, nascondi_errore
+from supporto.tabella import crea_tabella, popola_riga
 
 
 class VistaGestisciCorsi(QWidget):
@@ -16,44 +26,70 @@ class VistaGestisciCorsi(QWidget):
         self.vista_inserisci = None
         self.vista_modifica = None
 
-        self.setWindowTitle("Gestione corsi")
-        self.resize(580, 420)
+        self.setWindowTitle("Gestisci corsi")
+        self.resize(700, 520)
 
         layout = QVBoxLayout(self)
-        layout.addWidget(QLabel("<b>Elenco corsi di formazione:</b>"))
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(12)
 
-        self.list_view = QListView(self)
-        layout.addWidget(self.list_view)
+        # Intestazione come nel mockup di pagina 107: "Gestisci corsi"
 
+        self.tabella = crea_tabella(["Codice", "Nome", "Data Inizio", "Stato", "Posti liberi"], self)
+        layout.addWidget(self.tabella)
+
+        # Due pulsanti larghi affiancati: [Visualizza iscritti] [Attesta partecipazione]
         row_azioni = QHBoxLayout()
+        row_azioni.setSpacing(12)
         btn_iscritti = QPushButton("Visualizza iscritti")
         btn_iscritti.clicked.connect(self.show_selected_info)
-        row_azioni.addWidget(btn_iscritti)
+        row_azioni.addWidget(btn_iscritti, 1)
 
         btn_attesta = QPushButton("Attesta partecipazione")
         btn_attesta.clicked.connect(self.attesta_partecipazione_click)
-        row_azioni.addWidget(btn_attesta)
+        row_azioni.addWidget(btn_attesta, 1)
         layout.addLayout(row_azioni)
 
+        # Banner d'errore (es. 'Il corso non è concluso o non ha iscritti.')
+        self.lbl_errore = crea_label_errore(self)
+        layout.addWidget(self.lbl_errore)
+
+        # Separatore visivo leggero o spazio
+        layout.addSpacing(6)
+
+        # Sezione "Gestisci un corso" come da mockup
+        lbl_sezione = QLabel("<b>Gestisci un corso</b>")
+        lbl_sezione.setStyleSheet("font-size: 13px; font-weight: bold; color: #2D3748;")
+        layout.addWidget(lbl_sezione)
+
         codice_row = QHBoxLayout()
-        codice_row.addWidget(QLabel("Codice corso:"))
+        codice_row.setSpacing(12)
+        lbl_codice = QLabel("Codice corso")
+        lbl_codice.setFixedWidth(120)
+        lbl_codice.setStyleSheet("font-size: 13px; font-weight: 500;")
+        codice_row.addWidget(lbl_codice)
+
         self.codice = QLineEdit(self)
-        self.codice.textChanged.connect(self.update_ui)
-        codice_row.addWidget(self.codice)
+        self.codice.textChanged.connect(self.update_pulsanti)
+        codice_row.addWidget(self.codice, 1)
         layout.addLayout(codice_row)
 
+        # Tre pulsanti affiancati: Inserisci | Modifica | Rimuovi
         btn_row = QHBoxLayout()
+        btn_row.setSpacing(12)
+
         self.btn_ins = QPushButton("Inserisci")
         self.btn_ins.clicked.connect(self.show_new)
-        btn_row.addWidget(self.btn_ins)
+        btn_row.addWidget(self.btn_ins, 1)
 
         self.btn_mod = QPushButton("Modifica")
         self.btn_mod.clicked.connect(self.show_modifica)
-        btn_row.addWidget(self.btn_mod)
+        btn_row.addWidget(self.btn_mod, 1)
 
         self.btn_rim = QPushButton("Rimuovi")
         self.btn_rim.clicked.connect(self.rimuovi_corso)
-        btn_row.addWidget(self.btn_rim)
+        btn_row.addWidget(self.btn_rim, 1)
+
         layout.addLayout(btn_row)
 
         self.setLayout(layout)
@@ -64,45 +100,55 @@ class VistaGestisciCorsi(QWidget):
         self.update_ui()
 
     def update_ui(self) -> None:
-        model = QStringListModel()
-        righe = []
-        for c in self.corsi:
+        self.tabella.setRowCount(len(self.corsi))
+        for r, c in enumerate(self.corsi):
             d = c.getDati()
-            righe.append(
-                f"{d['codice']} | {d['nome']} | Inizio: {d['dataInizio']:%d/%m/%Y} | "
-                f"Stato: {c.getStato().value} | Posti liberi: {d['postiLiberi']}"
-            )
-        model.setStringList(righe)
-        self.list_view.setModel(model)
+            popola_riga(self.tabella, r, [
+                d.get("codice", ""),
+                d.get("nome", ""),
+                f"{d['dataInizio']:%d/%m/%Y}",
+                c.getStato().value,
+                str(d.get("postiLiberi", 0))
+            ])
 
+        if not self.corsi:
+            mostra_errore(self.lbl_errore, "Nessun corso attivo presente.")
+        else:
+            nascondi_errore(self.lbl_errore)
+
+        self.update_pulsanti()
+
+    def update_pulsanti(self) -> None:
         ha_codice = bool(self.codice.text().strip())
         self.btn_ins.setEnabled(ha_codice)
         self.btn_mod.setEnabled(ha_codice)
         self.btn_rim.setEnabled(ha_codice)
 
     def _get_selected_corso(self) -> Corso | None:
-        idx = self.list_view.currentIndex().row()
+        idx = self.tabella.currentRow()
         if 0 <= idx < len(self.corsi):
             return self.corsi[idx]
         return None
 
     def show_selected_info(self) -> None:
+        nascondi_errore(self.lbl_errore)
         corso = self._get_selected_corso()
         if not corso:
-            QMessageBox.warning(self, "Attenzione", "Selezionare un corso dall'elenco.")
+            mostra_errore(self.lbl_errore, "Selezionare un corso dall'elenco.")
             return
         from viste.gestione_corsi.vista_iscritti_corso import VistaIscrittiCorso
         self.vista_iscritti = VistaIscrittiCorso(corso)
         self.vista_iscritti.show()
 
     def attesta_partecipazione_click(self) -> None:
+        nascondi_errore(self.lbl_errore)
         corso = self._get_selected_corso()
         if not corso:
-            QMessageBox.warning(self, "Attenzione", "Selezionare un corso dall'elenco.")
+            mostra_errore(self.lbl_errore, "Selezionare un corso dall'elenco.")
             return
         iscritti = Corso().attestaPartecipazione(corso)
         if not iscritti:
-            QMessageBox.critical(self, "Errore", "Corso non concluso o senza iscritti.")
+            mostra_errore(self.lbl_errore, "Il corso non è concluso o non ha iscritti.")
             return
 
         from viste.gestione_corsi.vista_attesta_partecipazione import VistaAttestaPartecipazione
@@ -110,9 +156,10 @@ class VistaGestisciCorsi(QWidget):
         self.vista_attesta.show()
 
     def show_new(self) -> None:
+        nascondi_errore(self.lbl_errore)
         cod = self.codice.text().strip()
         if not Corso().inserisciCorso(cod):
-            QMessageBox.critical(self, "Errore", f"Corso {cod} già presente.")
+            mostra_errore(self.lbl_errore, f"Corso {cod} già presente.")
             return
 
         from viste.gestione_corsi.vista_inserisci_corso import VistaInserisciCorso
@@ -120,10 +167,11 @@ class VistaGestisciCorsi(QWidget):
         self.vista_inserisci.show()
 
     def show_modifica(self) -> None:
+        nascondi_errore(self.lbl_errore)
         cod = self.codice.text().strip()
         dati_c = Corso().modificaCorso(cod)
         if not dati_c:
-            QMessageBox.critical(self, "Errore", "Corso non trovato o non programmato.")
+            mostra_errore(self.lbl_errore, "Corso non trovato o non programmato.")
             return
 
         trovati = [c for c in self.corsi if c.getDati()["codice"] == cod]
@@ -134,10 +182,11 @@ class VistaGestisciCorsi(QWidget):
         self.vista_modifica.show()
 
     def rimuovi_corso(self) -> None:
+        nascondi_errore(self.lbl_errore)
         cod = self.codice.text().strip()
         ok = Corso().rimuoviCorso(cod)
         if ok:
-            QMessageBox.information(self, "Rimozione", f"Corso {cod} rimosso con successo.")
+            nascondi_errore(self.lbl_errore)
             self.load_corsi()
         else:
-            QMessageBox.critical(self, "Errore", "Corso non trovato o non programmato.")
+            mostra_errore(self.lbl_errore, "Corso non trovato o non programmato.")

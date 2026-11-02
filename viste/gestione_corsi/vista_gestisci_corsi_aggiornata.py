@@ -1,10 +1,11 @@
 """VistaGestisciCorsi (GestioneCorsi): VisualizzaCorsi, CUDCorso, VisualizzaIscrittiCorso, AttestaPartecipazione."""
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QLineEdit, QListView, QPushButton, QMessageBox
+    QLineEdit, QListView, QPushButton
 )
 from PyQt5.QtCore import QStringListModel
 from attivita.corso import Corso
+from supporto.stile import crea_label_errore, mostra_errore, nascondi_errore
 
 
 class VistaGestisciCorsi(QWidget):
@@ -54,6 +55,9 @@ class VistaGestisciCorsi(QWidget):
             btn_row.addWidget(b)
         layout.addLayout(btn_row)
 
+        self.lbl_errore = crea_label_errore(self)
+        layout.addWidget(self.lbl_errore)
+
         # Attiva Inserisci/Modifica/Rimuovi solo se il codice non e' vuoto.
         # Non ricostruisce la lista, quindi la selezione dell'elenco non si perde.
         self.codice.textChanged.connect(
@@ -78,6 +82,11 @@ class VistaGestisciCorsi(QWidget):
         else:
             righe = ["Nessun corso presente."]            # VisualizzaCorsi 3.1
         self.list_view.setModel(QStringListModel(righe))
+        if not self.corsi:
+            mostra_errore(self.lbl_errore, "Nessun corso attivo presente.")
+        else:
+            nascondi_errore(self.lbl_errore)
+
 
     def _get_selected_corso(self) -> Corso | None:       # - get_selected_corso(): Corso
         idx = self.list_view.currentIndex().row()
@@ -86,39 +95,43 @@ class VistaGestisciCorsi(QWidget):
         return None
 
     def visualizza_iscritti_click(self) -> None:
+        nascondi_errore(self.lbl_errore)
         corso = self._get_selected_corso()
         if not corso:
-            QMessageBox.warning(self, "Attenzione", "Selezionare un corso dall'elenco.")
+            mostra_errore(self.lbl_errore, "Selezionare un corso dall'elenco.")
             return
         from viste.gestione_corsi.vista_iscritti_corso import VistaIscrittiCorso
         self.vista_iscritti = VistaIscrittiCorso(corso)
         self.vista_iscritti.show()
 
     def attesta_partecipazione_click(self) -> None:
+        nascondi_errore(self.lbl_errore)
         corso = self._get_selected_corso()
         if not corso:
-            QMessageBox.warning(self, "Attenzione", "Selezionare un corso dall'elenco.")
+            mostra_errore(self.lbl_errore, "Selezionare un corso dall'elenco.")
             return
         if not Corso().attestaPartecipazione(corso):
-            QMessageBox.critical(self, "Errore", "Il corso non è concluso o non ha iscritti.")
+            mostra_errore(self.lbl_errore, "Il corso non è concluso o non ha iscritti.")
             return
         from viste.gestione_corsi.vista_attesta_partecipazione import VistaAttestaPartecipazione
         self.vista_attesta = VistaAttestaPartecipazione(corso)   # create(Corso)
         self.vista_attesta.show()
 
     def inserisci_click(self) -> None:
+        nascondi_errore(self.lbl_errore)
         cod = self.codice.text().strip()
         if not Corso().inserisciCorso(cod):
-            QMessageBox.critical(self, "Errore", "Corso già presente.")         # CUDCorso 2.4.1
+            mostra_errore(self.lbl_errore, "Corso già presente.")         # CUDCorso 2.4.1
             return
         from viste.gestione_corsi.vista_inserisci_corso import VistaInserisciCorso
         self.vista_inserisci = VistaInserisciCorso(cod, self.load_corsi)
         self.vista_inserisci.show()
 
     def modifica_click(self) -> None:
+        nascondi_errore(self.lbl_errore)
         cod = self.codice.text().strip()
         if not Corso().modificaCorso(cod):
-            QMessageBox.critical(self, "Errore", "Corso non trovato o non programmato.")   # CUDCorso 3.4.1
+            mostra_errore(self.lbl_errore, "Corso non trovato o non programmato.")   # CUDCorso 3.4.1
             return
         trovati = [c for c in self.corsi if c.getDati()["codice"] == cod]
         if not trovati:
@@ -128,9 +141,11 @@ class VistaGestisciCorsi(QWidget):
         self.vista_modifica.show()
 
     def rimuovi_click(self) -> None:
+        nascondi_errore(self.lbl_errore)
         cod = self.codice.text().strip()
         if Corso().rimuoviCorso(cod):
-            QMessageBox.information(self, "Rimozione", f"Corso {cod} rimosso.")
+            nascondi_errore(self.lbl_errore)
             self.load_corsi()
         else:
-            QMessageBox.critical(self, "Errore", "Corso non trovato o non programmato.")   # CUDCorso 4.4.1
+            mostra_errore(self.lbl_errore, "Corso non trovato o non programmato.")   # CUDCorso 4.4.1
+

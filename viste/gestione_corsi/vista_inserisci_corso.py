@@ -1,11 +1,23 @@
-"""VistaInserisciCorso (GestioneCorsi) secondo le specifiche del PDF e mockup (pag. 11)."""
+"""VistaInserisciCorso (GestioneCorsi) secondo le specifiche del PDF e mockup (pag. 108).
+Layout a due colonne:
+- Intestazione 'Nuovo corso'
+- Campo 'Codice' (mostra il codice generato)
+- 'Nome', 'Descrizione', 'Direttore del corso', 'Tipo di corso'
+- 'Inizio' e 'Fine' affiancati con date picker
+- 'Orario' (testo libero, es. '20:30 - 23:00')
+- 'Luogo'
+- 'Numero posti'
+- Banner di errore
+- Pulsante 'Inserisci corso' centrato
+"""
 from datetime import date
 from PyQt5.QtWidgets import (
-    QWidget, QVBoxLayout, QLabel, QLineEdit,
-    QComboBox, QDateEdit, QPushButton, QMessageBox
+    QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel,
+    QLineEdit, QDateEdit, QPushButton
 )
 from PyQt5.QtCore import QDate
 from attivita.corso import Corso
+from supporto.stile import crea_label_errore, mostra_errore, nascondi_errore
 
 
 class VistaInserisciCorso(QWidget):
@@ -15,57 +27,97 @@ class VistaInserisciCorso(QWidget):
         self.callback = callback
         self.qlines: dict[str, QLineEdit] = {}
 
-        self.setWindowTitle("Nuovo corso")
-        self.resize(460, 480)
+        self.setWindowTitle(f"Nuovo corso {self.codice}")
+        self.resize(520, 500)
 
-        self.v_layout = QVBoxLayout(self)
-        self.v_layout.addWidget(QLabel(f"<b>Codice corso:</b> {self.codice}"))
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(14)
 
-        self.add_info_text("nome", "Nome corso")
-        self.add_info_text("descrizione", "Descrizione")
-        self.add_info_text("direttoreCorso", "Direttore del corso")
+        # Intestazione come nel mockup di pagina 108: "Nuovo corso"
 
-        self.v_layout.addWidget(QLabel("Tipo di corso:"))
-        self.combo = QComboBox(self)
-        self.combo.addItems(["Base", "Sanitario", "Soccorso", "Protezione Civile"])
-        self.v_layout.addWidget(self.combo)
+        grid = QGridLayout()
+        grid.setHorizontalSpacing(16)
+        grid.setVerticalSpacing(10)
+        grid.setColumnStretch(0, 0)
+        grid.setColumnStretch(1, 1)
 
-        self.v_layout.addWidget(QLabel("Data di inizio:"))
+        row = 0
+
+        def add_row(key: str, label_text: str, default_val: str = "", read_only: bool = False):
+            nonlocal row
+            lbl = QLabel(label_text)
+            lbl.setStyleSheet("font-size: 13px; font-weight: 500;")
+            txt = QLineEdit(self)
+            txt.setText(str(default_val))
+            if read_only:
+                txt.setReadOnly(True)
+            self.qlines[key] = txt
+            grid.addWidget(lbl, row, 0)
+            grid.addWidget(txt, row, 1)
+            row += 1
+
+        # Riga Codice (nel mockup di pagina 108 c'è la riga "Codice" con dentro es. C-032)
+        add_row("codice", "Codice", self.codice, read_only=False)
+
+        add_row("nome", "Nome", "")
+        add_row("descrizione", "Descrizione", "")
+        add_row("direttoreCorso", "Direttore del corso", "")
+        add_row("tipoCorso", "Tipo di corso", "Base")
+
+        # Inizio e Fine affiancati
+        lbl_inizio = QLabel("Inizio")
+        lbl_inizio.setStyleSheet("font-size: 13px; font-weight: 500;")
+        grid.addWidget(lbl_inizio, row, 0)
+
+        date_row_layout = QHBoxLayout()
+        date_row_layout.setSpacing(12)
+
         self.data_inizio = QDateEdit(self)
         self.data_inizio.setDate(QDate.currentDate().addDays(7))
         self.data_inizio.setCalendarPopup(True)
-        self.v_layout.addWidget(self.data_inizio)
+        date_row_layout.addWidget(self.data_inizio, 1)
 
-        self.v_layout.addWidget(QLabel("Data di fine:"))
+        lbl_fine = QLabel("Fine")
+        lbl_fine.setStyleSheet("font-size: 13px; font-weight: 500;")
+        date_row_layout.addWidget(lbl_fine)
+
         self.data_fine = QDateEdit(self)
         self.data_fine.setDate(QDate.currentDate().addDays(14))
         self.data_fine.setCalendarPopup(True)
-        self.v_layout.addWidget(self.data_fine)
+        date_row_layout.addWidget(self.data_fine, 1)
 
-        self.add_info_text("orario", "Orario di svolgimento")
-        self.qlines["orario"].setText("20:00 - 23:00")
+        grid.addLayout(date_row_layout, row, 1)
+        row += 1
 
-        self.add_info_text("luogo", "Luogo di svolgimento")
-        self.add_info_text("postiTotali", "Numero di posti")
-        self.qlines["postiTotali"].setText("20")
+        add_row("orario", "Orario", "20:30 - 23:00")
+        add_row("luogo", "Luogo", "")
+        add_row("postiTotali", "Numero posti", "20")
 
-        btn = QPushButton("Salva")
+        main_layout.addLayout(grid)
+
+        self.lbl_errore = crea_label_errore(self)
+        main_layout.addWidget(self.lbl_errore)
+
+        # Pulsante centrato "Inserisci corso" come da mockup pag. 108
+        btn_layout = QHBoxLayout()
+        btn_layout.addStretch()
+        btn = QPushButton("Inserisci corso")
+        btn.setFixedWidth(200)
         btn.clicked.connect(self.aggiungi_corso)
-        self.v_layout.addWidget(btn)
+        btn_layout.addWidget(btn)
+        btn_layout.addStretch()
+        main_layout.addLayout(btn_layout)
 
-        self.setLayout(self.v_layout)
-
-    def add_info_text(self, chiave: str, etichetta: str) -> None:
-        self.v_layout.addWidget(QLabel(f"{etichetta}:"))
-        txt = QLineEdit(self)
-        self.qlines[chiave] = txt
-        self.v_layout.addWidget(txt)
+        self.setLayout(main_layout)
 
     def aggiungi_corso(self) -> None:
+        nascondi_errore(self.lbl_errore)
+        codice_effettivo = self.qlines["codice"].text().strip() or self.codice
         nome = self.qlines["nome"].text().strip()
         desc = self.qlines["descrizione"].text().strip()
         direttore = self.qlines["direttoreCorso"].text().strip()
-        tipo = self.combo.currentText()
+        tipo = self.qlines["tipoCorso"].text().strip()
 
         q_i = self.data_inizio.date()
         d_inizio = date(q_i.year(), q_i.month(), q_i.day())
@@ -78,17 +130,16 @@ class VistaInserisciCorso(QWidget):
         try:
             posti = int(self.qlines["postiTotali"].text().strip())
         except ValueError:
-            QMessageBox.critical(self, "Errore", "Il numero di posti deve essere un numero intero positivo.")
+            mostra_errore(self.lbl_errore, "Il numero di posti deve essere un numero intero positivo.")
             return
 
         try:
             Corso().inserisciDatiCorso(
-                self.codice, nome, desc, direttore, tipo,
+                codice_effettivo, nome, desc, direttore, tipo,
                 d_inizio, d_fine, orario, luogo, posti
             )
-            QMessageBox.information(self, "Corso creato", f"Corso {self.codice} creato con successo.")
             if self.callback:
                 self.callback()
             self.close()
         except ValueError as e:
-            QMessageBox.critical(self, "Errore", str(e))
+            mostra_errore(self.lbl_errore, str(e))

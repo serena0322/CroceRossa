@@ -1,12 +1,29 @@
-"""VistaInserisciTurno (GestioneTurni) secondo le specifiche del PDF e mockup (pag. 9)."""
+"""VistaInserisciTurno (GestioneTurni) secondo le specifiche del PDF e mockup (pag. 104).
+Layout a due colonne:
+- Titolo 'Nuovo turno'
+- Form:
+  - Codice
+  - Data (QDateEdit)
+  - Ora inizio | Ora fine affiancati (QTimeEdit)
+  - Luogo
+  - Tipo di servizio
+  - Numero posti
+  - Patente richiesta
+  - Corsi richiesti
+  - Mezzo previsto
+  - Materiale necessario
+  - Dati paziente
+- Banner errore
+- Pulsante 'Inserisci turno' centrato
+"""
 from datetime import date, time
 from PyQt5.QtWidgets import (
-    QWidget, QVBoxLayout, QLabel, QLineEdit,
-    QComboBox, QDateEdit, QTimeEdit, QPushButton,
-    QMessageBox
+    QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel,
+    QLineEdit, QDateEdit, QTimeEdit, QPushButton
 )
 from PyQt5.QtCore import QDate, QTime
 from attivita.turno import Turno
+from supporto.stile import crea_label_errore, mostra_errore, nascondi_errore
 
 
 class VistaInserisciTurno(QWidget):
@@ -16,62 +33,101 @@ class VistaInserisciTurno(QWidget):
         self.callback = callback
         self.qlines: dict[str, QLineEdit] = {}
 
-        self.setWindowTitle("Nuovo turno")
-        self.resize(460, 520)
+        self.setWindowTitle(f"Nuovo turno {self.codice}")
+        self.resize(520, 580)
 
-        self.v_layout = QVBoxLayout(self)
-        self.v_layout.addWidget(QLabel(f"<b>Codice turno:</b> {self.codice}"))
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(12)
 
-        self.add_info_text("datiPaziente", "Dati paziente (se presente)")
+        # Intestazione come mockup pag. 104: "Nuovo turno"
 
-        self.v_layout.addWidget(QLabel("Data:"))
+        grid = QGridLayout()
+        grid.setHorizontalSpacing(16)
+        grid.setVerticalSpacing(8)
+        grid.setColumnStretch(0, 0)
+        grid.setColumnStretch(1, 1)
+
+        row = 0
+
+        def add_row(key: str, label_text: str, default_val: str = ""):
+            nonlocal row
+            lbl = QLabel(label_text)
+            lbl.setStyleSheet("font-size: 13px; font-weight: 500;")
+            txt = QLineEdit(self)
+            txt.setText(str(default_val))
+            self.qlines[key] = txt
+            grid.addWidget(lbl, row, 0)
+            grid.addWidget(txt, row, 1)
+            row += 1
+
+        # Codice
+        add_row("codice", "Codice", self.codice)
+
+        # Data
+        lbl_data = QLabel("Data")
+        lbl_data.setStyleSheet("font-size: 13px; font-weight: 500;")
+        grid.addWidget(lbl_data, row, 0)
+
         self.data = QDateEdit(self)
         self.data.setDate(QDate.currentDate().addDays(1))
         self.data.setCalendarPopup(True)
-        self.v_layout.addWidget(self.data)
+        grid.addWidget(self.data, row, 1)
+        row += 1
 
-        self.v_layout.addWidget(QLabel("Ora inizio:"))
+        # Ora inizio & Ora fine affiancati
+        lbl_orari = QLabel("Ora inizio")
+        lbl_orari.setStyleSheet("font-size: 13px; font-weight: 500;")
+        grid.addWidget(lbl_orari, row, 0)
+
+        orari_layout = QHBoxLayout()
+        orari_layout.setSpacing(12)
+
         self.ora_inizio = QTimeEdit(self)
         self.ora_inizio.setTime(QTime(8, 0))
-        self.v_layout.addWidget(self.ora_inizio)
+        orari_layout.addWidget(self.ora_inizio, 1)
 
-        self.v_layout.addWidget(QLabel("Ora fine:"))
+        lbl_fine = QLabel("Ora fine")
+        lbl_fine.setStyleSheet("font-size: 13px; font-weight: 500;")
+        orari_layout.addWidget(lbl_fine)
+
         self.ora_fine = QTimeEdit(self)
         self.ora_fine.setTime(QTime(14, 0))
-        self.v_layout.addWidget(self.ora_fine)
+        orari_layout.addWidget(self.ora_fine, 1)
 
-        self.add_info_text("luogo", "Luogo")
+        grid.addLayout(orari_layout, row, 1)
+        row += 1
 
-        self.v_layout.addWidget(QLabel("Tipo di servizio:"))
-        self.combo = QComboBox(self)
-        self.combo.addItems(["Trasporto infermi", "Emergenza 118", "Assistenza manifestazioni", "Protezione Civile"])
-        self.v_layout.addWidget(self.combo)
+        add_row("luogo", "Luogo", "")
+        add_row("tipoServizio", "Tipo di servizio", "Trasporto sanitario")
+        add_row("postiTotali", "Numero posti", "3")
+        add_row("patenteRichiesta", "Patente richiesta", "")
+        add_row("corsiRichiesti", "Corsi richiesti", "")
+        add_row("mezzo", "Mezzo previsto", "")
+        add_row("materialeNecessario", "Materiale necessario", "")
+        add_row("datiPaziente", "Dati paziente", "")
 
-        self.add_info_text("postiTotali", "Numero di posti")
-        self.qlines["postiTotali"].setText("3")
+        main_layout.addLayout(grid)
 
-        self.v_layout.addWidget(QLabel("Patente richiesta:"))
-        self.combo_patente = QComboBox(self)
-        self.combo_patente.addItems(["Nessuna", "CRI 1", "CRI 2", "CRI 3", "CRI 4", "CRI 5", "B"])
-        self.v_layout.addWidget(self.combo_patente)
+        # Banner errore
+        self.lbl_errore = crea_label_errore(self)
+        main_layout.addWidget(self.lbl_errore)
 
-        self.add_info_text("corsiRichiesti", "Corsi richiesti")
-        self.add_info_text("mezzo", "Mezzo previsto")
-        self.add_info_text("materialeNecessario", "Materiale necessario")
-
-        btn = QPushButton("Salva")
+        # Pulsante centrato "Inserisci turno"
+        btn_layout = QHBoxLayout()
+        btn_layout.addStretch()
+        btn = QPushButton("Inserisci turno")
+        btn.setFixedWidth(200)
         btn.clicked.connect(self.aggiungi_turno)
-        self.v_layout.addWidget(btn)
+        btn_layout.addWidget(btn)
+        btn_layout.addStretch()
+        main_layout.addLayout(btn_layout)
 
-        self.setLayout(self.v_layout)
-
-    def add_info_text(self, chiave: str, etichetta: str) -> None:
-        self.v_layout.addWidget(QLabel(f"{etichetta}:"))
-        txt = QLineEdit(self)
-        self.qlines[chiave] = txt
-        self.v_layout.addWidget(txt)
+        self.setLayout(main_layout)
 
     def aggiungi_turno(self) -> None:
+        nascondi_errore(self.lbl_errore)
+        codice_effettivo = self.qlines["codice"].text().strip() or self.codice
         paziente = self.qlines["datiPaziente"].text().strip()
         qd = self.data.date()
         d = date(qd.year(), qd.month(), qd.day())
@@ -80,15 +136,15 @@ class VistaInserisciTurno(QWidget):
         ora_i = time(qi.hour(), qi.minute())
         ora_f = time(qf.hour(), qf.minute())
         luogo = self.qlines["luogo"].text().strip()
-        tipo_servizio = self.combo.currentText()
+        tipo_servizio = self.qlines["tipoServizio"].text().strip()
         try:
             posti = int(self.qlines["postiTotali"].text().strip())
         except ValueError:
-            QMessageBox.critical(self, "Errore", "Il numero di posti deve essere un numero intero positivo.")
+            mostra_errore(self.lbl_errore, "Il numero di posti deve essere un numero intero positivo.")
             return
 
-        patente = self.combo_patente.currentText()
-        if patente == "Nessuna":
+        patente = self.qlines["patenteRichiesta"].text().strip()
+        if patente.lower() == "nessuna":
             patente = ""
 
         corsi = self.qlines["corsiRichiesti"].text().strip()
@@ -97,12 +153,11 @@ class VistaInserisciTurno(QWidget):
 
         try:
             Turno().inserisciDatiTurno(
-                self.codice, paziente, d, ora_i, ora_f, luogo,
+                codice_effettivo, paziente, d, ora_i, ora_f, luogo,
                 tipo_servizio, posti, patente, corsi, mezzo, materiale
             )
-            QMessageBox.information(self, "Turno inserito", f"Turno {self.codice} creato con successo.")
             if self.callback:
                 self.callback()
             self.close()
         except ValueError as e:
-            QMessageBox.critical(self, "Errore", str(e))
+            mostra_errore(self.lbl_errore, str(e))

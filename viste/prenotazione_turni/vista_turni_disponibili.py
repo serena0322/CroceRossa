@@ -1,14 +1,24 @@
-"""VistaTurniDisponibili (PrenotazioneTurni) secondo le specifiche del PDF e mockup (pag. 12)."""
+"""VistaTurniDisponibili (PrenotazioneTurni) secondo le specifiche del PDF e mockup (pag. 105).
+Layout:
+- Intestazione 'Turni disponibili'
+- Filtri su riga:
+    'Data' [date picker]   'Tipo di servizio' [line edit]
+- Pulsante 'Filtra' centrato
+- Tabella: Codice | Data | Orario | Posti liberi
+- Due pulsanti: 'Dettagli' e 'Prenota' affiancati
+- Banner di errore (es. 'Sei già prenotato a un turno che si sovrappone.')
+"""
 from datetime import date
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QCheckBox, QComboBox, QDateEdit, QListView,
-    QPushButton, QMessageBox
+    QLineEdit, QDateEdit, QPushButton
 )
-from PyQt5.QtCore import QDate, QStringListModel
+from PyQt5.QtCore import QDate
 from attivita.turno import Turno
 from attivita.prenotazione import Prenotazione
 from utenti.volontario import Volontario
+from supporto.stile import crea_label_errore, mostra_errore, nascondi_errore
+from supporto.tabella import crea_tabella, popola_riga
 
 
 class VistaTurniDisponibili(QWidget):
@@ -19,44 +29,68 @@ class VistaTurniDisponibili(QWidget):
         self.vista_dettagli = None
 
         self.setWindowTitle("Turni disponibili")
-        self.resize(550, 420)
+        self.resize(650, 480)
 
-        layout = QVBoxLayout(self)
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(14)
 
+        # Intestazione come mockup pag. 105: "Turni disponibili"
+
+        # Riga filtri: Data [dataEdit]  Tipo di servizio [lineEdit]
         filtro_layout = QHBoxLayout()
-        self.check_data = QCheckBox("Filtra per data", self)
-        filtro_layout.addWidget(self.check_data)
+        filtro_layout.setSpacing(14)
 
-        filtro_layout.addWidget(QLabel("Data:"))
+        lbl_data = QLabel("Data")
+        lbl_data.setStyleSheet("font-size: 13px; font-weight: 500;")
+        filtro_layout.addWidget(lbl_data)
+
         self.data_filtro = QDateEdit(self)
         self.data_filtro.setDate(QDate.currentDate())
         self.data_filtro.setCalendarPopup(True)
-        filtro_layout.addWidget(self.data_filtro)
+        filtro_layout.addWidget(self.data_filtro, 1)
 
-        filtro_layout.addWidget(QLabel("Tipo di servizio:"))
-        self.combo_tipo = QComboBox(self)
-        self.combo_tipo.addItems(["Tutti", "Emergenza", "Trasporto sanitario", "Assistenza eventi", "Protezione civile"])
-        filtro_layout.addWidget(self.combo_tipo)
+        lbl_tipo = QLabel("Tipo di servizio")
+        lbl_tipo.setStyleSheet("font-size: 13px; font-weight: 500;")
+        filtro_layout.addWidget(lbl_tipo)
 
+        self.txt_tipo = QLineEdit(self)
+        self.txt_tipo.setPlaceholderText("Es. Trasporto sanitario")
+        filtro_layout.addWidget(self.txt_tipo, 1)
+
+        main_layout.addLayout(filtro_layout)
+
+        # Pulsante centrato "Filtra"
+        btn_f_layout = QHBoxLayout()
+        btn_f_layout.addStretch()
         btn_filtra = QPushButton("Filtra")
+        btn_filtra.setFixedWidth(160)
         btn_filtra.clicked.connect(self.filtra_turni_click)
-        filtro_layout.addWidget(btn_filtra)
-        layout.addLayout(filtro_layout)
+        btn_f_layout.addWidget(btn_filtra)
+        btn_f_layout.addStretch()
+        main_layout.addLayout(btn_f_layout)
 
-        self.list_view = QListView(self)
-        layout.addWidget(self.list_view)
+        # Tabella colonne: Codice | Data | Orario | Posti liberi
+        self.tabella = crea_tabella(["Codice", "Data", "Orario", "Posti liberi"], self)
+        main_layout.addWidget(self.tabella)
 
+        # Due pulsanti: [Dettagli] [Prenota]
         btn_row = QHBoxLayout()
+        btn_row.setSpacing(12)
         btn_dettagli = QPushButton("Dettagli")
         btn_dettagli.clicked.connect(self.show_selected_info)
-        btn_row.addWidget(btn_dettagli)
+        btn_row.addWidget(btn_dettagli, 1)
 
         btn_prenota = QPushButton("Prenota")
         btn_prenota.clicked.connect(self.prenota_turno_click)
-        btn_row.addWidget(btn_prenota)
-        layout.addLayout(btn_row)
+        btn_row.addWidget(btn_prenota, 1)
+        main_layout.addLayout(btn_row)
 
-        self.setLayout(layout)
+        # Banner di errore
+        self.lbl_errore = crea_label_errore(self)
+        main_layout.addWidget(self.lbl_errore)
+
+        self.setLayout(main_layout)
         self.load_turni()
 
     def load_turni(self) -> None:
@@ -64,57 +98,56 @@ class VistaTurniDisponibili(QWidget):
         self.update_ui()
 
     def filtra_turni_click(self) -> None:
-        d = None
-        if self.check_data.isChecked():
-            qd = self.data_filtro.date()
-            d = date(qd.year(), qd.month(), qd.day())
+        nascondi_errore(self.lbl_errore)
+        qd = self.data_filtro.date()
+        d = date(qd.year(), qd.month(), qd.day())
+        tipo = self.txt_tipo.text().strip()
 
-        tipo = self.combo_tipo.currentText()
-        if tipo == "Tutti":
-            tipo = ""
-
+        # Filtra per data e tipo servizio
         self.turni = Turno().filtraTurni(d, tipo)
         if not self.turni:
-            QMessageBox.information(self, "Ricerca turni", "Nessun turno trovato con i criteri selezionati.")
+            mostra_errore(self.lbl_errore, "Nessun turno trovato con i criteri selezionati.")
         self.update_ui()
 
     def update_ui(self) -> None:
-        model = QStringListModel()
-        righe = []
-        for t in self.turni:
+        self.tabella.setRowCount(len(self.turni))
+        for r, t in enumerate(self.turni):
             d = t.getDati()
-            righe.append(
-                f"{d['codice']} | {d['data']:%d/%m} {d['oraInizio']:%H:%M}-{d['oraFine']:%H:%M} | "
-                f"{d['tipoServizio']} | Posti liberi: {d['postiLiberi']}"
-            )
-        model.setStringList(righe)
-        self.list_view.setModel(model)
+            popola_riga(self.tabella, r, [
+                d.get("codice", ""),
+                f"{d['data']:%d/%m/%Y}",
+                f"{d['oraInizio']:%H:%M}-{d['oraFine']:%H:%M}",
+                str(d.get("postiLiberi", 0))
+            ])
 
-    def _get_selected_turno(self) -> Turno | None:
-        idx = self.list_view.currentIndex().row()
-        if 0 <= idx < len(self.turni):
-            return self.turni[idx]
-        return None
+        if not self.turni:
+            mostra_errore(self.lbl_errore, "Nessun turno disponibile presente.")
+        else:
+            nascondi_errore(self.lbl_errore)
 
     def show_selected_info(self) -> None:
-        turno = self._get_selected_turno()
-        if not turno:
-            QMessageBox.warning(self, "Attenzione", "Selezionare un turno dall'elenco.")
+        nascondi_errore(self.lbl_errore)
+        idx = self.tabella.currentRow()
+        if not (0 <= idx < len(self.turni)):
+            mostra_errore(self.lbl_errore, "Selezionare un turno dall'elenco.")
             return
         from viste.prenotazione_turni.vista_dettagli_turno import VistaDettagliTurno
-        self.vista_dettagli = VistaDettagliTurno(turno)
+        self.vista_dettagli = VistaDettagliTurno(self.turni[idx])
         self.vista_dettagli.show()
 
     def prenota_turno_click(self) -> None:
-        turno = self._get_selected_turno()
-        if not turno:
-            QMessageBox.warning(self, "Attenzione", "Selezionare un turno dall'elenco.")
+        nascondi_errore(self.lbl_errore)
+        idx = self.tabella.currentRow()
+        if not (0 <= idx < len(self.turni)):
+            mostra_errore(self.lbl_errore, "Selezionare un turno dall'elenco.")
             return
 
-        errore = Prenotazione().prenotaTurno(turno, self.volontario)
-        if errore:
-            QMessageBox.critical(self, "Prenotazione non possibile", errore)
+        turno = self.turni[idx]
+        msg = Prenotazione().prenotaTurno(turno, self.volontario)
+        if msg:
+            if "sovrappone" in msg.lower():
+                msg = "Sei già prenotato a un turno che si sovrappone."
+            mostra_errore(self.lbl_errore, msg)
             return
 
-        QMessageBox.information(self, "Prenotazione", "Prenotazione registrata con successo.")
         self.load_turni()

@@ -1,83 +1,124 @@
-"""VistaLogin (GestioneAccount) conforme alle specifiche del PDF e diagrammi sequence."""
+"""VistaLogin (GestioneAccount) conforme alle specifiche del PDF e mockup (pag. 104).
+Layout:
+- Intestazione 'Croce Rossa Ancona - Accesso'
+- Titolo 'Accedi'
+- Form a 2 colonne:
+    E-mail
+    Password
+- Banner di errore (es. 'Credenziali non valide.')
+- Pulsante 'Accedi' centrato
+- Link / pulsante 'Password dimenticata?' centrato
+- Separatore e riga orizzontale in basso con i due pulsanti:
+    'Registrati come Volontario' e 'Registrati come Referente'
+"""
 from __future__ import annotations
 from PyQt5.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QLineEdit, QPushButton, QMessageBox
+    QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel,
+    QLineEdit, QPushButton
 )
-from utenti.utente import Utente
 from utenti.volontario import Volontario
 from utenti.referente import Referente
+from supporto.stile import crea_label_errore, mostra_errore, nascondi_errore
 
 
 class VistaLogin(QWidget):
     def __init__(self, parent=None):
         super(VistaLogin, self).__init__(parent)
-        self.setWindowTitle("Croce Rossa Italiana - Login")
-        self.resize(380, 260)
+        self.setWindowTitle("Accedi")
+        self.resize(520, 360)
 
         self.vista_home = None
         self.vista_recupero = None
         self.vista_reg_vol = None
         self.vista_reg_ref = None
 
-        layout = QVBoxLayout(self)
-        layout.setSpacing(10)
-        layout.setContentsMargins(20, 20, 20, 20)
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(24, 24, 24, 24)
+        main_layout.setSpacing(12)
 
-        title = QLabel("Accedi alla piattaforma")
-        title.setProperty("heading", "true")
-        layout.addWidget(title)
+        # Titolo "Accedi"
+        lbl_accedi = QLabel("<b>Accedi</b>")
+        lbl_accedi.setStyleSheet("font-size: 18px; font-weight: bold; color: #1A202C; margin-bottom: 4px;")
+        main_layout.addWidget(lbl_accedi)
 
-        layout.addWidget(QLabel("E-mail"))
+        # Griglia E-mail e Password
+        grid = QGridLayout()
+        grid.setHorizontalSpacing(16)
+        grid.setVerticalSpacing(10)
+        grid.setColumnStretch(0, 0)
+        grid.setColumnStretch(1, 1)
+
+        lbl_email = QLabel("E-mail")
+        lbl_email.setStyleSheet("font-size: 13px; font-weight: 500;")
         self.txt_email = QLineEdit(self)
-        self.txt_email.setPlaceholderText("mario.rossi@email.it")
-        layout.addWidget(self.txt_email)
+        self.txt_email.setPlaceholderText("mario.rossi@gmail.com")
+        grid.addWidget(lbl_email, 0, 0)
+        grid.addWidget(self.txt_email, 0, 1)
 
-        layout.addWidget(QLabel("Password"))
+        lbl_pwd = QLabel("Password")
+        lbl_pwd.setStyleSheet("font-size: 13px; font-weight: 500;")
         self.txt_password = QLineEdit(self)
         self.txt_password.setEchoMode(QLineEdit.Password)
-        layout.addWidget(self.txt_password)
+        grid.addWidget(lbl_pwd, 1, 0)
+        grid.addWidget(self.txt_password, 1, 1)
 
-        row_login = QHBoxLayout()
+        main_layout.addLayout(grid)
+
+        # Banner d'errore (es. 'Credenziali non valide.')
+        self.lbl_errore = crea_label_errore(self)
+        main_layout.addWidget(self.lbl_errore)
+
+        # Pulsante centrato "Accedi"
+        btn_acc_layout = QHBoxLayout()
+        btn_acc_layout.addStretch()
         self.btn_login = QPushButton("Accedi")
+        self.btn_login.setFixedWidth(200)
         self.btn_login.clicked.connect(self.login_click)
-        row_login.addWidget(self.btn_login)
+        btn_acc_layout.addWidget(self.btn_login)
+        btn_acc_layout.addStretch()
+        main_layout.addLayout(btn_acc_layout)
 
+        # Link "Password dimenticata?" centrato
+        btn_rec_layout = QHBoxLayout()
+        btn_rec_layout.addStretch()
         self.btn_recupera = QPushButton("Password dimenticata?")
+        self.btn_recupera.setStyleSheet("background: transparent; border: none; color: #3182CE; font-weight: normal; text-decoration: underline;")
         self.btn_recupera.clicked.connect(self.recupera_credenziali_click)
-        row_login.addWidget(self.btn_recupera)
-        layout.addLayout(row_login)
+        btn_rec_layout.addWidget(self.btn_recupera)
+        btn_rec_layout.addStretch()
+        main_layout.addLayout(btn_rec_layout)
 
-        layout.addSpacing(10)
-        lbl_non_hai = QLabel("Non hai un account?")
-        lbl_non_hai.setStyleSheet("color: #718096; font-size: 12px;")
-        layout.addWidget(lbl_non_hai)
+        main_layout.addSpacing(8)
 
+        # Riga inferiore con i due pulsanti di registrazione affiancati
         reg_layout = QHBoxLayout()
+        reg_layout.setSpacing(12)
+
         self.btn_reg_vol = QPushButton("Registrati come Volontario")
         self.btn_reg_vol.clicked.connect(self.registrazione_volontario_click)
-        reg_layout.addWidget(self.btn_reg_vol)
+        reg_layout.addWidget(self.btn_reg_vol, 1)
 
         self.btn_reg_ref = QPushButton("Registrati come Referente")
         self.btn_reg_ref.clicked.connect(self.registrazione_referente_click)
-        reg_layout.addWidget(self.btn_reg_ref)
-        layout.addLayout(reg_layout)
+        reg_layout.addWidget(self.btn_reg_ref, 1)
 
-        self.setLayout(layout)
+        main_layout.addLayout(reg_layout)
+
+        self.setLayout(main_layout)
 
     def login_click(self) -> None:
+        nascondi_errore(self.lbl_errore)
         email = self.txt_email.text().strip()
         pwd = self.txt_password.text().strip()
         if not email or not pwd:
-            QMessageBox.warning(self, "Attenzione", "Inserire e-mail e password.")
+            mostra_errore(self.lbl_errore, "Inserire e-mail e password.")
             return
 
         utente = Volontario().inserisciCredenziali(email, pwd)
         if utente is None:
-            QMessageBox.critical(self, "Errore", "Credenziali non valide.")
+            mostra_errore(self.lbl_errore, "Credenziali non valide.")
             return
 
-        # Apri home in base al tipo di utente
         if isinstance(utente, Referente):
             from viste.gestione_account.vista_home_referente import VistaHomeReferente
             self.vista_home = VistaHomeReferente(utente)

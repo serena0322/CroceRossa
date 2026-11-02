@@ -1,11 +1,20 @@
-"""VistaModificaCorso (GestioneCorsi) secondo le specifiche del PDF e mockup (pag. 11)."""
+"""VistaModificaCorso (GestioneCorsi) secondo le specifiche del PDF e mockup.
+Layout a due colonne con:
+- Titolo 'Modifica corso <codice>'
+- Form con label a sinistra e campi a destra
+- Riga date con 'Inizio' [date picker] e 'Fine' [date picker] affiancati
+- Campo 'Orario' come testo libero (es. 'Giovedì 20:30 - 23:00')
+- Banner di errore rosso/rosa a tutta larghezza
+- Pulsante 'Salva modifiche' centrato
+"""
 from datetime import date
 from PyQt5.QtWidgets import (
-    QWidget, QVBoxLayout, QLabel, QLineEdit,
-    QComboBox, QDateEdit, QPushButton, QMessageBox
+    QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel,
+    QLineEdit, QDateEdit, QPushButton
 )
-from PyQt5.QtCore import QDate
+from PyQt5.QtCore import QDate, Qt
 from attivita.corso import Corso
+from supporto.stile import crea_label_errore, mostra_errore, nascondi_errore
 
 
 class VistaModificaCorso(QWidget):
@@ -16,67 +25,97 @@ class VistaModificaCorso(QWidget):
         self.qlines: dict[str, QLineEdit] = {}
 
         d = self.corso.getDati()
-        self.setWindowTitle(f"Modifica corso {d['codice']}")
-        self.resize(460, 480)
+        codice = d.get("codice", "")
+        self.setWindowTitle(f"Modifica corso {codice}")
+        self.resize(520, 480)
 
-        self.v_layout = QVBoxLayout(self)
-        self.v_layout.addWidget(QLabel(f"<b>Codice corso:</b> {d['codice']}"))
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(14)
 
-        self.add_info_text("nome", "Nome corso")
-        self.qlines["nome"].setText(d.get("nome", ""))
+        # Intestazione mockup: "Modifica corso C-031"
 
-        self.add_info_text("descrizione", "Descrizione")
-        self.qlines["descrizione"].setText(d.get("descrizione", ""))
+        # Griglia del form a 2 colonne
+        grid = QGridLayout()
+        grid.setHorizontalSpacing(16)
+        grid.setVerticalSpacing(10)
+        grid.setColumnStretch(0, 0)
+        grid.setColumnStretch(1, 1)
 
-        self.add_info_text("direttoreCorso", "Direttore del corso")
-        self.qlines["direttoreCorso"].setText(d.get("direttoreCorso", ""))
+        row = 0
 
-        self.v_layout.addWidget(QLabel("Tipo di corso:"))
-        self.combo = QComboBox(self)
-        self.combo.addItems(["Base", "Sanitario", "Soccorso", "Protezione Civile"])
-        self.combo.setCurrentText(d.get("tipoCorso", "Base"))
-        self.v_layout.addWidget(self.combo)
+        def add_row(key: str, label_text: str, default_val: str = ""):
+            nonlocal row
+            lbl = QLabel(label_text)
+            lbl.setStyleSheet("font-size: 13px; font-weight: 500;")
+            txt = QLineEdit(self)
+            txt.setText(str(default_val))
+            self.qlines[key] = txt
+            grid.addWidget(lbl, row, 0)
+            grid.addWidget(txt, row, 1)
+            row += 1
 
-        self.v_layout.addWidget(QLabel("Data di inizio:"))
+        add_row("nome", "Nome", d.get("nome", ""))
+        add_row("descrizione", "Descrizione", d.get("descrizione", ""))
+        add_row("direttoreCorso", "Direttore del corso", d.get("direttoreCorso", ""))
+        add_row("tipoCorso", "Tipo di corso", d.get("tipoCorso", "Base"))
+
+        # Riga Inizio & Fine affiancati
+        lbl_inizio = QLabel("Inizio")
+        lbl_inizio.setStyleSheet("font-size: 13px; font-weight: 500;")
+        grid.addWidget(lbl_inizio, row, 0)
+
+        date_row_layout = QHBoxLayout()
+        date_row_layout.setSpacing(12)
+
         self.data_inizio = QDateEdit(self)
         di = d["dataInizio"]
         self.data_inizio.setDate(QDate(di.year, di.month, di.day))
         self.data_inizio.setCalendarPopup(True)
-        self.v_layout.addWidget(self.data_inizio)
+        date_row_layout.addWidget(self.data_inizio, 1)
 
-        self.v_layout.addWidget(QLabel("Data di fine:"))
+        lbl_fine = QLabel("Fine")
+        lbl_fine.setStyleSheet("font-size: 13px; font-weight: 500;")
+        date_row_layout.addWidget(lbl_fine)
+
         self.data_fine = QDateEdit(self)
         df = d["dataFine"]
         self.data_fine.setDate(QDate(df.year, df.month, df.day))
         self.data_fine.setCalendarPopup(True)
-        self.v_layout.addWidget(self.data_fine)
+        date_row_layout.addWidget(self.data_fine, 1)
 
-        self.add_info_text("orario", "Orario di svolgimento")
-        self.qlines["orario"].setText(d.get("orario", ""))
+        grid.addLayout(date_row_layout, row, 1)
+        row += 1
 
-        self.add_info_text("luogo", "Luogo di svolgimento")
-        self.qlines["luogo"].setText(d.get("luogo", ""))
+        # Orario (tipo dato: testo libero come da mockup "Giovedì 20:30 - 23:00")
+        add_row("orario", "Orario", d.get("orario", ""))
+        add_row("luogo", "Luogo", d.get("luogo", ""))
+        add_row("postiTotali", "Numero posti", d.get("postiTotali", 20))
 
-        self.add_info_text("postiTotali", "Numero di posti")
-        self.qlines["postiTotali"].setText(str(d.get("postiTotali", 20)))
+        main_layout.addLayout(grid)
 
-        btn = QPushButton("Salva modifiche")
-        btn.clicked.connect(self.salva_modifiche)
-        self.v_layout.addWidget(btn)
+        # Banner errore sotto i campi
+        self.lbl_errore = crea_label_errore(self)
+        main_layout.addWidget(self.lbl_errore)
 
-        self.setLayout(self.v_layout)
+        # Pulsante "Salva modifiche" centrato
+        btn_layout = QHBoxLayout()
+        btn_layout.addStretch()
+        btn_salva = QPushButton("Salva modifiche")
+        btn_salva.setFixedWidth(200)
+        btn_salva.clicked.connect(self.salva_modifiche)
+        btn_layout.addWidget(btn_salva)
+        btn_layout.addStretch()
+        main_layout.addLayout(btn_layout)
 
-    def add_info_text(self, chiave: str, etichetta: str) -> None:
-        self.v_layout.addWidget(QLabel(f"{etichetta}:"))
-        txt = QLineEdit(self)
-        self.qlines[chiave] = txt
-        self.v_layout.addWidget(txt)
+        self.setLayout(main_layout)
 
     def salva_modifiche(self) -> None:
+        nascondi_errore(self.lbl_errore)
         nome = self.qlines["nome"].text().strip()
         desc = self.qlines["descrizione"].text().strip()
         direttore = self.qlines["direttoreCorso"].text().strip()
-        tipo = self.combo.currentText()
+        tipo = self.qlines["tipoCorso"].text().strip()
 
         q_i = self.data_inizio.date()
         d_inizio = date(q_i.year(), q_i.month(), q_i.day())
@@ -89,7 +128,7 @@ class VistaModificaCorso(QWidget):
         try:
             posti = int(self.qlines["postiTotali"].text().strip())
         except ValueError:
-            QMessageBox.critical(self, "Errore", "Il numero di posti deve essere un numero intero positivo.")
+            mostra_errore(self.lbl_errore, "Il numero di posti deve essere un numero intero positivo.")
             return
 
         try:
@@ -98,11 +137,12 @@ class VistaModificaCorso(QWidget):
                 d_inizio, d_fine, orario, luogo, posti
             )
             if ok:
-                QMessageBox.information(self, "Modifiche salvate", "Corso aggiornato e iscritti notificati.")
                 if self.callback:
                     self.callback()
                 self.close()
             else:
-                QMessageBox.critical(self, "Errore", "Posti inferiori ai Volontari già iscritti.")
+                iscritti = len(self.corso.volontariIscritti) if hasattr(self.corso, 'volontariIscritti') else 0
+                msg = f"Il numero di posti è inferiore ai Volontari iscritti ({iscritti})." if iscritti else "Posti inferiori ai Volontari già iscritti."
+                mostra_errore(self.lbl_errore, msg)
         except ValueError as e:
-            QMessageBox.critical(self, "Errore", str(e))
+            mostra_errore(self.lbl_errore, str(e))

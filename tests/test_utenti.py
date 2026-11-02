@@ -13,10 +13,21 @@ class TestAccount(TestBase):
     def test_email_gia_usata(self):
         self.nuovo_volontario("mario@cri.it")
         v2 = Volontario()
-        ok = v2.inserisciInformazioni("Luigi", "Verdi", "VRDLGU80A01H501U",
-                                      "mario@cri.it", "3339998877",
-                                      "Comitato di Roma", "pass123")
-        self.assertFalse(ok)
+        ok_vol = v2.inserisciInformazioni("Luigi", "Verdi", "VRDLGU80A01H501U",
+                                          "mario@cri.it", "3339998877",
+                                          "Comitato di Roma", "pass123")
+        self.assertFalse(ok_vol, "La registrazione del Volontario deve fallire se l'email è già in uso.")
+
+        # Verifica anche per il Referente con email già usata
+        dati = GestoreDati().carica()
+        dati["codici_autorizzazione"].add("REF_TEST")
+        GestoreDati().salva(dati)
+
+        r2 = Referente()
+        ok_ref = r2.inserisciInformazioni("Sanitario", "mario@cri.it", "3331112233",
+                                          "Comitato di Roma", "pass123", "REF_TEST")
+        self.assertFalse(ok_ref, "La registrazione del Referente deve fallire se l'email è già in uso.")
+
 
     def test_password_troppo_corta(self):
         v = Volontario()

@@ -1,11 +1,20 @@
-"""VistaGestisciTurni (GestioneTurni) secondo le specifiche del PDF e mockup (pag. 8)."""
+"""VistaGestisciTurni (GestioneTurni) secondo le specifiche del PDF e mockup (pag. 104).
+Layout:
+- Intestazione 'Gestisci turni'
+- Tabella: Codice | Data | Luogo | Mezzo | Paziente | Patente
+- Pulsante 'Visualizza prenotati' centrato
+- Sezione 'Gestisci un turno':
+  - Codice turno [line edit]
+  - Tre pulsanti affiancati: Inserisci | Modifica | Rimuovi
+- Banner di errore (es. 'Turno non trovato o non più programmato.')
+"""
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QLineEdit, QListView, QPushButton, QMessageBox
+    QLineEdit, QPushButton
 )
-from PyQt5.QtCore import QStringListModel
 from attivita.turno import Turno
-from attivita.stato_attivita import StatoAttivita
+from supporto.stile import crea_label_errore, mostra_errore, nascondi_errore
+from supporto.tabella import crea_tabella, popola_riga
 
 
 class VistaGestisciTurni(QWidget):
@@ -16,41 +25,72 @@ class VistaGestisciTurni(QWidget):
         self.vista_inserisci = None
         self.vista_modifica = None
 
-        self.setWindowTitle("Gestione turni")
-        self.resize(580, 420)
+        self.setWindowTitle("Gestisci turni")
+        self.resize(720, 520)
 
-        layout = QVBoxLayout(self)
-        layout.addWidget(QLabel("<b>Elenco turni operativi:</b>"))
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(12)
 
-        self.list_view = QListView(self)
-        layout.addWidget(self.list_view)
+        # Intestazione come mockup pag. 104: "Gestisci turni"
 
+        # Tabella colonne mockup: Codice | Data | Luogo | Mezzo | Paziente | Patente
+        self.tabella = crea_tabella(["Codice", "Data", "Luogo", "Mezzo", "Paziente", "Patente"], self)
+        main_layout.addWidget(self.tabella)
+
+        # Pulsante centrato "Visualizza prenotati"
+        btn_v_layout = QHBoxLayout()
+        btn_v_layout.addStretch()
         btn_prenotati = QPushButton("Visualizza prenotati")
+        btn_prenotati.setFixedWidth(240)
         btn_prenotati.clicked.connect(self.show_selected_info)
-        layout.addWidget(btn_prenotati)
+        btn_v_layout.addWidget(btn_prenotati)
+        btn_v_layout.addStretch()
+        main_layout.addLayout(btn_v_layout)
+
+        # Separatore/spazio
+        main_layout.addSpacing(6)
+
+        # Sezione "Gestisci un turno"
+        lbl_sezione = QLabel("<b>Gestisci un turno</b>")
+        lbl_sezione.setStyleSheet("font-size: 13px; font-weight: bold; color: #2D3748;")
+        main_layout.addWidget(lbl_sezione)
 
         codice_row = QHBoxLayout()
-        codice_row.addWidget(QLabel("Codice turno:"))
-        self.codice = QLineEdit(self)
-        self.codice.textChanged.connect(self.update_ui)
-        codice_row.addWidget(self.codice)
-        layout.addLayout(codice_row)
+        codice_row.setSpacing(12)
+        lbl_codice = QLabel("Codice turno")
+        lbl_codice.setFixedWidth(120)
+        lbl_codice.setStyleSheet("font-size: 13px; font-weight: 500;")
+        codice_row.addWidget(lbl_codice)
 
+        self.codice = QLineEdit(self)
+        self.codice.textChanged.connect(self.update_pulsanti)
+        codice_row.addWidget(self.codice, 1)
+        main_layout.addLayout(codice_row)
+
+        # Tre pulsanti affiancati: Inserisci | Modifica | Rimuovi
         btn_row = QHBoxLayout()
+        btn_row.setSpacing(12)
+
         self.btn_ins = QPushButton("Inserisci")
         self.btn_ins.clicked.connect(self.show_new)
-        btn_row.addWidget(self.btn_ins)
+        btn_row.addWidget(self.btn_ins, 1)
 
         self.btn_mod = QPushButton("Modifica")
         self.btn_mod.clicked.connect(self.show_modifica)
-        btn_row.addWidget(self.btn_mod)
+        btn_row.addWidget(self.btn_mod, 1)
 
         self.btn_rim = QPushButton("Rimuovi")
         self.btn_rim.clicked.connect(self.rimuovi_turno)
-        btn_row.addWidget(self.btn_rim)
-        layout.addLayout(btn_row)
+        btn_row.addWidget(self.btn_rim, 1)
 
-        self.setLayout(layout)
+        main_layout.addLayout(btn_row)
+
+        # Banner di errore in fondo
+        self.lbl_errore = crea_label_errore(self)
+        main_layout.addWidget(self.lbl_errore)
+
+        self.setLayout(main_layout)
         self.load_turni()
 
     def load_turni(self) -> None:
@@ -58,27 +98,38 @@ class VistaGestisciTurni(QWidget):
         self.update_ui()
 
     def update_ui(self) -> None:
-        model = QStringListModel()
-        righe = []
-        for t in self.turni:
+        self.tabella.setRowCount(len(self.turni))
+        for r, t in enumerate(self.turni):
             d = t.getDati()
             pat_ok = "Sì" if t.verificaPatentePrenotati() else "No"
-            righe.append(
-                f"{d['codice']} | Data: {d['data']:%d/%m} {d['oraInizio']:%H:%M}-{d['oraFine']:%H:%M} | "
-                f"{d['luogo']} | Mezzo: {d['mezzo']} | Stato: {t.getStato().value} | Patente ok: {pat_ok}"
-            )
-        model.setStringList(righe)
-        self.list_view.setModel(model)
+            paziente = d.get('datiPaziente', '').strip() or "-"
+            popola_riga(self.tabella, r, [
+                d.get("codice", ""),
+                f"{d['data']:%d/%m/%Y}",
+                d.get("luogo", ""),
+                d.get("mezzo", "") or "-",
+                paziente,
+                pat_ok
+            ])
 
+        if not self.turni:
+            mostra_errore(self.lbl_errore, "Nessun turno attivo presente.")
+        else:
+            nascondi_errore(self.lbl_errore)
+
+        self.update_pulsanti()
+
+    def update_pulsanti(self) -> None:
         ha_codice = bool(self.codice.text().strip())
         self.btn_ins.setEnabled(ha_codice)
         self.btn_mod.setEnabled(ha_codice)
         self.btn_rim.setEnabled(ha_codice)
 
     def show_selected_info(self) -> None:
-        idx = self.list_view.currentIndex().row()
+        nascondi_errore(self.lbl_errore)
+        idx = self.tabella.currentRow()
         if not (0 <= idx < len(self.turni)):
-            QMessageBox.warning(self, "Attenzione", "Selezionare un turno dall'elenco.")
+            mostra_errore(self.lbl_errore, "Selezionare un turno dall'elenco.")
             return
         turno = self.turni[idx]
         from viste.gestione_turni.vista_prenotati_turno import VistaPrenotatiTurno
@@ -86,9 +137,10 @@ class VistaGestisciTurni(QWidget):
         self.vista_prenotati.show()
 
     def show_new(self) -> None:
+        nascondi_errore(self.lbl_errore)
         cod = self.codice.text().strip()
         if not Turno().inserisciTurno(cod):
-            QMessageBox.critical(self, "Errore", f"Turno {cod} già presente.")
+            mostra_errore(self.lbl_errore, f"Turno {cod} già presente.")
             return
 
         from viste.gestione_turni.vista_inserisci_turno import VistaInserisciTurno
@@ -96,10 +148,11 @@ class VistaGestisciTurni(QWidget):
         self.vista_inserisci.show()
 
     def show_modifica(self) -> None:
+        nascondi_errore(self.lbl_errore)
         cod = self.codice.text().strip()
         dati_t = Turno().modificaTurno(cod)
         if not dati_t:
-            QMessageBox.critical(self, "Errore", "Turno non trovato o non programmato.")
+            mostra_errore(self.lbl_errore, "Turno non trovato o non più programmato.")
             return
 
         trovati = [t for t in self.turni if t.getDati()["codice"] == cod]
@@ -110,10 +163,11 @@ class VistaGestisciTurni(QWidget):
         self.vista_modifica.show()
 
     def rimuovi_turno(self) -> None:
+        nascondi_errore(self.lbl_errore)
         cod = self.codice.text().strip()
         ok = Turno().rimuoviTurno(cod)
         if ok:
-            QMessageBox.information(self, "Rimozione", f"Turno {cod} rimosso con successo.")
+            nascondi_errore(self.lbl_errore)
             self.load_turni()
         else:
-            QMessageBox.critical(self, "Errore", "Turno non trovato o non programmato (non rimovibile).")
+            mostra_errore(self.lbl_errore, "Turno non trovato o non più programmato.")
