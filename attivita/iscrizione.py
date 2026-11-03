@@ -40,7 +40,7 @@ class Iscrizione(Partecipazione):
         self.__dataIscrizione = orologio.adesso().date()
         self.__corso, self.__volontario = corso, volontario
         corso.aggiungiIscrizione(self)
-        corso.setPostiLiberi(datiCorso["postiLiberi"] - 1)
+        #corso.setPostiLiberi(datiCorso["postiLiberi"] - 1)
         volontario.aggiungiPartecipazione(self)
         dati = GestoreDati().carica()
         dati["iscrizioni"][self.__codice] = self
@@ -77,8 +77,8 @@ class Iscrizione(Partecipazione):
 
     def liberaPosti(self) -> None:
         self.__corso.eliminaIscrizione(self)
-        if self.__corso.getStato() == StatoAttivita.PROGRAMMATO:
-            self.__corso.setPostiLiberi(self.__corso.getDati()["postiLiberi"] + 1)
+        #if self.__corso.getStato() == StatoAttivita.PROGRAMMATO:
+           # self.__corso.setPostiLiberi(self.__corso.getDati()["postiLiberi"] + 1)
 
     def notificaModifica(self) -> None:
         self.__volontario.inviaEmail("Corso modificato",
