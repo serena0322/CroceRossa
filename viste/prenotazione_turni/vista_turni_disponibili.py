@@ -54,9 +54,9 @@ class VistaTurniDisponibili(QWidget):
         lbl_tipo.setStyleSheet("font-size: 13px; font-weight: 500;")
         filtro_layout.addWidget(lbl_tipo)
 
-        self.txt_tipo = QLineEdit(self)
-        self.txt_tipo.setPlaceholderText("Es. Trasporto sanitario")
-        filtro_layout.addWidget(self.txt_tipo, 1)
+        self.tipo = QLineEdit(self)
+        self.tipo.setPlaceholderText("Es. Trasporto sanitario")
+        filtro_layout.addWidget(self.tipo, 1)
 
         main_layout.addLayout(filtro_layout)
 
@@ -101,13 +101,14 @@ class VistaTurniDisponibili(QWidget):
         nascondi_errore(self.lbl_errore)
         qd = self.data_filtro.date()
         d = date(qd.year(), qd.month(), qd.day())
-        tipo = self.txt_tipo.text().strip()
+        tipo = self.tipo.text().strip()
 
         # Filtra per data e tipo servizio
         self.turni = Turno().filtraTurni(d, tipo)
+        self.update_ui()
         if not self.turni:
             mostra_errore(self.lbl_errore, "Nessun turno trovato con i criteri selezionati.")
-        self.update_ui()
+
 
     def update_ui(self) -> None:
         self.tabella.setRowCount(len(self.turni))
