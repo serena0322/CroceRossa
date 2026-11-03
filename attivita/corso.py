@@ -204,7 +204,7 @@ class Corso(Programmabile):
     def selezionaSuperati(self, corso: Corso, superati: list[Volontario]) -> None:
         for iscrizione in corso.getIscrizioni():
             if iscrizione.getVolontario() in superati:
-                iscrizione.setSuperato(True)
+                iscrizione.setSuperato()
             else:
                 iscrizione.setNonSuperato()
         GestoreDati().salva(GestoreDati().carica())
