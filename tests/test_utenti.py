@@ -15,7 +15,7 @@ class TestAccount(TestBase):
         v2 = Volontario()
         ok_vol = v2.inserisciInformazioni("Luigi", "Verdi", "VRDLGU80A01H501U",
                                           "mario@cri.it", "3339998877",
-                                          "Comitato di Roma", "pass123")
+                                          "Comitato di Ancona", "pass123")
         self.assertFalse(ok_vol, "La registrazione del Volontario deve fallire se l'email è già in uso.")
 
         # Verifica anche per il Referente con email già usata
@@ -25,7 +25,7 @@ class TestAccount(TestBase):
 
         r2 = Referente()
         ok_ref = r2.inserisciInformazioni("Sanitario", "mario@cri.it", "3331112233",
-                                          "Comitato di Roma", "pass123", "REF_TEST")
+                                          "Comitato di Ancona", "pass123", "REF_TEST")
         self.assertFalse(ok_ref, "La registrazione del Referente deve fallire se l'email è già in uso.")
 
 
@@ -34,7 +34,7 @@ class TestAccount(TestBase):
         # NF2: password almeno 6 caratteri alfanumerici
         ok = v.inserisciInformazioni("Luigi", "Verdi", "VRDLGU80A01H501U",
                                      "luigi@cri.it", "3339998877",
-                                     "Comitato di Roma", "12345")
+                                     "Comitato di Ancona", "12345")
         self.assertFalse(ok)
 
     def test_referente_con_codice_valido_e_non_valido(self):
