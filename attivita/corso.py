@@ -170,8 +170,17 @@ class Corso(Programmabile):
         return self.ricercaCorso({"disponibile": True})
 
     def filtraCorsi(self, tipoCorso: str) -> list[Corso]:
-        return [c for c in self.visualizzaCatalogoCorsi()
-                if c.soddisfaCriterio(self.__prelevaCriterio({"tipoCorso": tipoCorso}))]
+        """Estensione FiltraCorsi"""
+        trovati = []
+        for corso in self.visualizzaCatalogoCorsi():
+            corso.getDati()
+            if corso.soddisfaCriterio(self.__prelevaCriterio({"tipoCorso": tipoCorso})):
+                self.__aggiungiATrovati(corso, trovati)
+        return trovati
+
+    #def filtraCorsi(self, tipoCorso: str) -> list[Corso]:
+        #return [c for c in self.visualizzaCatalogoCorsi()
+               # if c.soddisfaCriterio(self.__prelevaCriterio({"tipoCorso": tipoCorso}))]
 
     def visualizzaCorsi(self) -> list[Corso]:
         return self.__ordinaPerData(list(GestoreDati().carica()["corsi"].values()))
