@@ -57,7 +57,7 @@ class Utente(ABC):
                 return utente
         return None
 
-    def autentica(self, utente: "Utente") -> None:
+    def __autentica(self, utente: "Utente") -> None:
         """L'apertura della home giusta la fa la vista (VistaLogin)."""
         pass
 
