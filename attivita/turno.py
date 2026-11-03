@@ -212,7 +212,7 @@ class Turno(Programmabile):
     def visualizzaDettagliTurno(self, turno: Turno) -> dict:
         return turno.getDati()
 
-    def visualizzaPrenotatiTurno(self, turno: Turno) -> list[dict]:
+    def visualizzaPrenotatiTurno(self, turno: Turno) -> list[Volontario]:
         ordinate = sorted(turno.getPrenotazioni(), key=lambda p: p.getDataPrenotazione())
         return [p.getVolontario().getDati() for p in ordinate]
 

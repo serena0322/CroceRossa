@@ -101,7 +101,7 @@ class VistaModificaTurno(QWidget):
 
         add_row("luogo", "Luogo", d.get("luogo", ""))
         add_row("tipoServizio", "Tipo di servizio", d.get("tipoServizio", ""))
-        add_row("postiTotali", "Numero posti", d.get("postiTotali", 3))
+        add_row("postiTotali", "Numero posti", str(d.get("postiTotali", 3)))
         add_row("patenteRichiesta", "Patente richiesta", d.get("patenteRichiesta") or "")
         add_row("corsiRichiesti", "Corsi richiesti", d.get("corsiRichiesti", ""))
         add_row("mezzo", "Mezzo previsto", d.get("mezzo", ""))

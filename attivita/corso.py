@@ -193,7 +193,7 @@ class Corso(Programmabile):
     def visualizzaDettagliCorso(self, corso: Corso) -> dict:
         return corso.getDati()
 
-    def visualizzaIscrittiCorso(self, corso: Corso) -> list[dict]:
+    def visualizzaIscrittiCorso(self, corso: Corso) -> list[Volontario]:
         ordinate = sorted(corso.getIscrizioni(), key=lambda i: i.getDataIscrizione())
         return [i.getVolontario().getDati() for i in ordinate]
 
