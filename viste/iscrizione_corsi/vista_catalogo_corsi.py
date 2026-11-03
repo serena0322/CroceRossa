@@ -41,9 +41,9 @@ class VistaCatalogoCorsi(QWidget):
         lbl_tipo.setStyleSheet("font-size: 13px; font-weight: 500;")
         filtro_row.addWidget(lbl_tipo)
 
-        self.txt_tipo = QLineEdit(self)
-        self.txt_tipo.setPlaceholderText("Es. Sanitario, Base...")
-        filtro_row.addWidget(self.txt_tipo, 1)
+        self.tipo_filtro = QLineEdit(self)
+        self.tipo_filtro.setPlaceholderText("Es. Sanitario, Base...")
+        filtro_row.addWidget(self.tipo_filtro, 1)
 
         btn_filtra = QPushButton("Filtra")
         btn_filtra.setFixedWidth(160)
@@ -83,14 +83,15 @@ class VistaCatalogoCorsi(QWidget):
 
     def filtra_corsi_click(self) -> None:
         nascondi_errore(self.lbl_errore)
-        tipo = self.txt_tipo.text().strip()
+        tipo = self.tipo_filtro.text().strip()
         if not tipo or tipo.lower() == "tutti":
             self.corsi = Corso().visualizzaCatalogoCorsi()
         else:
             self.corsi = Corso().filtraCorsi(tipo)
+        self.update_ui()
         if not self.corsi:
             mostra_errore(self.lbl_errore, "Nessun corso trovato con il filtro specificato.")
-        self.update_ui()
+        
 
     def update_ui(self) -> None:
         self.tabella.setRowCount(len(self.corsi))
