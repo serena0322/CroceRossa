@@ -28,6 +28,44 @@ class TestCorsi(TestBase):
         self.assertFalse(Iscrizione().iscriviCorso(c, v))
         self.assertEqual(c.getDati()["postiLiberi"], 1)
 
+    def test_esito_iniziale_iscrizione_vuoto(self):
+        i = Iscrizione()
+        self.assertEqual(i.getDati()["esito"], "")
+        self.assertFalse(i.getSuperato())
+
+    def test_visualizza_iscritti_corso(self):
+        c = Corso()
+        c.inserisciDatiCorso("C1", "Primo Soccorso", "Descrizione", "Mario Rossi",
+                             "Base", date(2026, 11, 10), date(2026, 11, 15),
+                             "18:00 - 20:00", "Sede", 5)
+        # Inizialmente nessun iscritto: restituisce lista vuota
+        self.assertEqual(Corso().visualizzaIscrittiCorso(c), [])
+
+        # Primo volontario iscritto il 2 novembre
+        self.vai_a(datetime(2026, 11, 2, 9, 0))
+        v1 = self.nuovo_volontario("v1@cri.it", cf="AAAAAA80A01H501U")
+        i1 = Iscrizione()
+        self.assertTrue(i1.iscriviCorso(c, v1))
+        self.assertEqual(i1.getDati()["esito"], "")
+
+        # Secondo volontario iscritto il 3 novembre
+        self.vai_a(datetime(2026, 11, 3, 10, 0))
+        v2 = self.nuovo_volontario("v2@cri.it", cf="BBBBBB80A01H501U")
+        i2 = Iscrizione()
+        self.assertTrue(i2.iscriviCorso(c, v2))
+
+        iscritti = Corso().visualizzaIscrittiCorso(c)
+        self.assertEqual(len(iscritti), 2)
+        # Ordine crescente di dataIscrizione
+        self.assertEqual(iscritti[0]["email"], "v1@cri.it")
+        self.assertEqual(iscritti[0]["dataIscrizione"], date(2026, 11, 2))
+        self.assertEqual(iscritti[1]["email"], "v2@cri.it")
+        self.assertEqual(iscritti[1]["dataIscrizione"], date(2026, 11, 3))
+
+        # Verifica che il dizionario originale del Volontario non sia inquinato
+        self.assertNotIn("dataIscrizione", v1.getDati())
+        self.assertNotIn("dataIscrizione", v2.getDati())
+
     def test_annullamento_entro_due_giorni_negato(self):
         c = Corso()
         c.inserisciDatiCorso("C1", "Primo Soccorso", "Descrizione", "Mario Rossi",

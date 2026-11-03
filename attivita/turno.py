@@ -212,9 +212,14 @@ class Turno(Programmabile):
     def visualizzaDettagliTurno(self, turno: Turno) -> dict:
         return turno.getDati()
 
-    def visualizzaPrenotatiTurno(self, turno: Turno) -> list[Volontario]:
+    def visualizzaPrenotatiTurno(self, turno: Turno) -> list[dict]:
         ordinate = sorted(turno.getPrenotazioni(), key=lambda p: p.getDataPrenotazione())
-        return [p.getVolontario().getDati() for p in ordinate]
+        risultato = []
+        for prenotazione in ordinate:
+            dati = prenotazione.getDatiVolontario()
+            dati["dataPrenotazione"] = prenotazione.getDataPrenotazione()
+            risultato.append(dati)
+        return risultato
 
     def verificaPatentePrenotati(self) -> bool:
         """True se almeno un prenotato ha una patente valida del tipo richiesto."""

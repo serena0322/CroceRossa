@@ -20,7 +20,7 @@ class Iscrizione(Partecipazione):
         self.__codice = ""
         self.__corso: Corso | None = None
         self.__dataIscrizione = date.min
-        self.__esito = " "
+        self.__esito = ""
         self.__volontario: Volontario | None = None
 
     def getDati(self) -> dict:

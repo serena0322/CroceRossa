@@ -193,9 +193,14 @@ class Corso(Programmabile):
     def visualizzaDettagliCorso(self, corso: Corso) -> dict:
         return corso.getDati()
 
-    def visualizzaIscrittiCorso(self, corso: Corso) -> list[Volontario]:
+    def visualizzaIscrittiCorso(self, corso: Corso) -> list[dict]:
         ordinate = sorted(corso.getIscrizioni(), key=lambda i: i.getDataIscrizione())
-        return [i.getVolontario().getDati() for i in ordinate]
+        risultato = []
+        for iscrizione in ordinate:  # loop for each
+            dati = iscrizione.getDatiVolontario()  # -> getDati()
+            dati["dataIscrizione"] = iscrizione.getDataIscrizione()
+            risultato.append(dati)
+        return risultato  # elencoIscritti()
 
     # ---------- AttestaPartecipazione ----------
     def attestaPartecipazione(self, corso: Corso) -> list[Volontario]:

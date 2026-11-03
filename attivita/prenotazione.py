@@ -43,7 +43,6 @@ class Prenotazione(Partecipazione):
         self.__dataPrenotazione = orologio.adesso().date()
         self.__turno, self.__volontario = turno, volontario
         turno.aggiungiPrenotazione(self)
-        #turno.setPostiLiberi(datiTurno["postiLiberi"] - 1)
         volontario.aggiungiPartecipazione(self)
         dati = GestoreDati().carica()
         dati["prenotazioni"][self.__codice] = self
