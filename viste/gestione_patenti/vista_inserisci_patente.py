@@ -51,10 +51,10 @@ class VistaInserisciPatente(QWidget):
         # Riga Tipo
         lbl_tipo = QLabel("Tipo")
         lbl_tipo.setStyleSheet("font-size: 13px; font-weight: 500;")
-        self.txt_tipo = QLineEdit(self)
-        self.txt_tipo.setPlaceholderText("Es. Patente 5")
+        self.tipo = QLineEdit(self)
+        self.tipo.setPlaceholderText("Es. Patente 5")
         grid.addWidget(lbl_tipo, 1, 0)
-        grid.addWidget(self.txt_tipo, 1, 1)
+        grid.addWidget(self.tipo, 1, 1)
 
         # Riga Data di scadenza
         lbl_scad = QLabel("Data di scadenza")
@@ -76,17 +76,17 @@ class VistaInserisciPatente(QWidget):
         btn_layout.addStretch()
         btn_salva = QPushButton("Inserisci patente")
         btn_salva.setFixedWidth(200)
-        btn_salva.clicked.connect(self.aggiungi_patente)
+        btn_salva.clicked.connect(self.aggiungi_patente_click)
         btn_layout.addWidget(btn_salva)
         btn_layout.addStretch()
         main_layout.addLayout(btn_layout)
 
         self.setLayout(main_layout)
 
-    def aggiungi_patente(self) -> None:
+    def aggiungi_patente_click(self) -> None:
         nascondi_errore(self.lbl_errore)
         codice_effettivo = self.txt_codice.text().strip() or self.codice
-        tipo = self.txt_tipo.text().strip()
+        tipo = self.tipo.text().strip()
         if not tipo:
             mostra_errore(self.lbl_errore, "Specificare il tipo di patente.")
             return
