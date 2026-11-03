@@ -61,6 +61,7 @@ class Corso(Programmabile):
 
     def aggiungiIscrizione(self, iscrizione: Iscrizione) -> None:
         self.__iscrizioni.append(iscrizione)
+        self.setPostiLiberi(self.__postiLiberi - 1)
 
     def eliminaIscrizione(self, iscrizione: Iscrizione) -> None:
         self.__iscrizioni.remove(iscrizione)
@@ -190,7 +191,7 @@ class Corso(Programmabile):
     def visualizzaDettagliCorso(self, corso: Corso) -> dict:
         return corso.getDati()
 
-    def visualizzaIscrittiCorso(self, corso: Corso) -> list[Volontario]:
+    def visualizzaIscrittiCorso(self, corso: Corso) -> list[dict]:
         ordinate = sorted(corso.getIscrizioni(), key=lambda i: i.getDataIscrizione())
         return [i.getVolontario() for i in ordinate]
 
@@ -210,7 +211,7 @@ class Corso(Programmabile):
         GestoreDati().salva(GestoreDati().carica())
 
     # ---------- AggiornaStatoCorso (Tempo, ogni giorno alle 00.00) ----------
-    def impostaCriterio(self) -> dict:
+    def __impostaCriterio(self) -> dict:
         return {
             "stati": {StatoAttivita.PROGRAMMATO, StatoAttivita.IN_CORSO},
             "inizioEntro": orologio.adesso().date()
@@ -218,7 +219,7 @@ class Corso(Programmabile):
 
     def aggiornaStatoCorsi(self) -> None:
         oggi = orologio.adesso().date()
-        for corso in self.ricercaCorso(self.impostaCriterio()):
+        for corso in self.ricercaCorso(self.__impostaCriterio()):
             if corso.getStato() == StatoAttivita.PROGRAMMATO:
                 corso.setStato(StatoAttivita.IN_CORSO)
             if corso.getDati()["dataFine"] < oggi:
