@@ -1,4 +1,4 @@
-"""Modulo di supporto per le e-mail (classe di supporto, non di dominio).
+"""Modulo di supporto per le e-mail (classe di supporto).
 MODALITA = "simulata": le e-mail vengono scritte in dati/email_inviate.log
 MODALITA = "smtp": le e-mail vengono inviate davvero con smtplib
 (la scelta dipende dalla risposta del prof: e-mail simulate o reali?)
