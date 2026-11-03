@@ -58,7 +58,7 @@ class VistaInserisciCorso(QWidget):
             row += 1
 
         # Riga Codice (nel mockup di pagina 108 c'è la riga "Codice" con dentro es. C-032)
-        add_row("codice", "Codice", self.codice, read_only=False)
+        add_row("codice", "Codice", self.codice, read_only=True)
 
         add_row("nome", "Nome", "")
         add_row("descrizione", "Descrizione", "")
