@@ -59,12 +59,21 @@ class Corso(Programmabile):
     def getDataInizio(self) -> date:
         return self.__dataInizio
 
+  #  def aggiungiIscrizione(self, iscrizione: Iscrizione) -> None:
+   #     self.__iscrizioni.append(iscrizione)
+    #    self.setPostiLiberi(self.__postiLiberi - 1)
+
+   # def eliminaIscrizione(self, iscrizione: Iscrizione) -> None:
+    #    self.__iscrizioni.remove(iscrizione)
+
     def aggiungiIscrizione(self, iscrizione: Iscrizione) -> None:
         self.__iscrizioni.append(iscrizione)
         self.setPostiLiberi(self.__postiLiberi - 1)
 
     def eliminaIscrizione(self, iscrizione: Iscrizione) -> None:
         self.__iscrizioni.remove(iscrizione)
+        if self.__stato == StatoAttivita.PROGRAMMATO:
+            self.setPostiLiberi(self.__postiLiberi + 1)
 
     def getIscrizioni(self) -> list[Iscrizione]:
         return list(self.__iscrizioni)
