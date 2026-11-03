@@ -203,11 +203,8 @@ class Turno(Programmabile):
         selezionati: list[Turno] = []
         for turno in self.visualizzaTurniDisponibili():
             if turno.soddisfaCriterio(criterio):
-                self.__aggiungiASelezionati(turno, selezionati)
+                self.__aggiungiATrovati(turno, selezionati)
         return selezionati
-
-    def __aggiungiASelezionati(self, turno: Turno, selezionati: list[Turno]) -> None:
-        selezionati.append(turno)
 
     def visualizzaDettagliTurno(self, turno: Turno) -> dict:
         return turno.getDati()
