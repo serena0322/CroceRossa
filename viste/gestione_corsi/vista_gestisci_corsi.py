@@ -33,8 +33,6 @@ class VistaGestisciCorsi(QWidget):
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(12)
 
-        # Intestazione come nel mockup di pagina 107: "Gestisci corsi"
-
         self.tabella = crea_tabella(["Codice", "Nome", "Data Inizio", "Stato", "Posti liberi"], self)
         layout.addWidget(self.tabella)
 
@@ -50,11 +48,11 @@ class VistaGestisciCorsi(QWidget):
         row_azioni.addWidget(btn_attesta, 1)
         layout.addLayout(row_azioni)
 
-        # Banner d'errore (es. 'Il corso non è concluso o non ha iscritti.')
+        # errore 
         self.lbl_errore = crea_label_errore(self)
         layout.addWidget(self.lbl_errore)
 
-        # Separatore visivo leggero o spazio
+        # Separatore visivo  
         layout.addSpacing(6)
 
         # Sezione "Gestisci un corso" come da mockup
