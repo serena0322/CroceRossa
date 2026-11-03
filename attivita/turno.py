@@ -209,9 +209,9 @@ class Turno(Programmabile):
     def visualizzaDettagliTurno(self, turno: Turno) -> dict:
         return turno.getDati()
 
-    def visualizzaPrenotatiTurno(self, turno: Turno) -> list[Volontario]:
+    def visualizzaPrenotatiTurno(self, turno: Turno) -> list[dict]:
         ordinate = sorted(turno.getPrenotazioni(), key=lambda p: p.getDataPrenotazione())
-        return [p.getVolontario() for p in ordinate]
+        return [p.getVolontario().getDati() for p in ordinate]
 
     def verificaPatentePrenotati(self) -> bool:
         """True se almeno un prenotato ha una patente valida del tipo richiesto."""
@@ -219,7 +219,7 @@ class Turno(Programmabile):
                    for p in self.__prenotazioni)
 
     # ---------- attore Tempo ----------
-    def impostaCriterio(self, casoDUso: str) -> dict:
+    def __impostaCriterio(self, casoDUso: str) -> dict:
         ora = orologio.adesso()
         if casoDUso == "AggiornaStatoTurno":
             return {
@@ -235,7 +235,7 @@ class Turno(Programmabile):
 
     def aggiornaStatoTurni(self) -> None:
         ora = orologio.adesso()
-        for turno in self.ricercaTurno(self.impostaCriterio("AggiornaStatoTurno")):
+        for turno in self.ricercaTurno(self.__impostaCriterio("AggiornaStatoTurno")):
             if turno.getStato() == StatoAttivita.PROGRAMMATO:
                 turno.setStato(StatoAttivita.IN_CORSO)
             if turno.getDataOraFine() <= ora:
@@ -246,6 +246,6 @@ class Turno(Programmabile):
         GestoreDati().salva(GestoreDati().carica())
 
     def inviaPromemoriaTurni(self) -> None:
-        for turno in self.ricercaTurno(self.impostaCriterio("InviaPromemoriaTurno")):
+        for turno in self.ricercaTurno(self.__impostaCriterio("InviaPromemoriaTurno")):
             for prenotazione in turno.getPrenotazioni():
                 prenotazione.inviaPromemoria()
