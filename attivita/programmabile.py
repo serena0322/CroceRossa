@@ -1,7 +1,4 @@
-"""Interfaccia Programmabile (realizzata da Turno e Corso).
-Python non ha la parola chiave "interface": la si scrive come classe astratta
-SENZA attributi e con SOLI metodi astratti, cioe' solo le signature.
-"""
+"""Interfaccia Programmabile (realizzata da Turno e Corso)."""
 from abc import ABC, abstractmethod
 from attivita.stato_attivita import StatoAttivita
 
