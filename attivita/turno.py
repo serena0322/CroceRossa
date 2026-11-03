@@ -244,11 +244,14 @@ class Turno(Programmabile):
     def aggiornaStatoTurni(self) -> None:
         ora = orologio.adesso()
         for turno in self.ricercaTurno(self.__impostaCriterio("AggiornaStatoTurno")):
-            if turno.getStato() == StatoAttivita.PROGRAMMATO:
+            dati = turno.getDati()
+            if dati["stato"] == StatoAttivita.PROGRAMMATO:
                 turno.setStato(StatoAttivita.IN_CORSO)
-            if turno.getDataOraFine() <= ora:
+            fine = datetime.combine(dati["data"], dati["oraFine"])
+            if fine <= ora:
                 turno.setStato(StatoAttivita.CONCLUSO)
-                durata = (turno.getDataOraFine() - turno.getDataOraInizio()).total_seconds() / 3600
+                inizio = datetime.combine(dati["data"], dati["oraInizio"])
+                durata = (fine - inizio).total_seconds() / 3600
                 for prenotazione in turno.getPrenotazioni():
                     prenotazione.aggiungiOreServizio(durata)
         GestoreDati().salva(GestoreDati().carica())
