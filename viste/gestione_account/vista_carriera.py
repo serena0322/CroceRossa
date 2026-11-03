@@ -42,9 +42,9 @@ class VistaCarriera(QWidget):
         self.tabella_turni = crea_tabella(["Data", "Codice"], self)
         main_layout.addWidget(self.tabella_turni)
 
-        lbl_ore = QLabel(f"<b>Ore di servizio totali:</b> {ore:g}")
-        lbl_ore.setStyleSheet("font-size: 13px; font-weight: bold; color: #1A202C;")
-        main_layout.addWidget(lbl_ore)
+        self.lbl_ore = QLabel(f"<b>Ore di servizio totali:</b> {ore:g}")
+        self.lbl_ore.setStyleSheet("font-size: 13px; font-weight: bold; color: #1A202C;")
+        main_layout.addWidget(self.lbl_ore)
 
         self.setLayout(main_layout)
         self.load_carriera(corsi, turni)
