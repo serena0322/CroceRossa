@@ -45,6 +45,7 @@ class VistaInserisciPatente(QWidget):
         lbl_cod.setStyleSheet("font-size: 13px; font-weight: 500;")
         self.txt_codice = QLineEdit(self)
         self.txt_codice.setText(self.codice)
+        self.txt_codice.setReadOnly(True)
         grid.addWidget(lbl_cod, 0, 0)
         grid.addWidget(self.txt_codice, 0, 1)
 
