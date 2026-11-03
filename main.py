@@ -1,4 +1,4 @@
-"""Avvio del programma. Qui vive l'attore Tempo: un QTimer controlla ogni minuto
+"""Avvio del programma. Vive l'attore Tempo: un QTimer controlla ogni minuto
 quali attivita' pianificate vanno eseguite (casi d'uso con attore Tempo)."""
 import sys
 from PyQt5.QtCore import QTimer
