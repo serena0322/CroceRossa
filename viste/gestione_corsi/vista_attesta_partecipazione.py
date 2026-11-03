@@ -29,11 +29,15 @@ class VistaAttestaPartecipazione(QWidget):
 
     def load_iscritti(self) -> None:
         modello = QStandardItemModel(self.list_iscritti)
+        superati_attuali = {
+            i.getVolontario() for i in self.corso.getIscrizioni() if i.getSuperato()
+        }
         for v in Corso().attestaPartecipazione(self.corso):
             d = v.getDati()
             item = QStandardItem(f"{d['nome']} {d['cognome']}")   # solo nome e cognome
             item.setCheckable(True)
-            item.setCheckState(Qt.Unchecked)
+            stato_check = Qt.Checked if v in superati_attuali else Qt.Unchecked
+            item.setCheckState(stato_check)
             item.setEditable(False)
             item.setData(v, Qt.UserRole)                          # il Volontario della riga
             modello.appendRow(item)

@@ -168,6 +168,10 @@ class Corso(Programmabile):
             elif chiave == "disponibile":
                 if not (self.__stato == StatoAttivita.PROGRAMMATO and self.__postiLiberi > 0):
                     return False
+            elif chiave == "tipoCorso":
+                # Ricerca insensibile a maiuscole/minuscole e per sottostringa per facilitare l'input da testo
+                if valore.lower() not in self.__tipoCorso.lower():
+                    return False
             elif self.getDati().get(chiave) != valore:
                 return False
         return True

@@ -82,7 +82,6 @@ class VistaCatalogoCorsi(QWidget):
         self.update_ui()
 
     def filtra_corsi_click(self) -> None:
-        nascondi_errore(self.lbl_errore)
         tipo = self.tipo_filtro.text().strip()
         if not tipo or tipo.lower() == "tutti":
             self.corsi = Corso().visualizzaCatalogoCorsi()
@@ -91,7 +90,8 @@ class VistaCatalogoCorsi(QWidget):
         self.update_ui()
         if not self.corsi:
             mostra_errore(self.lbl_errore, "Nessun corso trovato con il filtro specificato.")
-        
+        else:
+            nascondi_errore(self.lbl_errore)
 
     def update_ui(self) -> None:
         self.tabella.setRowCount(len(self.corsi))
@@ -102,11 +102,6 @@ class VistaCatalogoCorsi(QWidget):
                 d.get("nome", ""),
                 str(d.get("postiLiberi", 0))
             ])
-
-        if not self.corsi:
-            mostra_errore(self.lbl_errore, "Nessun corso disponibile a catalogo.")
-        else:
-            nascondi_errore(self.lbl_errore)
 
     def show_selected_info(self) -> None:
         nascondi_errore(self.lbl_errore)
