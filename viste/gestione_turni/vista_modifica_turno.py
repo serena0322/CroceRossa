@@ -119,14 +119,14 @@ class VistaModificaTurno(QWidget):
         btn_layout.addStretch()
         btn = QPushButton("Salva modifiche")
         btn.setFixedWidth(200)
-        btn.clicked.connect(self.salva_modifiche)
+        btn.clicked.connect(self.salva_modifiche_click)
         btn_layout.addWidget(btn)
         btn_layout.addStretch()
         main_layout.addLayout(btn_layout)
 
         self.setLayout(main_layout)
 
-    def salva_modifiche(self) -> None:
+    def salva_modifiche_click(self) -> None:
         nascondi_errore(self.lbl_errore)
         paziente = self.qlines["datiPaziente"].text().strip()
         qd = self.data.date()

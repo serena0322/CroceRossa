@@ -103,14 +103,14 @@ class VistaModificaCorso(QWidget):
         btn_layout.addStretch()
         btn_salva = QPushButton("Salva modifiche")
         btn_salva.setFixedWidth(200)
-        btn_salva.clicked.connect(self.salva_modifiche)
+        btn_salva.clicked.connect(self.salva_modifiche_click)
         btn_layout.addWidget(btn_salva)
         btn_layout.addStretch()
         main_layout.addLayout(btn_layout)
 
         self.setLayout(main_layout)
 
-    def salva_modifiche(self) -> None:
+    def salva_modifiche_click(self) -> None:
         nascondi_errore(self.lbl_errore)
         nome = self.qlines["nome"].text().strip()
         desc = self.qlines["descrizione"].text().strip()

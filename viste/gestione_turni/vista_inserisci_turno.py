@@ -118,14 +118,14 @@ class VistaInserisciTurno(QWidget):
         btn_layout.addStretch()
         btn = QPushButton("Inserisci turno")
         btn.setFixedWidth(200)
-        btn.clicked.connect(self.aggiungi_turno)
+        btn.clicked.connect(self.aggiungi_turno_click)
         btn_layout.addWidget(btn)
         btn_layout.addStretch()
         main_layout.addLayout(btn_layout)
 
         self.setLayout(main_layout)
 
-    def aggiungi_turno(self) -> None:
+    def aggiungi_turno_click(self) -> None:
         nascondi_errore(self.lbl_errore)
         codice_effettivo = self.qlines["codice"].text().strip() or self.codice
         paziente = self.qlines["datiPaziente"].text().strip()

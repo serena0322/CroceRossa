@@ -104,14 +104,14 @@ class VistaInserisciCorso(QWidget):
         btn_layout.addStretch()
         btn = QPushButton("Inserisci corso")
         btn.setFixedWidth(200)
-        btn.clicked.connect(self.aggiungi_corso)
+        btn.clicked.connect(self.aggiungi_corso_click)
         btn_layout.addWidget(btn)
         btn_layout.addStretch()
         main_layout.addLayout(btn_layout)
 
         self.setLayout(main_layout)
 
-    def aggiungi_corso(self) -> None:
+    def aggiungi_corso_click(self) -> None:
         nascondi_errore(self.lbl_errore)
         codice_effettivo = self.qlines["codice"].text().strip() or self.codice
         nome = self.qlines["nome"].text().strip()
