@@ -170,7 +170,6 @@ class Corso(Programmabile):
         return self.ricercaCorso({"disponibile": True})
 
     def filtraCorsi(self, tipoCorso: str) -> list[Corso]:
-        """Estensione FiltraCorsi"""
         trovati = []
         for corso in self.visualizzaCatalogoCorsi():
             corso.getDati()
