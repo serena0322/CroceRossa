@@ -27,8 +27,6 @@ class VistaIscrizioni(QWidget):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(14)
 
-        # Intestazione come mockup: "Le mie iscrizioni"
-
         self.tabella = crea_tabella(["Nome", "Codice", "Data inizio", "Luogo"], self)
         main_layout.addWidget(self.tabella)
 
@@ -42,7 +40,7 @@ class VistaIscrizioni(QWidget):
         btn_layout.addStretch()
         main_layout.addLayout(btn_layout)
 
-        # Banner errore
+        #errore
         self.lbl_errore = crea_label_errore(self)
         main_layout.addWidget(self.lbl_errore)
 
