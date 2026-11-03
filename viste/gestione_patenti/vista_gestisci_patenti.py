@@ -62,15 +62,15 @@ class VistaGestisciPatenti(QWidget):
         btn_row.setSpacing(12)
 
         self.btn_ins = QPushButton("Inserisci")
-        self.btn_ins.clicked.connect(self.show_new)
+        self.btn_ins.clicked.connect(self.inserisci_click)
         btn_row.addWidget(self.btn_ins, 1)
 
         self.btn_mod = QPushButton("Modifica")
-        self.btn_mod.clicked.connect(self.show_modifica)
+        self.btn_mod.clicked.connect(self.modifica_click)
         btn_row.addWidget(self.btn_mod, 1)
 
         self.btn_rim = QPushButton("Rimuovi")
-        self.btn_rim.clicked.connect(self.rimuovi_patente)
+        self.btn_rim.clicked.connect(self.rimuovi_click)
         btn_row.addWidget(self.btn_rim, 1)
 
         main_layout.addLayout(btn_row)
@@ -109,7 +109,7 @@ class VistaGestisciPatenti(QWidget):
         self.btn_mod.setEnabled(ha_codice)
         self.btn_rim.setEnabled(ha_codice)
 
-    def show_new(self) -> None:
+    def inserisci_click(self) -> None:
         nascondi_errore(self.lbl_errore)
         cod = self.codice.text().strip()
         if not Patente().inserisciPatente(cod):
@@ -120,7 +120,7 @@ class VistaGestisciPatenti(QWidget):
         self.vista_inserisci = VistaInserisciPatente(cod, self.volontario, self.load_patenti)
         self.vista_inserisci.show()
 
-    def show_modifica(self) -> None:
+    def modifica_click(self) -> None:
         nascondi_errore(self.lbl_errore)
         cod = self.codice.text().strip()
         dati_p = Patente().modificaPatente(cod, self.volontario)
@@ -135,7 +135,7 @@ class VistaGestisciPatenti(QWidget):
         self.vista_modifica = VistaModificaPatente(trovate[0], self.load_patenti)
         self.vista_modifica.show()
 
-    def rimuovi_patente(self) -> None:
+    def rimuovi_click(self) -> None:
         nascondi_errore(self.lbl_errore)
         cod = self.codice.text().strip()
         ok = Patente().rimuoviPatente(cod, self.volontario)
