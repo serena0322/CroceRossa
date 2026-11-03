@@ -1,4 +1,4 @@
-"""VistaIscrittiCorso (GestioneCorsi) secondo le specifiche del PDF e mockup (pag. 107).
+"""VistaIscrittiCorso (GestioneCorsi).
 Layout:
 - Intestazione: 'Iscritti al corso <codice>'
 - Tabella: Nome | Cognome | E-mail | Telefono | Iscritto il
@@ -22,7 +22,6 @@ class VistaIscrittiCorso(QWidget):
         layout.setContentsMargins(18, 18, 18, 18)
         layout.setSpacing(12)
 
-        # Intestazione come nel mockup di pagina 107: "Iscritti al corso C-028"
         layout.addWidget(QLabel(f"Iscritti al corso {codice}"))
 
         self.tabella = crea_tabella(["Nome", "Cognome", "E-mail", "Telefono", "Iscritto il"], self)
