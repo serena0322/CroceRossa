@@ -122,7 +122,7 @@ class Volontario(Utente):
                 if i.getDatiCorso()["stato"] != StatoAttivita.CONCLUSO]
 
     def annullaIscrizione(self, iscrizione: Iscrizione) -> bool:
-        if iscrizione.getDataInizioCorso() - orologio.adesso().date() <= timedelta(days=2):
+        if iscrizione.getDataInizioCorso() - orologio.adesso().date() < timedelta(days=2):
             return False
         iscrizione.liberaPosti()
         self.eliminaPartecipazione(iscrizione)
