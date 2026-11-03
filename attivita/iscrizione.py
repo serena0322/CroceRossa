@@ -12,20 +12,24 @@ if TYPE_CHECKING:
     from attivita.corso import Corso
     from utenti.volontario import Volontario
 
+SUPERATO = "Superato"
+NON_SUPERATO = "Non superato"
+
 class Iscrizione(Partecipazione):
     def __init__(self):  # create(): void
         self.__codice = ""
         self.__corso: Corso | None = None
         self.__dataIscrizione = date.min
-        self.__superato = False
+        self.__esito = " "
         self.__volontario: Volontario | None = None
 
     def getDati(self) -> dict:
         return {
             "codice": self.__codice,
             "dataIscrizione": self.__dataIscrizione,
-            "superato": self.__superato
-        }
+            "esito": self.__esito,
+            "superato": self.getSuperato()
+    }
 
     def iscriviCorso(self, corso: Corso, volontario: Volontario) -> bool:
         datiCorso = corso.getDati()
@@ -58,14 +62,14 @@ class Iscrizione(Partecipazione):
     def getDatiCorso(self) -> dict:
         return self.__corso.getDati()
 
-    def getSuperato(self) -> bool:
-        return self.__superato
-
-    def setSuperato(self, superato: bool = True) -> None:
-        self.__superato = superato
+    def setSuperato(self) -> None:
+        self.__esito = SUPERATO
 
     def setNonSuperato(self) -> None:
-        self.__superato = False
+        self.__esito = NON_SUPERATO
+
+    def getSuperato(self) -> bool:
+        return self.__esito == SUPERATO
 
     # ---------- Partecipazione ----------
     def getDatiVolontario(self) -> dict:
