@@ -63,6 +63,7 @@ class VistaInserisciTurno(QWidget):
 
         # Codice
         add_row("codice", "Codice", self.codice)
+        self.qlines["codice"].setReadOnly(True)
 
         # Data
         lbl_data = QLabel("Data")
