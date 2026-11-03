@@ -47,7 +47,7 @@ class VistaProfilo(QWidget):
             lbl = QLabel(label_text)
             lbl.setStyleSheet("font-size: 13px; font-weight: 500;")
             txt = QLineEdit(self)
-            txt.setText(str(default_val))
+            txt.setText(default_val)
             if is_pwd:
                 txt.setEchoMode(QLineEdit.Password)
             self.qlines[key] = txt

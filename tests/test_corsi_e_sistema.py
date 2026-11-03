@@ -106,7 +106,7 @@ class TestBackup(TestBase):
         self.nuovo_volontario()
         backup_manager = GestoreBackup()
         backup_dir = f"{self.cartella}/backup_test"
-        backup_manager._GestoreBackup__percorsoBackup = backup_dir
+        setattr(backup_manager, "_GestoreBackup__percorsoBackup", backup_dir)
 
         backup_manager.effettuaBackup()
         giorno_str = f"{self.ora:%Y%m%d}"
