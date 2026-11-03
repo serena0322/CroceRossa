@@ -152,7 +152,7 @@ class VistaGestisciCorsi(QWidget):
             return
 
         from viste.gestione_corsi.vista_attesta_partecipazione import VistaAttestaPartecipazione
-        self.vista_attesta = VistaAttestaPartecipazione(corso, self.load_corsi)
+        self.vista_attesta = VistaAttestaPartecipazione(corso, self.load_corsi) #levare self.load_corsi.
         self.vista_attesta.show()
 
     def show_new(self) -> None:
