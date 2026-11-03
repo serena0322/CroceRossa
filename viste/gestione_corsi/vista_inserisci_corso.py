@@ -1,4 +1,4 @@
-"""VistaInserisciCorso (GestioneCorsi) secondo le specifiche del PDF e mockup (pag. 108).
+"""VistaInserisciCorso (GestioneCorsi) 
 Layout a due colonne:
 - Intestazione 'Nuovo corso'
 - Campo 'Codice' (mostra il codice generato)
@@ -34,8 +34,6 @@ class VistaInserisciCorso(QWidget):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(14)
 
-        # Intestazione come nel mockup di pagina 108: "Nuovo corso"
-
         grid = QGridLayout()
         grid.setHorizontalSpacing(16)
         grid.setVerticalSpacing(10)
@@ -57,7 +55,7 @@ class VistaInserisciCorso(QWidget):
             grid.addWidget(txt, row, 1)
             row += 1
 
-        # Riga Codice (nel mockup di pagina 108 c'è la riga "Codice" con dentro es. C-032)
+        # Riga Codice 
         add_row("codice", "Codice", self.codice, read_only=True)
 
         add_row("nome", "Nome", "")
@@ -99,7 +97,7 @@ class VistaInserisciCorso(QWidget):
         self.lbl_errore = crea_label_errore(self)
         main_layout.addWidget(self.lbl_errore)
 
-        # Pulsante centrato "Inserisci corso" come da mockup pag. 108
+        # pulsante centrato "Inserisci corso" 
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
         btn = QPushButton("Inserisci corso")
