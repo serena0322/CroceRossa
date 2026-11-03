@@ -1,4 +1,4 @@
-"""VistaInserisciTurno (GestioneTurni) secondo le specifiche del PDF e mockup (pag. 104).
+"""VistaInserisciTurno (GestioneTurni) 
 Layout a due colonne:
 - Titolo 'Nuovo turno'
 - Form:
