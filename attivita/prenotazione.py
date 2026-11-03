@@ -89,8 +89,6 @@ class Prenotazione(Partecipazione):
     def liberaPosti(self) -> None:
         if self.__turno is not None:
             self.__turno.eliminaPrenotazione(self)
-            if self.__turno.getStato() == StatoAttivita.PROGRAMMATO:
-                self.__turno.setPostiLiberi(self.__turno.getDati()["postiLiberi"] + 1)
 
     def notificaModifica(self) -> None:
         if self.__turno is not None and self.__volontario is not None:
