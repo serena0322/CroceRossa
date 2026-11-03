@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from utenti.volontario import Volontario
 
 class Turno(Programmabile):
-    def __init__(self):  # create(): void
+    def __init__(self):  
         self.__codice = ""
         self.__corsiRichiesti = ""
         self.__data = date.min
@@ -30,7 +30,7 @@ class Turno(Programmabile):
         self.__tipoServizio = ""
         self.__prenotazioni: list[Prenotazione] = []
 
-    # ---------- Programmabile ----------
+    # Programmabile
     def getDati(self) -> dict:
         return {
             "codice": self.__codice,
@@ -78,7 +78,7 @@ class Turno(Programmabile):
     def getPrenotazioni(self) -> list[Prenotazione]:
         return list(self.__prenotazioni)
 
-    # ---------- CUDTurno: inserimento ----------
+    # CUDTurno: inserimento
     def inserisciTurno(self, codice: str) -> bool:
         return len(self.ricercaTurno({"codice": codice})) == 0
 
@@ -86,7 +86,7 @@ class Turno(Programmabile):
                            oraFine: time, luogo: str, tipoServizio: str, postiTotali: int,
                            patenteRichiesta: str, corsiRichiesti: str, mezzo: str,
                            materialeNecessario: str) -> None:
-        """Solleva ValueError se i dati violano NF5 (la vista mostra il messaggio)."""
+        """ ValueError se i dati violano NF5 ( mostra il messaggio)."""
         self.__validaDati(data, oraInizio, oraFine, postiTotali, 0)
         self.__codice = codice
         self.setDati(datiPaziente, data, oraInizio, oraFine, luogo, tipoServizio, postiTotali,
@@ -118,7 +118,7 @@ class Turno(Programmabile):
         if postiTotali < prenotati:
             raise ValueError("I posti non possono essere meno dei Volontari prenotati.")
 
-    # ---------- CUDTurno: modifica ----------
+    # modifica 
     def modificaTurno(self, codice: str) -> dict:
         trovati = self.ricercaTurno({"codice": codice})
         if trovati and trovati[0].getStato() == StatoAttivita.PROGRAMMATO:
@@ -141,7 +141,7 @@ class Turno(Programmabile):
         GestoreDati().salva(GestoreDati().carica())
         return True
 
-    # ---------- CUDTurno: rimozione ----------
+    # rimozione 
     def rimuoviTurno(self, codice: str) -> bool:
         trovati = self.ricercaTurno({"codice": codice})
         if not trovati or trovati[0].getStato() != StatoAttivita.PROGRAMMATO:
@@ -155,7 +155,7 @@ class Turno(Programmabile):
         GestoreDati().salva(dati)
         return True
 
-    # ---------- RicercaTurno (incluso) ----------
+    # RicercaTurno (incluso) 
     def ricercaTurno(self, criterio: dict) -> list[Turno]:
         criterio = self.__prelevaCriterio(criterio)
         trovati: list[Turno] = []
@@ -191,7 +191,7 @@ class Turno(Programmabile):
     def __aggiungiATrovati(self, turno: Turno, trovati: list[Turno]) -> None:
         trovati.append(turno)
 
-    # ---------- visualizzazioni ----------
+    #  visualizzazioni 
     def visualizzaTurni(self) -> list[Turno]:
         return self.__ordinaPerData(list(GestoreDati().carica()["turni"].values()))
 
@@ -226,7 +226,7 @@ class Turno(Programmabile):
         return any(p.getVolontario().possiedePatenteValida(self.__patenteRichiesta, self.__data)
                    for p in self.__prenotazioni)
 
-    # ---------- attore Tempo ----------
+    # attore Tempo 
     def __impostaCriterio(self, casoDUso: str) -> dict:
         ora = orologio.adesso()
         if casoDUso == "AggiornaStatoTurno":
