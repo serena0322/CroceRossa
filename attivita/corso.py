@@ -71,7 +71,7 @@ class Corso(Programmabile):
     def getIscrizioni(self) -> list[Iscrizione]:
         return list(self.__iscrizioni)
 
-    # ---------- CUDCorso ----------
+    # CUDCorso
     def inserisciCorso(self, codice: str) -> bool:
         return len(self.ricercaCorso({"codice": codice})) == 0
 
@@ -138,7 +138,7 @@ class Corso(Programmabile):
         GestoreDati().salva(dati)
         return True
 
-    # ---------- RicercaCorso ----------
+    # RicercaCorso 
     def ricercaCorso(self, criterio: dict) -> list[Corso]:
         criterio = self.__prelevaCriterio(criterio)
         trovati: list[Corso] = []
@@ -172,7 +172,7 @@ class Corso(Programmabile):
     def __aggiungiATrovati(self, corso: Corso, trovati: list[Corso]) -> None:
         trovati.append(corso)
 
-    # ---------- visualizzazioni ----------
+    # visualizzazioni 
     def visualizzaCatalogoCorsi(self) -> list[Corso]:
         return self.ricercaCorso({"disponibile": True})
 
@@ -202,7 +202,7 @@ class Corso(Programmabile):
             risultato.append(dati)
         return risultato  # elencoIscritti()
 
-    # ---------- AttestaPartecipazione ----------
+    # AttestaPartecipazione 
     def attestaPartecipazione(self, corso: Corso) -> list[Volontario]:
         """Iscritti del corso se e' concluso e ha iscritti, altrimenti lista vuota."""
         if corso.getStato() != StatoAttivita.CONCLUSO:
@@ -217,7 +217,7 @@ class Corso(Programmabile):
                 iscrizione.setNonSuperato()
         GestoreDati().salva(GestoreDati().carica())
 
-    # ---------- AggiornaStatoCorso (Tempo, ogni giorno alle 00.00) ----------
+    # AggiornaStatoCorso (Tempo)
     def __impostaCriterio(self) -> dict:
         return {
             "stati": {StatoAttivita.PROGRAMMATO, StatoAttivita.IN_CORSO},
