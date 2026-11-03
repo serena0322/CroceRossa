@@ -42,7 +42,7 @@ class VistaGestisciCorsi(QWidget):
         row_azioni = QHBoxLayout()
         row_azioni.setSpacing(12)
         btn_iscritti = QPushButton("Visualizza iscritti")
-        btn_iscritti.clicked.connect(self.show_selected_info)
+        btn_iscritti.clicked.connect(self.visualizza_iscritti_click)
         row_azioni.addWidget(btn_iscritti, 1)
 
         btn_attesta = QPushButton("Attesta partecipazione")
@@ -79,15 +79,15 @@ class VistaGestisciCorsi(QWidget):
         btn_row.setSpacing(12)
 
         self.btn_ins = QPushButton("Inserisci")
-        self.btn_ins.clicked.connect(self.show_new)
+        self.btn_ins.clicked.connect(self.inserisci_click)
         btn_row.addWidget(self.btn_ins, 1)
 
         self.btn_mod = QPushButton("Modifica")
-        self.btn_mod.clicked.connect(self.show_modifica)
+        self.btn_mod.clicked.connect(self.modifica_click)
         btn_row.addWidget(self.btn_mod, 1)
 
         self.btn_rim = QPushButton("Rimuovi")
-        self.btn_rim.clicked.connect(self.rimuovi_corso)
+        self.btn_rim.clicked.connect(self.rimuovi_click)
         btn_row.addWidget(self.btn_rim, 1)
 
         layout.addLayout(btn_row)
@@ -130,7 +130,7 @@ class VistaGestisciCorsi(QWidget):
             return self.corsi[idx]
         return None
 
-    def show_selected_info(self) -> None:
+    def visualizza_iscritti_click(self) -> None:
         nascondi_errore(self.lbl_errore)
         corso = self._get_selected_corso()
         if not corso:
@@ -152,10 +152,10 @@ class VistaGestisciCorsi(QWidget):
             return
 
         from viste.gestione_corsi.vista_attesta_partecipazione import VistaAttestaPartecipazione
-        self.vista_attesta = VistaAttestaPartecipazione(corso, self.load_corsi) #levare self.load_corsi.
+        self.vista_attesta = VistaAttestaPartecipazione(corso) #levato self.load_corsi.
         self.vista_attesta.show()
 
-    def show_new(self) -> None:
+    def inserisci_click(self) -> None:
         nascondi_errore(self.lbl_errore)
         cod = self.codice.text().strip()
         if not Corso().inserisciCorso(cod):
@@ -166,7 +166,7 @@ class VistaGestisciCorsi(QWidget):
         self.vista_inserisci = VistaInserisciCorso(cod, self.load_corsi)
         self.vista_inserisci.show()
 
-    def show_modifica(self) -> None:
+    def modifica_click(self) -> None:
         nascondi_errore(self.lbl_errore)
         cod = self.codice.text().strip()
         dati_c = Corso().modificaCorso(cod)
@@ -181,7 +181,7 @@ class VistaGestisciCorsi(QWidget):
         self.vista_modifica = VistaModificaCorso(trovati[0], self.load_corsi)
         self.vista_modifica.show()
 
-    def rimuovi_corso(self) -> None:
+    def rimuovi_click(self) -> None:
         nascondi_errore(self.lbl_errore)
         cod = self.codice.text().strip()
         ok = Corso().rimuoviCorso(cod)
