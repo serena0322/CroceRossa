@@ -1,15 +1,12 @@
-"""Package Gestione: GestoreStatistiche (GestisciStatistiche, diagramma 7.1.5).
+"""Package Gestione: GestoreStatistiche 
 Usa: GestoreDati (per avere gli elenchi), Volontario (getDati) e,
-per turni e corsi, SOLO l'interfaccia Programmabile (getDati, getStato).
+per turni e corsi, l'interfaccia Programmabile (getDati, getStato).
 """
 from dati.gestore_dati import GestoreDati
 from utenti.volontario import Volontario
 
 
 class GestoreStatistiche:
-    """Realizza il caso d'uso GestisciStatistiche (7.1.5).
-    Usa: GestoreDati (per avere gli elenchi), Volontario (getDati) e,
-    per turni e corsi, SOLO l'interfaccia Programmabile (getDati, getStato)."""
 
     def __init__(self):  
         pass
