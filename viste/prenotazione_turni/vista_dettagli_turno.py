@@ -1,5 +1,5 @@
 """Viste/PrenotazioneTurni: VistaDettagliTurno (VisualizzaDettagliTurno).
-Secondo il mockup (pag. 106 del PDF):
+
 - Titolo 'Dettagli turno <codice>'
 - Form a 2 colonne in sola lettura:
   - Codice
@@ -31,8 +31,6 @@ class VistaDettagliTurno(QWidget):
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(14)
-
-        # Intestazione come mockup pag. 106: "Dettagli turno T-170"
 
         grid = QGridLayout()
         grid.setHorizontalSpacing(24)
