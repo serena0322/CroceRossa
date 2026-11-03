@@ -40,8 +40,6 @@ class VistaInserisciTurno(QWidget):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(12)
 
-        # Intestazione come mockup pag. 104: "Nuovo turno"
-
         grid = QGridLayout()
         grid.setHorizontalSpacing(16)
         grid.setVerticalSpacing(8)
@@ -114,7 +112,7 @@ class VistaInserisciTurno(QWidget):
         self.lbl_errore = crea_label_errore(self)
         main_layout.addWidget(self.lbl_errore)
 
-        # Pulsante centrato "Inserisci turno"
+        # Pulsante al centro "Inserisci turno"
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
         btn = QPushButton("Inserisci turno")
