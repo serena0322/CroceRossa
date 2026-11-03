@@ -3,7 +3,7 @@ from dati.gestore_dati import GestoreDati
 from utenti.utente import FORMATO_EMAIL, FORMATO_PASSWORD, Utente
 
 class Referente(Utente):
-    def __init__(self):  # create(): void
+    def __init__(self): 
         super().__init__()
         self.__codiceAutorizzazione = ""
         self.__settoreGestito = ""
@@ -40,4 +40,4 @@ class Referente(Utente):
         return all(u.getEmail() != email for u in GestoreDati().carica()["utenti"].values())
 
     def __verificaCodiceAutorizzazione(self, codice: str) -> bool:
-        return codice in GestoreDati().carica()["codici_autorizzazione"]  # NF4
+        return codice in GestoreDati().carica()["codici_autorizzazione"]

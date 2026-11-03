@@ -28,7 +28,7 @@ def crea_tabella(colonne: list[str], parent=None) -> QTableWidget:
 
 def popola_riga(tabella: QTableWidget, riga_idx: int, valori: list[str]) -> None:
     """Inserisce una riga di celle non modificabili con testo centrato verticalmente."""
-    align_center_left = 0x0080 | 0x0001  # Qt.AlignVCenter (128) | Qt.AlignLeft (1)
+    align_center_left = 0x0080 | 0x0001  
     for col_idx, val in enumerate(valori):
         item = QTableWidgetItem(val)
         item.setTextAlignment(align_center_left)

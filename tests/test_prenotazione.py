@@ -64,10 +64,10 @@ class TestAnnullaPrenotazione(TestBase):
         self.assertEqual(v.visualizzaPrenotazioni(), [])
 
     def test_annullamento_negato_a_meno_di_24_ore(self):
-        v, t = self.nuovo_volontario(), self.nuovo_turno()  # turno il 5/11 alle 8.00
+        v, t = self.nuovo_volontario(), self.nuovo_turno()
         p = Prenotazione()
         p.prenotaTurno(t, v)
-        self.vai_a(datetime(2026, 11, 4, 9, 0))  # mancano 23 ore
+        self.vai_a(datetime(2026, 11, 4, 9, 0))
         self.assertFalse(v.annullaPrenotazione(p))
         self.assertEqual(t.getDati()["postiLiberi"], 2)
 

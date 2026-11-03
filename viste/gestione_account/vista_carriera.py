@@ -21,7 +21,6 @@ class VistaCarriera(QWidget):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(12)
 
-        # Intestazione come mockup pag. 104: "Carriera"
 
         d = self.volontario.visualizzaCarriera()
         corsi = d.get("corsiSuperati", [])

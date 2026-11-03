@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 FORMATO_CODICE_FISCALE = re.compile(r"^[A-Z0-9]{16}$")
 
 class Volontario(Utente):
-    def __init__(self):  # create(): void
+    def __init__(self):
         super().__init__()
         self.__codiceFiscale = ""
         self.__cognome = ""

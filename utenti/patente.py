@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from utenti.volontario import Volontario
 
 class Patente:
-    def __init__(self):  # create(): void
+    def __init__(self): 
         self.__codice = ""
         self.__dataScadenza = date.min
         self.__tipo = ""

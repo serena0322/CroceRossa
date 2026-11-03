@@ -10,7 +10,7 @@ from supporto import orologio
 
 MODALITA = "simulata"
 PERCORSO_LOG = os.path.join("dati", "email_inviate.log")
-SMTP_SERVER = "smtp.esempio.it"  # da configurare se MODALITA = "smtp"
+SMTP_SERVER = "smtp.esempio.it"  
 SMTP_PORTA = 587
 SMTP_UTENTE = ""
 SMTP_PASSWORD = ""

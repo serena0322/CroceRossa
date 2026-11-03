@@ -23,7 +23,6 @@ class VistaHomeReferente(QWidget):
         main_layout.setContentsMargins(24, 24, 24, 24)
         main_layout.setSpacing(14)
 
-        # Intestazione come mockup: "Croce Rossa Ancona - Home Referente"
 
         lbl_ciao = QLabel("<b>Ciao</b>")
         lbl_ciao.setStyleSheet("font-size: 18px; font-weight: bold; color: #1A202C;")

@@ -9,14 +9,13 @@ import dati.gestore_dati as gestore_dati
 from attivita.turno import Turno
 from utenti.volontario import Volontario
 
-ORA_FINTA = datetime(2026, 11, 2, 9, 0)  # lunedi 2 novembre 2026, ore 9.00
+ORA_FINTA = datetime(2026, 11, 2, 9, 0)  
 
 class TestBase(unittest.TestCase):
     def setUp(self):
         self.cartella = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, self.cartella)
 
-        # 1) il pickle va in una cartella temporanea, mai in dati/dati.pickle
         patch_file = mock.patch.object(gestore_dati, "PERCORSO_FILE",
                                        f"{self.cartella}/dati.pickle")
         patch_file.start()
@@ -24,13 +23,11 @@ class TestBase(unittest.TestCase):
         gestore_dati._dati = None
         self.addCleanup(setattr, gestore_dati, "_dati", None)
 
-        # 2) l'ora corrente e' fissa e si puo' spostare con self.vai_a(...)
         self.ora = ORA_FINTA
         patch_ora = mock.patch("supporto.orologio.adesso", side_effect=lambda: self.ora)
         patch_ora.start()
         self.addCleanup(patch_ora.stop)
 
-        # 3) le e-mail non partono: vengono raccolte in self.email
         self.email = []
         patch_posta = mock.patch("supporto.posta.invia",
                                  side_effect=lambda a, o, t: self.email.append((a, o, t)))

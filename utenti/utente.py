@@ -10,7 +10,7 @@ FORMATO_EMAIL = re.compile(r"^[\w.+-]+@[\w-]+(\.[\w-]+)+$")
 FORMATO_PASSWORD = re.compile(r"^[A-Za-z0-9]{6,}$")  # NF2
 
 class Utente(ABC):
-    def __init__(self):  # create(): void
+    def __init__(self): 
         self.__comitato = ""
         self.__email = ""
         self.__password = ""

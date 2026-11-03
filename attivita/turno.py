@@ -66,11 +66,6 @@ class Turno(Programmabile):
     def getDataOraFine(self) -> datetime:
         return datetime.combine(self.__data, self.__oraFine)
 
-   # def aggiungiPrenotazione(self, prenotazione: Prenotazione) -> None:
-   #     self.__prenotazioni.append(prenotazione)
-   # def eliminaPrenotazione(self, prenotazione: Prenotazione) -> None:
-    #    self.__prenotazioni.remove(prenotazione)
-
     def aggiungiPrenotazione(self, prenotazione: Prenotazione) -> None:
         self.__prenotazioni.append(prenotazione)
         self.setPostiLiberi(self.__postiLiberi - 1)

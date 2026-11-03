@@ -31,7 +31,6 @@ class TestAccount(TestBase):
 
     def test_password_troppo_corta(self):
         v = Volontario()
-        # NF2: password almeno 6 caratteri alfanumerici
         ok = v.inserisciInformazioni("Luigi", "Verdi", "VRDLGU80A01H501U",
                                      "luigi@cri.it", "3339998877",
                                      "Comitato di Ancona", "12345")

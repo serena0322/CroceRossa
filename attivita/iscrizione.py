@@ -77,9 +77,7 @@ class Iscrizione(Partecipazione):
 
     def liberaPosti(self) -> None:
         self.__corso.eliminaIscrizione(self)
-        #if self.__corso.getStato() == StatoAttivita.PROGRAMMATO:
-           # self.__corso.setPostiLiberi(self.__corso.getDati()["postiLiberi"] + 1)
-
+        
     def notificaModifica(self) -> None:
         self.__volontario.inviaEmail("Corso modificato",
                                      f"Il corso {self.__corso.getDati()['nome']} e' stato modificato.")

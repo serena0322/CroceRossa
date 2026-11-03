@@ -59,13 +59,6 @@ class Corso(Programmabile):
     def getDataInizio(self) -> date:
         return self.__dataInizio
 
-  #  def aggiungiIscrizione(self, iscrizione: Iscrizione) -> None:
-   #     self.__iscrizioni.append(iscrizione)
-    #    self.setPostiLiberi(self.__postiLiberi - 1)
-
-   # def eliminaIscrizione(self, iscrizione: Iscrizione) -> None:
-    #    self.__iscrizioni.remove(iscrizione)
-
     def aggiungiIscrizione(self, iscrizione: Iscrizione) -> None:
         self.__iscrizioni.append(iscrizione)
         self.setPostiLiberi(self.__postiLiberi - 1)
@@ -190,10 +183,6 @@ class Corso(Programmabile):
             if corso.soddisfaCriterio(self.__prelevaCriterio({"tipoCorso": tipoCorso})):
                 self.__aggiungiATrovati(corso, trovati)
         return trovati
-
-    #def filtraCorsi(self, tipoCorso: str) -> list[Corso]:
-        #return [c for c in self.visualizzaCatalogoCorsi()
-               # if c.soddisfaCriterio(self.__prelevaCriterio({"tipoCorso": tipoCorso}))]
 
     def visualizzaCorsi(self) -> list[Corso]:
         return self.__ordinaPerData(list(GestoreDati().carica()["corsi"].values()))
