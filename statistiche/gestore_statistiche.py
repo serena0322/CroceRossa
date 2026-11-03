@@ -22,20 +22,6 @@ class GestoreStatistiche:
             return self.__calcolaStatisticheCorsi(list(dati.get("corsi", {}).values()))
         return {}
 
-    # Metodi di compatibilità con la vecchia interfaccia pubblica
-    def calcolaStatisticheVolontari(self) -> dict:
-        dati = GestoreDati().carica()
-        volontari = [u for u in dati.get("utenti", {}).values() if isinstance(u, Volontario)]
-        return self.__calcolaStatisticheVolontari(volontari)
-
-    def calcolaStatisticheTurni(self) -> dict:
-        dati = GestoreDati().carica()
-        return self.__calcolaStatisticheTurni(list(dati.get("turni", {}).values()))
-
-    def calcolaStatisticheCorsi(self) -> dict:
-        dati = GestoreDati().carica()
-        return self.__calcolaStatisticheCorsi(list(dati.get("corsi", {}).values()))
-
     def __calcolaStatisticheVolontari(self, volontari) -> dict:
         if not volontari:
             return {}  # la vista mostra il messaggio di errore
