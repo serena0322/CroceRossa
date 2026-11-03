@@ -33,7 +33,7 @@ class VistaStatistiche(QWidget):
 
         self.combo = QComboBox(self)
         self.combo.addItems(["Volontari", "Turni e prenotazioni", "Corsi e iscrizioni"])
-        self.combo.currentTextChanged.connect(self.on_changed)
+        self.combo.currentTextChanged.connect(self.on_Changed)
         cat_layout.addWidget(self.combo, 1)
         main_layout.addLayout(cat_layout)
 
@@ -45,9 +45,9 @@ class VistaStatistiche(QWidget):
         main_layout.addWidget(self.content_widget, 1)
 
         self.setLayout(main_layout)
-        self.on_changed("Volontari")
+        self.on_Changed("Volontari")
 
-    def on_changed(self, cat_label: str) -> None:
+    def on_Changed(self, cat_label: str) -> None:
         # Pulisce i widget correnti
         for i in reversed(range(self.content_layout.count())):
             item = self.content_layout.itemAt(i)
