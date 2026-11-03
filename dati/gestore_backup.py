@@ -12,9 +12,9 @@ class GestoreBackup:
 
     def effettuaBackup(self) -> None:
         dati = GestoreDati().carica()  # preleva i dati di tutte le categorie
-        self.__copiaDati(dati)
+        self.__copiaDatiBackup(dati)
 
-    def __copiaDati(self, dati: dict) -> None:
+    def __copiaDatiBackup(self, dati: dict) -> None:
         os.makedirs(self.__percorsoBackup, exist_ok=True)
         nome = f"dati_{orologio.adesso():%Y%m%d}.pickle"
         with open(os.path.join(self.__percorsoBackup, nome), "wb") as file:
