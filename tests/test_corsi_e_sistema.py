@@ -96,9 +96,9 @@ class TestCorsi(TestBase):
         Corso().selezionaSuperati(c, [v])
 
         stats = GestoreStatistiche().gestisciStatistiche("corsi")
-        self.assertIn("perStato", stats)
+        self.assertIn("corsiPerStato", stats)
         self.assertEqual(stats["iscrizioniTotali"], 1)
-        self.assertEqual(stats["percentualeSuperati"]["TSSA"], 100.0)
+        self.assertEqual(stats["percentualeSuperatiPerCorso"]["TSSA"], 100.0)
 
 
 class TestBackup(TestBase):
