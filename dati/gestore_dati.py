@@ -2,15 +2,14 @@
 Tutto il sistema sta in UN SOLO dizionario salvato in dati/dati.pickle.
 Un solo pickle.dump conserva i riferimenti condivisi: la Prenotazione che sta
 nella lista del Turno e quella nella lista del Volontario restano lo stesso
-oggetto anche dopo il caricamento (con file separati diventerebbero copie).
+oggetto anche dopo il caricamento.
 """
 import os
 import pickle
 
 PERCORSO_FILE = os.path.join("dati", "dati.pickle")
 
-# dizionario caricato una sola volta e condiviso da tutte le classi
-_dati = None
+_dati = None # dizionario condiviso da tutte le classi
 
 def _struttura_vuota() -> dict:
     return {
@@ -25,7 +24,7 @@ def _struttura_vuota() -> dict:
     }
 
 class GestoreDati:
-    def __init__(self):  # create(): void
+    def __init__(self): 
         self.__percorsoFile = PERCORSO_FILE
 
     def carica(self) -> dict:
