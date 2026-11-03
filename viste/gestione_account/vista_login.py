@@ -50,17 +50,17 @@ class VistaLogin(QWidget):
 
         lbl_email = QLabel("E-mail")
         lbl_email.setStyleSheet("font-size: 13px; font-weight: 500;")
-        self.txt_email = QLineEdit(self)
-        self.txt_email.setPlaceholderText("mario.rossi@gmail.com")
+        self.email = QLineEdit(self)
+        self.email.setPlaceholderText("mario.rossi@gmail.com")
         grid.addWidget(lbl_email, 0, 0)
-        grid.addWidget(self.txt_email, 0, 1)
+        grid.addWidget(self.email, 0, 1)
 
         lbl_pwd = QLabel("Password")
         lbl_pwd.setStyleSheet("font-size: 13px; font-weight: 500;")
-        self.txt_password = QLineEdit(self)
-        self.txt_password.setEchoMode(QLineEdit.Password)
+        self.password = QLineEdit(self)
+        self.password.setEchoMode(QLineEdit.Password)
         grid.addWidget(lbl_pwd, 1, 0)
-        grid.addWidget(self.txt_password, 1, 1)
+        grid.addWidget(self.password, 1, 1)
 
         main_layout.addLayout(grid)
 
@@ -108,8 +108,8 @@ class VistaLogin(QWidget):
 
     def login_click(self) -> None:
         nascondi_errore(self.lbl_errore)
-        email = self.txt_email.text().strip()
-        pwd = self.txt_password.text().strip()
+        email = self.email.text().strip()
+        pwd = self.password.text().strip()
         if not email or not pwd:
             mostra_errore(self.lbl_errore, "Inserire e-mail e password.")
             return
