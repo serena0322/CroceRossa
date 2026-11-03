@@ -43,7 +43,7 @@ class VistaGestisciTurni(QWidget):
         btn_v_layout.addStretch()
         btn_prenotati = QPushButton("Visualizza prenotati")
         btn_prenotati.setFixedWidth(240)
-        btn_prenotati.clicked.connect(self.show_selected_info)
+        btn_prenotati.clicked.connect(self.visualizza_prenotati_click)
         btn_v_layout.addWidget(btn_prenotati)
         btn_v_layout.addStretch()
         main_layout.addLayout(btn_v_layout)
@@ -73,15 +73,15 @@ class VistaGestisciTurni(QWidget):
         btn_row.setSpacing(12)
 
         self.btn_ins = QPushButton("Inserisci")
-        self.btn_ins.clicked.connect(self.show_new)
+        self.btn_ins.clicked.connect(self.inserisci_click)
         btn_row.addWidget(self.btn_ins, 1)
 
         self.btn_mod = QPushButton("Modifica")
-        self.btn_mod.clicked.connect(self.show_modifica)
+        self.btn_mod.clicked.connect(self.modifica_click)
         btn_row.addWidget(self.btn_mod, 1)
 
         self.btn_rim = QPushButton("Rimuovi")
-        self.btn_rim.clicked.connect(self.rimuovi_turno)
+        self.btn_rim.clicked.connect(self.rimuovi_click)
         btn_row.addWidget(self.btn_rim, 1)
 
         main_layout.addLayout(btn_row)
@@ -125,7 +125,7 @@ class VistaGestisciTurni(QWidget):
         self.btn_mod.setEnabled(ha_codice)
         self.btn_rim.setEnabled(ha_codice)
 
-    def show_selected_info(self) -> None:
+    def visualizza_prenotati_click(self) -> None:
         nascondi_errore(self.lbl_errore)
         idx = self.tabella.currentRow()
         if not (0 <= idx < len(self.turni)):
@@ -136,7 +136,7 @@ class VistaGestisciTurni(QWidget):
         self.vista_prenotati = VistaPrenotatiTurno(turno)
         self.vista_prenotati.show()
 
-    def show_new(self) -> None:
+    def inserisci_click(self) -> None:
         nascondi_errore(self.lbl_errore)
         cod = self.codice.text().strip()
         if not Turno().inserisciTurno(cod):
@@ -147,7 +147,7 @@ class VistaGestisciTurni(QWidget):
         self.vista_inserisci = VistaInserisciTurno(cod, self.load_turni)
         self.vista_inserisci.show()
 
-    def show_modifica(self) -> None:
+    def modifica_click(self) -> None:
         nascondi_errore(self.lbl_errore)
         cod = self.codice.text().strip()
         dati_t = Turno().modificaTurno(cod)
@@ -162,7 +162,7 @@ class VistaGestisciTurni(QWidget):
         self.vista_modifica = VistaModificaTurno(trovati[0], self.load_turni)
         self.vista_modifica.show()
 
-    def rimuovi_turno(self) -> None:
+    def rimuovi_click(self) -> None:
         nascondi_errore(self.lbl_errore)
         cod = self.codice.text().strip()
         ok = Turno().rimuoviTurno(cod)
