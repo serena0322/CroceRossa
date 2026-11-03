@@ -40,7 +40,6 @@ class Iscrizione(Partecipazione):
         self.__dataIscrizione = orologio.adesso().date()
         self.__corso, self.__volontario = corso, volontario
         corso.aggiungiIscrizione(self)
-        #corso.setPostiLiberi(datiCorso["postiLiberi"] - 1)
         volontario.aggiungiPartecipazione(self)
         dati = GestoreDati().carica()
         dati["iscrizioni"][self.__codice] = self
