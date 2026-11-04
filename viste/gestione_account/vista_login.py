@@ -1,4 +1,4 @@
-"""VistaLogin (GestioneAccount) conforme alle specifiche del PDF e mockup (pag. 104).
+"""VistaLogin (GestioneAccount).
 Layout:
 - Intestazione 'Croce Rossa Ancona - Accesso'
 - Titolo 'Accedi'
