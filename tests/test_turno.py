@@ -84,10 +84,10 @@ class TestCUDTurno(TestBase):
         self.assertIn("eliminato", self.email[0][1])
 
     def test_turno_in_corso_non_rimovibile(self):
-        # Alle 7:00 inseriamo il turno delle 8:00
+        # turno non ancora iniziato
         self.vai_a(datetime(2026, 11, 2, 7, 0))
         t = self.nuovo_turno("T1", giorno=date(2026, 11, 2), inizio=time(8, 0), fine=time(12, 0))
-        # Spostiamo alle 9:00 -> in corso
+        # il turno risulta in corso
         self.vai_a(datetime(2026, 11, 2, 9, 0))
         Turno().aggiornaStatoTurni()
         self.assertEqual(t.getStato(), StatoAttivita.IN_CORSO)
@@ -100,12 +100,12 @@ class TestCUDTurno(TestBase):
         # Inizialmente nessun prenotato: restituisce lista vuota
         self.assertEqual(Turno().visualizzaPrenotatiTurno(t), [])
 
-        # Primo volontario prenotato il 2 novembre
+        # Primo volontario
         self.vai_a(datetime(2026, 11, 2, 9, 0))
         v1 = self.nuovo_volontario("v1@cri.it", cf="AAAAAA80A01H501U")
         Prenotazione().prenotaTurno(t, v1)
 
-        # Secondo volontario prenotato il 3 novembre
+        # Secondo volontario
         self.vai_a(datetime(2026, 11, 3, 10, 0))
         v2 = self.nuovo_volontario("v2@cri.it", cf="BBBBBB80A01H501U")
         Prenotazione().prenotaTurno(t, v2)
@@ -156,7 +156,6 @@ class TestTempo(TestBase):
         self.assertEqual(v.getDati()["oreServizio"], 4.0)
 
     def test_promemoria_solo_ai_turni_di_domani(self):
-        # Oggi è 2 nov 2026
         t_domani = self.nuovo_turno("T_DOMANI", giorno=date(2026, 11, 3))
         t_dopodomani = self.nuovo_turno("T_DOPO", giorno=date(2026, 11, 4))
         v = self.nuovo_volontario()
