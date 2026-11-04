@@ -145,7 +145,7 @@ class Turno(Programmabile):
     def eliminaTurno(self, codice: str) -> bool:
         trovati = self.ricercaTurno({"codice": codice})
         if not trovati or trovati[0].getStato() != StatoAttivita.PROGRAMMATO:
-            return False  # turno non rimovibile
+            return False  # turno non eliminabile
         turno = trovati[0]
         dati = GestoreDati().carica()
         for prenotazione in turno.getPrenotazioni():
