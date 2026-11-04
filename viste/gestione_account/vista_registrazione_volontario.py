@@ -1,4 +1,4 @@
-"""VistaRegistrazioneVolontario (GestioneAccount) secondo le specifiche del PDF e mockup (pag. 104).
+"""VistaRegistrazioneVolontario (GestioneAccount).
 Layout a due colonne:
 - Titolo 'Registrazione Volontario'
 - Campi:
