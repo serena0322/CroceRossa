@@ -1,4 +1,4 @@
-"""VistaCarriera (GestioneAccount) secondo le specifiche del PDF e mockup (pag. 104).
+"""VistaCarriera (GestioneAccount).
 Layout:
 - Intestazione 'Carriera'
 - Sezione 'Corsi superati': tabella con colonna 'Corso'
