@@ -30,8 +30,6 @@ class VistaRegistrazioneReferente(QWidget):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(12)
 
-        # Intestazione come mockup pag. 104: "Registrazione Referente"
-
         grid = QGridLayout()
         grid.setHorizontalSpacing(16)
         grid.setVerticalSpacing(8)
