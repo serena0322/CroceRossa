@@ -48,8 +48,11 @@ class Utente(ABC):
         pass
 
     def inserisciCredenziali(self, email: str, password: str):
-        """Restituisce l'Utente autenticato oppure None (credenziali non valide)."""
-        return self.__validaCredenziali(email, password)
+    """Restituisce l'Utente autenticato oppure None (credenziali non valide)."""
+    utente = self.__validaCredenziali(email, password)
+    if utente is not None:
+        self.__autentica(utente)
+    return utente
 
     def __validaCredenziali(self, email: str, password: str):
         for utente in GestoreDati().carica()["utenti"].values():
