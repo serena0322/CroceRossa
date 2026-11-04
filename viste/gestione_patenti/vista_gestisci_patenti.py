@@ -136,7 +136,7 @@ class VistaGestisciPatenti(QWidget):
     def rimuovi_click(self) -> None:
         nascondi_errore(self.lbl_errore)
         cod = self.codice.text().strip()
-        ok = Patente().rimuoviPatente(cod, self.volontario)
+        ok = Patente().eliminaPatente(cod, self.volontario)
         if ok:
             nascondi_errore(self.lbl_errore)
             self.load_patenti()
