@@ -1,4 +1,4 @@
-"""VistaHomeVolontario (GestioneAccount) secondo le specifiche del PDF e mockup (pag. 104).
+"""VistaHomeVolontario (GestioneAccount).
 Layout:
 - Intestazione: 'Croce Rossa Ancona - Home Volontario'
 - Titolo grande: 'Ciao <Nome> <Cognome>'
@@ -106,8 +106,8 @@ class VistaHomeVolontario(QWidget):
         self.vista_successiva.show()
 
     def go_account(self) -> None:
-        from viste.gestione_account.vista_profilo import VistaProfilo
-        self.vista_successiva = VistaProfilo(self.volontario)
+        from viste.gestione_account.vista_account import VistaAccount
+        self.vista_successiva = VistaAccount(self.volontario)
         self.vista_successiva.show()
 
     def go_carriera(self) -> None:
