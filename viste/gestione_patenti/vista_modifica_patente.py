@@ -32,15 +32,13 @@ class VistaModificaPatente(QWidget):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(14)
 
-        # Intestazione come mockup pag. 104: "Modifica patente"
-
         grid = QGridLayout()
         grid.setHorizontalSpacing(16)
         grid.setVerticalSpacing(10)
         grid.setColumnStretch(0, 0)
         grid.setColumnStretch(1, 1)
 
-        # Riga Codice (in sola lettura)
+        # Riga Codice (sola lettura)
         lbl_cod = QLabel("Codice")
         lbl_cod.setStyleSheet("font-size: 13px; font-weight: 500;")
         self.txt_codice = QLineEdit(self)
