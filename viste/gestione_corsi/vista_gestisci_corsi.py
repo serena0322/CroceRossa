@@ -1,4 +1,4 @@
-"""VistaGestisciCorsi (GestioneCorsi) secondo le specifiche del PDF e mockup (pag. 107).
+"""VistaGestisciCorsi (GestioneCorsi).
 Layout:
 - Intestazione 'Gestisci corsi'
 - Tabella (Codice, Nome, Data Inizio, Stato, Posti liberi)
