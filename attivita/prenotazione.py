@@ -96,7 +96,7 @@ class Prenotazione(Partecipazione):
                                          f"Il turno {d['codice']} del {d['data']:%d/%m/%Y} "
                                          f"e' stato modificato.")
 
-    def notificaEliminazione(self) -> None:
+    def avvisaEliminazione(self) -> None:
         if self.__turno is not None and self.__volontario is not None:
             d = self.__turno.getDati()
             self.__volontario.inviaEmail("Turno eliminato",
