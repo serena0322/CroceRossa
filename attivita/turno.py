@@ -149,7 +149,7 @@ class Turno(Programmabile):
         turno = trovati[0]
         dati = GestoreDati().carica()
         for prenotazione in turno.getPrenotazioni():
-            prenotazione.notificaEliminazione()  # e-mail + toglie dal Volontario
+            prenotazione.avvisaEliminazione()  # e-mail + toglie dal Volontario
             dati["prenotazioni"].pop(prenotazione.getDati()["codice"], None)
         del dati["turni"][codice]
         GestoreDati().salva(dati)
