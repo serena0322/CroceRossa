@@ -52,7 +52,7 @@ class Patente:
         GestoreDati().salva(GestoreDati().carica())
 
     # rimozione
-    def rimuoviPatente(self, codice: str, volontario: Volontario) -> bool:
+    def eliminaPatente(self, codice: str, volontario: Volontario) -> bool:
         trovate = self.ricercaPatente({"codice": codice})
         if not trovate or trovate[0] not in volontario.visualizzaPatenti():
             return False
