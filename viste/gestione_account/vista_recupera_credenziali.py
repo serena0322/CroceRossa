@@ -1,4 +1,4 @@
-"""VistaRecuperaCredenziali (GestioneAccount) secondo le specifiche del PDF e mockup (pag. 104).
+"""VistaRecuperaCredenziali (GestioneAccount).
 Layout a due colonne:
 - Titolo 'Recupero password'
 - Istruzione: 'Riceverai una nuova password all'indirizzo indicato.'
