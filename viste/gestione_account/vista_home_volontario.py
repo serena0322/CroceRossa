@@ -41,7 +41,7 @@ class VistaHomeVolontario(QWidget):
         riga_ut1 = QHBoxLayout()
         riga_ut1.setSpacing(12)
         btn_prof = QPushButton("Profilo")
-        btn_prof.clicked.connect(self.go_profilo)
+        btn_prof.clicked.connect(self.go_account)
         riga_ut1.addWidget(btn_prof, 1)
 
         btn_carr = QPushButton("Carriera")
@@ -105,7 +105,7 @@ class VistaHomeVolontario(QWidget):
         self.vista_successiva = VistaIscrizioni(self.volontario)
         self.vista_successiva.show()
 
-    def go_profilo(self) -> None:
+    def go_account(self) -> None:
         from viste.gestione_account.vista_profilo import VistaProfilo
         self.vista_successiva = VistaProfilo(self.volontario)
         self.vista_successiva.show()
