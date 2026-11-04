@@ -181,7 +181,7 @@ class VistaGestisciCorsi(QWidget):
     def rimuovi_click(self) -> None:
         nascondi_errore(self.lbl_errore)
         cod = self.codice.text().strip()
-        ok = Corso().rimuoviCorso(cod)
+        ok = Corso().eliminaCorso(cod)
         if ok:
             nascondi_errore(self.lbl_errore)
             self.load_corsi()
