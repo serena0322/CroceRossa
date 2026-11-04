@@ -122,7 +122,7 @@ class Corso(Programmabile):
                       orario, luogo, postiTotali)
         corso.setPostiLiberi(postiTotali - iscritti)
         for iscrizione in corso.getIscrizioni():
-            iscrizione.notificaModifica()
+            iscrizione.avvisaModifica()
         GestoreDati().salva(GestoreDati().carica())
         return True
 
