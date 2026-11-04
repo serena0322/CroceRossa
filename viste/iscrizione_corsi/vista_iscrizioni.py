@@ -1,4 +1,4 @@
-"""VistaIscrizioni (IscrizioneCorsi) secondo le specifiche del PDF e mockup.
+"""VistaIscrizioni (IscrizioneCorsi).
 Layout:
 - Intestazione 'Le mie iscrizioni'
 - Tabella colonne: Nome | Codice | Data inizio | Luogo
