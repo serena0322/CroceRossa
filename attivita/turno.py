@@ -142,7 +142,7 @@ class Turno(Programmabile):
         return True
 
     # rimozione 
-    def rimuoviTurno(self, codice: str) -> bool:
+    def eliminaTurno(self, codice: str) -> bool:
         trovati = self.ricercaTurno({"codice": codice})
         if not trovati or trovati[0].getStato() != StatoAttivita.PROGRAMMATO:
             return False  # turno non rimovibile
