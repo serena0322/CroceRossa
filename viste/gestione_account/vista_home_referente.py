@@ -1,4 +1,4 @@
-"""VistaHomeReferente (GestioneAccount) secondo le specifiche del PDF e mockup (pag. 104).
+"""VistaHomeReferente (GestioneAccount).
 Layout:
 - Intestazione: 'Croce Rossa Ancona - Home Referente'
 - Saluto: 'Ciao'
@@ -71,6 +71,6 @@ class VistaHomeReferente(QWidget):
         self.vista_successiva.show()
 
     def go_account(self) -> None:
-        from viste.gestione_account.vista_profilo import VistaProfilo
-        self.vista_successiva = VistaProfilo(self.referente)
+        from viste.gestione_account.vista_account import VistaAccount
+        self.vista_successiva = VistaAccount(self.referente)
         self.vista_successiva.show()
