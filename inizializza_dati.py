@@ -1,7 +1,7 @@
 """Inizializzazione completa di un dataset ricco e realistico per simulazioni e test:
 - 15 codici di autorizzazione standard (CRI-REF-001 ... CRI-REF-015)
 - Diversi Referenti (Emergenza, Sanitario, Formazione, Sociale)
-- Oltre 10 Volontari con profili realistici, patenti CRI e ordinarie (CRI 1, 2, 3, 4, 5, B, C)
+- Oltre 10 Volontari con account realistici, patenti CRI e ordinarie (CRI 1, 2, 3, 4, 5, B, C)
 - Numerosi Turni (Passati/Conclusi, Oggi, Futuri/Programmati) con diversi tipi di servizio
 - Numerosi Corsi (Conclusi con attestazioni e percentuali di successo, In corso, Programmati con posti liberi)
 - Prenotazioni e Iscrizioni già assegnate tra volontari e attività, ore di servizio accumulate
