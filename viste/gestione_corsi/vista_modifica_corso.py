@@ -33,9 +33,7 @@ class VistaModificaCorso(QWidget):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(14)
 
-        # Intestazione mockup: "Modifica corso C-031"
-
-        # Griglia del form a 2 colonne
+        # Griglia
         grid = QGridLayout()
         grid.setHorizontalSpacing(16)
         grid.setVerticalSpacing(10)
@@ -60,7 +58,7 @@ class VistaModificaCorso(QWidget):
         add_row("direttoreCorso", "Direttore del corso", d.get("direttoreCorso", ""))
         add_row("tipoCorso", "Tipo di corso", d.get("tipoCorso", "Base"))
 
-        # Riga Inizio & Fine affiancati
+        # Riga Inizio - Fine 
         lbl_inizio = QLabel("Inizio")
         lbl_inizio.setStyleSheet("font-size: 13px; font-weight: 500;")
         grid.addWidget(lbl_inizio, row, 0)
@@ -87,7 +85,7 @@ class VistaModificaCorso(QWidget):
         grid.addLayout(date_row_layout, row, 1)
         row += 1
 
-        # Orario (tipo dato: testo libero come da mockup "Giovedì 20:30 - 23:00")
+        # Orario
         add_row("orario", "Orario", d.get("orario", ""))
         add_row("luogo", "Luogo", d.get("luogo", ""))
         add_row("postiTotali", "Numero posti", str(d.get("postiTotali", 20)))
