@@ -16,7 +16,7 @@ SUPERATO = "Superato"
 NON_SUPERATO = "Non superato"
 
 class Iscrizione(Partecipazione):
-    def __init__(self):  # create(): void
+    def __init__(self):  # create()
         self.__codice = ""
         self.__corso: Corso | None = None
         self.__dataIscrizione = date.min
@@ -73,7 +73,7 @@ class Iscrizione(Partecipazione):
     def getSuperato(self) -> bool:
         return self.__esito == SUPERATO
 
-    # ---------- Partecipazione ----------
+    #Partecipazione
     def getDatiVolontario(self) -> dict:
         assert self.__volontario is not None, "Volontario non associato"
         return self.__volontario.getDati()
