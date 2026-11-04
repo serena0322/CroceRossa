@@ -31,9 +31,7 @@ class VistaCatalogoCorsi(QWidget):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(14)
 
-        # Intestazione come mockup: "Catalogo corsi"
-
-        # Riga filtro: Tipo di corso [QLineEdit]   [Filtra]
+        # Riga filtro: Tipo di corso
         filtro_row = QHBoxLayout()
         filtro_row.setSpacing(12)
 
@@ -52,11 +50,11 @@ class VistaCatalogoCorsi(QWidget):
 
         main_layout.addLayout(filtro_row)
 
-        # Tabella colonne da mockup: Codice | Nome | Posti liberi
+        # Tabella colonne: Codice | Nome | Posti liberi
         self.tabella = crea_tabella(["Codice", "Nome", "Posti liberi"], self)
         main_layout.addWidget(self.tabella)
 
-        # Pulsanti [Dettagli] e [Iscriviti] affiancati
+        # Pulsanti [Dettagli] [Iscriviti] 
         btn_row = QHBoxLayout()
         btn_row.setSpacing(12)
 
