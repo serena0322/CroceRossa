@@ -76,12 +76,10 @@ class TestCorsi(TestBase):
         i.iscriviCorso(c, v)
         self.assertEqual(c.getDati()["postiLiberi"], 4)
 
-        # ORA_FINTA è 2026-11-02: mancano esattamente 2 giorni (4 nov - 2 nov = 2 <= 2 giorni)
         # L'annullamento entro 2 giorni deve essere negato
         self.assertFalse(v.annullaIscrizione(i))
         self.assertEqual(c.getDati()["postiLiberi"], 4)
 
-        # Se il corso iniziasse tra 3 giorni (5 nov), l'annullamento al 2 nov deve essere consentito
         c2 = Corso()
         c2.inserisciDatiCorso("C2", "Corso Avanzato", "Descrizione", "Mario Rossi",
                               "Base", date(2026, 11, 5), date(2026, 11, 6),
@@ -103,12 +101,11 @@ class TestCorsi(TestBase):
         # Non ancora concluso -> attestaPartecipazione restituisce lista vuota
         self.assertEqual(Corso().attestaPartecipazione(c), [])
 
-        # Avanza data oltre dataFine (5 nov) e aggiorna stato corsi
         self.vai_a(datetime(2026, 11, 5, 10, 0))
         Corso().aggiornaStatoCorsi()
         self.assertEqual(c.getStato(), StatoAttivita.CONCLUSO)
 
-        # Ora concluso -> attestaPartecipazione restituisce la lista degli iscritti
+        # Concluso -> attestaPartecipazione restituisce la lista degli iscritti
         iscritti = Corso().attestaPartecipazione(c)
         self.assertEqual(len(iscritti), 1)
         self.assertIs(iscritti[0], v)
