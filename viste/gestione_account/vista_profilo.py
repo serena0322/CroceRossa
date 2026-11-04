@@ -29,8 +29,6 @@ class VistaProfilo(QWidget):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(14)
 
-        # Intestazione come mockup pag. 104: "Profilo"
-
         lbl_sotto = QLabel("Modifica i tuoi recapiti e la password.")
         lbl_sotto.setStyleSheet("font-size: 13px; color: #4A5568;")
         main_layout.addWidget(lbl_sotto)
