@@ -1,4 +1,4 @@
-"""VistaDettagliCorso (IscrizioneCorsi) secondo le specifiche del PDF e mockup (dettagli_corso.png).
+"""VistaDettagliCorso (IscrizioneCorsi).
 Layout:
 - Intestazione: 'Dettagli corso <codice>'
 - Form a due colonne in sola lettura:
