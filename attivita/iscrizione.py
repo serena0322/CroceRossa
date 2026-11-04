@@ -82,7 +82,7 @@ class Iscrizione(Partecipazione):
         if self.__corso is not None:
             self.__corso.eliminaIscrizione(self)
 
-    def notificaModifica(self) -> None:
+    def avvisaModifica(self) -> None:
         if self.__corso is not None and self.__volontario is not None:
             self.__volontario.inviaEmail("Corso modificato",
                                          f"Il corso {self.__corso.getDati()['nome']} e' stato modificato.")
