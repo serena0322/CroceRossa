@@ -27,9 +27,7 @@ class VistaPrenotazioni(QWidget):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(14)
 
-        # Intestazione come nel mockup di pagina 106: "Le mie prenotazioni"
-
-        # Tabella colonne da mockup: Data | Orario | Codice turno
+        # Tabella colonne: Data | Orario | Codice turno
         self.tabella = crea_tabella(["Data", "Orario", "Codice turno"], self)
         main_layout.addWidget(self.tabella)
 
