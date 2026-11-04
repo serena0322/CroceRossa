@@ -36,7 +36,7 @@ class VistaGestisciCorsi(QWidget):
         self.tabella = crea_tabella(["Codice", "Nome", "Data Inizio", "Stato", "Posti liberi"], self)
         layout.addWidget(self.tabella)
 
-        # Due pulsanti larghi affiancati: [Visualizza iscritti] [Attesta partecipazione]
+        # Due pulsanti: [Visualizza iscritti] [Attesta partecipazione]
         row_azioni = QHBoxLayout()
         row_azioni.setSpacing(12)
         btn_iscritti = QPushButton("Visualizza iscritti")
@@ -52,10 +52,9 @@ class VistaGestisciCorsi(QWidget):
         self.lbl_errore = crea_label_errore(self)
         layout.addWidget(self.lbl_errore)
 
-        # Separatore visivo  
         layout.addSpacing(6)
 
-        # Sezione "Gestisci un corso" come da mockup
+        # Sezione "Gestisci un corso"
         lbl_sezione = QLabel("<b>Gestisci un corso</b>")
         lbl_sezione.setStyleSheet("font-size: 13px; font-weight: bold; color: #2D3748;")
         layout.addWidget(lbl_sezione)
