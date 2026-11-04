@@ -1,15 +1,12 @@
-"""Package Gestione: GestoreStatistiche (GestisciStatistiche, diagramma 7.1.5).
+"""Package Gestione: GestoreStatistiche 
 Usa: GestoreDati (per avere gli elenchi), Volontario (getDati) e,
-per turni e corsi, SOLO l'interfaccia Programmabile (getDati, getStato).
+per turni e corsi, l'interfaccia Programmabile (getDati, getStato).
 """
 from dati.gestore_dati import GestoreDati
 from utenti.volontario import Volontario
 
 
 class GestoreStatistiche:
-    """Realizza il caso d'uso GestisciStatistiche (7.1.5).
-    Usa: GestoreDati (per avere gli elenchi), Volontario (getDati) e,
-    per turni e corsi, SOLO l'interfaccia Programmabile (getDati, getStato)."""
 
     def __init__(self):  
         pass
@@ -24,20 +21,6 @@ class GestoreStatistiche:
         if categoria == "corsi":
             return self.__calcolaStatisticheCorsi(list(dati.get("corsi", {}).values()))
         return {}
-
-    # Metodi di compatibilità con la vecchia interfaccia pubblica
-    def calcolaStatisticheVolontari(self) -> dict:
-        dati = GestoreDati().carica()
-        volontari = [u for u in dati.get("utenti", {}).values() if isinstance(u, Volontario)]
-        return self.__calcolaStatisticheVolontari(volontari)
-
-    def calcolaStatisticheTurni(self) -> dict:
-        dati = GestoreDati().carica()
-        return self.__calcolaStatisticheTurni(list(dati.get("turni", {}).values()))
-
-    def calcolaStatisticheCorsi(self) -> dict:
-        dati = GestoreDati().carica()
-        return self.__calcolaStatisticheCorsi(list(dati.get("corsi", {}).values()))
 
     def __calcolaStatisticheVolontari(self, volontari) -> dict:
         if not volontari:

@@ -90,7 +90,7 @@ class VistaModificaCorso(QWidget):
         # Orario (tipo dato: testo libero come da mockup "Giovedì 20:30 - 23:00")
         add_row("orario", "Orario", d.get("orario", ""))
         add_row("luogo", "Luogo", d.get("luogo", ""))
-        add_row("postiTotali", "Numero posti", d.get("postiTotali", 20))
+        add_row("postiTotali", "Numero posti", str(d.get("postiTotali", 20)))
 
         main_layout.addLayout(grid)
 

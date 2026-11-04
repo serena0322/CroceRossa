@@ -23,6 +23,7 @@ class VistaPrenotatiTurno(QWidget):
         main_layout.setSpacing(14)
 
         # Intestazione come mockup pag. 104: "Prenotati al turno T-170"
+        main_layout.addWidget(QLabel(f"Prenotati al turno {codice}"))
 
         # Tabella colonne: Nome | Cognome | E-mail | Telefono | Prenotato il
         self.tabella = crea_tabella(["Nome", "Cognome", "E-mail", "Telefono", "Prenotato il"], self)
@@ -32,17 +33,13 @@ class VistaPrenotatiTurno(QWidget):
         self.load_prenotati()
 
     def load_prenotati(self) -> None:
-        prenotazioni = sorted(self.turno.getPrenotazioni(), key=lambda p: p.getDataPrenotazione())
-        self.tabella.setRowCount(len(prenotazioni))
-        for r, p in enumerate(prenotazioni):
-            vol = p.getVolontario()
-            d = vol.getDati() if vol else {}
-            data_p = p.getDataPrenotazione()
-            str_data = f"{data_p:%d/%m/%Y}" if data_p else "-"
+        prenotati = Turno().visualizzaPrenotatiTurno(self.turno)
+        self.tabella.setRowCount(len(prenotati))
+        for r, d in enumerate(prenotati):
             popola_riga(self.tabella, r, [
                 d.get("nome", ""),
                 d.get("cognome", ""),
                 d.get("email", ""),
                 d.get("telefono", ""),
-                str_data
+                f"{d['dataPrenotazione']:%d/%m/%Y}"
             ])

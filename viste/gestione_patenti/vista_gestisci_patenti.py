@@ -32,12 +32,11 @@ class VistaGestisciPatenti(QWidget):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(14)
 
-        # Intestazione come mockup pag. 104: "Le mie patenti"
 
         self.tabella = crea_tabella(["Codice", "Tipo", "Data di scadenza"], self)
         main_layout.addWidget(self.tabella)
 
-        # Separatore/spazio
+        # Separatore
         main_layout.addSpacing(6)
 
         # Sezione "Gestisci una patente"
@@ -75,7 +74,7 @@ class VistaGestisciPatenti(QWidget):
 
         main_layout.addLayout(btn_row)
 
-        # Banner d'errore
+        #errore
         self.lbl_errore = crea_label_errore(self)
         main_layout.addWidget(self.lbl_errore)
 

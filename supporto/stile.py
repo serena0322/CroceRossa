@@ -1,12 +1,4 @@
-"""Stili e tema dell'applicazione Croce Rossa Italiana.
-Riproduce l'estetica esatta dei mockup del PDF (pagine 4-14):
-- Sfondo pulito (#FFFFFF / #FAFAFA)
-- Titoli e intestazioni chiari con barra di stato / indicatori
-- Pulsanti con contorno rosso / bordi arrotondati, testo rosso scuro (#C8102E / #B82832), hover con sfondo tenue
-- Campi di input (QLineEdit, QDateEdit, QTimeEdit, QComboBox) con bordo sottile grigio (#B0B0B0), angoli arrotondati e padding
-- Tabelle e liste alternate con intestazioni chiare e righe evidenziate
-- Finestre con spaziatura e gerarchia ordinata
-"""
+"""Stili e tema dell'applicazione Croce Rossa Italiana."""
 from PyQt5.QtWidgets import QLabel
 
 FOGLIO_DI_STILE = """

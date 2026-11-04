@@ -257,6 +257,16 @@ def popola_dati():
     v_luca.aggiungiPartecipazione(p_fut3)
     dati["prenotazioni"]["PREN-V-172"] = p_fut3
 
+    # Calcolo coerente delle ore di servizio svolte sui soli turni CONCLUSI per ciascun volontario
+    for v in volontari_creati.values():
+        totale_ore = 0.0
+        for p in getattr(v, "_Volontario__prenotazioni", []):
+            t = p.getTurno()
+            if t.getStato() == StatoAttivita.CONCLUSO:
+                durata = (t.getDataOraFine() - t.getDataOraInizio()).total_seconds() / 3600
+                totale_ore += round(durata, 2)
+        setattr(v, "_Volontario__oreServizio", totale_ore)
+
     # Salva il dataset complessivo
     GestoreDati().salva(dati)
     print("Popolamento dataset completato con successo!")

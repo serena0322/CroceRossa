@@ -20,7 +20,7 @@ class Iscrizione(Partecipazione):
         self.__codice = ""
         self.__corso: Corso | None = None
         self.__dataIscrizione = date.min
-        self.__esito = " "
+        self.__esito = ""
         self.__volontario: Volontario | None = None
 
     def getDati(self) -> dict:
@@ -40,7 +40,6 @@ class Iscrizione(Partecipazione):
         self.__dataIscrizione = orologio.adesso().date()
         self.__corso, self.__volontario = corso, volontario
         corso.aggiungiIscrizione(self)
-        #corso.setPostiLiberi(datiCorso["postiLiberi"] - 1)
         volontario.aggiungiPartecipazione(self)
         dati = GestoreDati().carica()
         dati["iscrizioni"][self.__codice] = self

@@ -1,4 +1,4 @@
-"""VistaIscrittiCorso (GestioneCorsi) secondo le specifiche del PDF e mockup (pag. 107).
+"""VistaIscrittiCorso (GestioneCorsi).
 Layout:
 - Intestazione: 'Iscritti al corso <codice>'
 - Tabella: Nome | Cognome | E-mail | Telefono | Iscritto il
@@ -22,7 +22,7 @@ class VistaIscrittiCorso(QWidget):
         layout.setContentsMargins(18, 18, 18, 18)
         layout.setSpacing(12)
 
-        # Intestazione come nel mockup di pagina 107: "Iscritti al corso C-028"
+        layout.addWidget(QLabel(f"Iscritti al corso {codice}"))
 
         self.tabella = crea_tabella(["Nome", "Cognome", "E-mail", "Telefono", "Iscritto il"], self)
         layout.addWidget(self.tabella)
@@ -31,17 +31,13 @@ class VistaIscrittiCorso(QWidget):
         self.load_iscritti()
 
     def load_iscritti(self) -> None:
-        iscrizioni = sorted(self.corso.getIscrizioni(), key=lambda i: i.getDataIscrizione())
-        self.tabella.setRowCount(len(iscrizioni))
-        for r, isc in enumerate(iscrizioni):
-            vol = isc.getVolontario()
-            d = vol.getDati() if vol else {}
-            data_isc = isc.getDataIscrizione()
-            str_data = f"{data_isc:%d/%m/%Y}" if data_isc else "-"
+        iscritti = Corso().visualizzaIscrittiCorso(self.corso)
+        self.tabella.setRowCount(len(iscritti))
+        for r, d in enumerate(iscritti):
             popola_riga(self.tabella, r, [
                 d.get("nome", ""),
                 d.get("cognome", ""),
                 d.get("email", ""),
                 d.get("telefono", ""),
-                str_data
+                f"{d['dataIscrizione']:%d/%m/%Y}"
             ])

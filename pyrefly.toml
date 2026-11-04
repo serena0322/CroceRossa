@@ -2,4 +2,4 @@ project-includes = [
     "**/*.py*",
     "**/*.ipynb",
 ]
-errors = { "missing-attribute" = false }
+preset = "basic"

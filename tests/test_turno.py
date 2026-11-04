@@ -95,6 +95,33 @@ class TestCUDTurno(TestBase):
         ok = Turno().rimuoviTurno("T1")
         self.assertFalse(ok)
 
+    def test_visualizza_prenotati_turno(self):
+        t = self.nuovo_turno("T1", posti=3)
+        # Inizialmente nessun prenotato: restituisce lista vuota
+        self.assertEqual(Turno().visualizzaPrenotatiTurno(t), [])
+
+        # Primo volontario prenotato il 2 novembre
+        self.vai_a(datetime(2026, 11, 2, 9, 0))
+        v1 = self.nuovo_volontario("v1@cri.it", cf="AAAAAA80A01H501U")
+        Prenotazione().prenotaTurno(t, v1)
+
+        # Secondo volontario prenotato il 3 novembre
+        self.vai_a(datetime(2026, 11, 3, 10, 0))
+        v2 = self.nuovo_volontario("v2@cri.it", cf="BBBBBB80A01H501U")
+        Prenotazione().prenotaTurno(t, v2)
+
+        prenotati = Turno().visualizzaPrenotatiTurno(t)
+        self.assertEqual(len(prenotati), 2)
+        # Ordine crescente di dataPrenotazione
+        self.assertEqual(prenotati[0]["email"], "v1@cri.it")
+        self.assertEqual(prenotati[0]["dataPrenotazione"], date(2026, 11, 2))
+        self.assertEqual(prenotati[1]["email"], "v2@cri.it")
+        self.assertEqual(prenotati[1]["dataPrenotazione"], date(2026, 11, 3))
+
+        # Verifica che il dizionario originale del Volontario non venga inquinato
+        self.assertNotIn("dataPrenotazione", v1.getDati())
+        self.assertNotIn("dataPrenotazione", v2.getDati())
+
 
 class TestTempo(TestBase):
     def test_aggiorna_stato_programmato_in_corso_concluso(self):

@@ -36,9 +36,9 @@ class Volontario(Utente):
             **self._datiUtente()
         }
 
-    # ---------- CreaAccountVolontario ----------
+    # CreaAccountVolontario 
     def creaAccountVolontario(self) -> None:
-        """Messaggio d'avvio: lo fa partire VistaRegistrazioneVolontario."""
+        """lo fa partire VistaRegistrazioneVolontario"""
         pass
 
     def inserisciInformazioni(self, nome: str, cognome: str, codiceFiscale: str, email: str,
@@ -67,7 +67,7 @@ class Volontario(Utente):
                 return False
         return True
 
-    # ---------- ore di servizio, patenti, partecipazioni ----------
+    #  ore di servizio, patenti, partecipazioni 
     def aggiungiOreServizio(self, ore: float) -> None:
         self.__oreServizio += ore
 
@@ -100,7 +100,7 @@ class Volontario(Utente):
         elif isinstance(partecipazione, Iscrizione) and partecipazione in self.__iscrizioni:
             self.__iscrizioni.remove(partecipazione)
 
-    # ---------- VisualizzaPrenotazioni / AnnullaPrenotazione ----------
+    #  VisualizzaPrenotazioni / AnnullaPrenotazione 
     def visualizzaPrenotazioni(self) -> list[Prenotazione]:
         """Prenotazioni presenti = a turni non conclusi."""
         return [p for p in self.__prenotazioni
@@ -116,7 +116,7 @@ class Volontario(Utente):
         GestoreDati().salva(dati)
         return True
 
-    # ---------- VisualizzaIscrizioni / AnnullaIscrizioneCorso ----------
+    # VisualizzaIscrizioni / AnnullaIscrizioneCorso 
     def visualizzaIscrizioni(self) -> list[Iscrizione]:
         return [i for i in self.__iscrizioni
                 if i.getDatiCorso()["stato"] != StatoAttivita.CONCLUSO]
@@ -131,7 +131,7 @@ class Volontario(Utente):
         GestoreDati().salva(dati)
         return True
 
-    # ---------- VisualizzaCarriera ----------
+    #  VisualizzaCarriera 
     def visualizzaCarriera(self) -> dict:
         corsi = [i.getDatiCorso()["nome"] for i in self.__iscrizioni if i.getSuperato()]
         turni = [(p.getDatiTurno()["data"], p.getDatiTurno()["codice"])
@@ -143,7 +143,7 @@ class Volontario(Utente):
             "oreServizio": self.__oreServizio
         }
 
-    # ---------- EliminaAccount (ridefinito) ----------
+    # EliminaAccount (ridefinito) 
     def eliminaAccount(self) -> None:
         dati = GestoreDati().carica()
         for prenotazione in list(self.__prenotazioni):

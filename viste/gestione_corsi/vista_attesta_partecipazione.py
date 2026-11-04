@@ -6,7 +6,7 @@ from attivita.corso import Corso
 
 
 class VistaAttestaPartecipazione(QWidget):
-    def __init__(self, corso: Corso, parent=None):        # create(Corso): void
+    def __init__(self, corso: Corso, parent=None):        
         super(VistaAttestaPartecipazione, self).__init__(parent)
         self.corso = corso
 
@@ -39,7 +39,7 @@ class VistaAttestaPartecipazione(QWidget):
             stato_check = Qt.Checked if v in superati_attuali else Qt.Unchecked
             item.setCheckState(stato_check)
             item.setEditable(False)
-            item.setData(v, Qt.UserRole)                          # il Volontario della riga
+            item.setData(v, Qt.UserRole) # Volontario della riga
             modello.appendRow(item)
         self.list_iscritti.setModel(modello)
 

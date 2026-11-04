@@ -1,4 +1,4 @@
-"""VistaStatistiche (GestioneAccount) secondo le specifiche del PDF e mockup (pag. 104).
+"""VistaStatistiche (GestioneAccount) 
 Layout:
 - Intestazione 'Statistiche'
 - Menu a tendina 'Categoria' [Volontari | Turni e prenotazioni | Corsi e iscrizioni]
@@ -21,8 +21,6 @@ class VistaStatistiche(QWidget):
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(14)
-
-        # Intestazione come mockup pag. 104: "Statistiche"
 
         cat_layout = QHBoxLayout()
         cat_layout.setSpacing(16)
@@ -78,8 +76,8 @@ class VistaStatistiche(QWidget):
         grid.setHorizontalSpacing(30)
         grid.setVerticalSpacing(6)
 
-        ore_tot = stats.get('oreServizioTotali', stats.get('oreTotali', 0.0))
-        media_ore = stats.get('mediaOreServizio', stats.get('mediaOre', 0.0))
+        ore_tot = stats['oreServizioTotali']
+        media_ore = stats['mediaOreServizio']
         n_vol = stats.get('numeroVolontari', 0)
 
         righe = [
@@ -119,12 +117,12 @@ class VistaStatistiche(QWidget):
         grid.setHorizontalSpacing(30)
         grid.setVerticalSpacing(6)
 
-        turni_stato = stats.get('turniPerStato', stats.get('perStato', {}))
+        turni_stato = stats['turniPerStato']
         prog = turni_stato.get("PROGRAMMATO", 0)
         inc = turni_stato.get("IN_CORSO", 0)
         conc = turni_stato.get("CONCLUSO", 0)
         pren_tot = stats.get("prenotazioniTotali", 0)
-        occ = stats.get("percentualeMediaPostiOccupati", stats.get("occupazioneMediaConclusi", 0.0))
+        occ = stats['percentualeMediaPostiOccupati']
 
         lbl_s = QLabel("<b>Turni per stato</b>")
         lbl_s.setStyleSheet("font-size: 13px; font-weight: bold; color: #2D3748;")
@@ -174,12 +172,12 @@ class VistaStatistiche(QWidget):
         grid.setHorizontalSpacing(30)
         grid.setVerticalSpacing(6)
 
-        corsi_stato = stats.get('corsiPerStato', stats.get('perStato', {}))
+        corsi_stato = stats['corsiPerStato']
         prog = corsi_stato.get("PROGRAMMATO", 0)
         inc = corsi_stato.get("IN_CORSO", 0)
         conc = corsi_stato.get("CONCLUSO", 0)
         isc_tot = stats.get("iscrizioniTotali", 0)
-        occ = stats.get("percentualeMediaPostiOccupati", stats.get("occupazioneMediaConclusi", 0.0))
+        occ = stats['percentualeMediaPostiOccupati']
 
         lbl_s = QLabel("<b>Corsi per stato</b>")
         lbl_s.setStyleSheet("font-size: 13px; font-weight: bold; color: #2D3748;")
@@ -221,7 +219,7 @@ class VistaStatistiche(QWidget):
 
         # Tabella superati: Corso concluso | % iscritti che lo hanno superato
         tabella = crea_tabella(["Corso concluso", "% iscritti che lo hanno superato"], self)
-        superati_dict = stats.get("percentualeSuperati", stats.get("percentualeSuperatiPerCorso", {}))
+        superati_dict = stats['percentualeSuperatiPerCorso']
         tabella.setRowCount(len(superati_dict))
         for r, (corso_nome, perc) in enumerate(superati_dict.items()):
             popola_riga(tabella, r, [

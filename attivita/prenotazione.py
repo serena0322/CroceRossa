@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from utenti.volontario import Volontario
 
 class Prenotazione(Partecipazione):
-    def __init__(self):  # create(): void
+    def __init__(self): 
         self.__codice = ""
         self.__dataPrenotazione = date.min
         self.__turno: Turno | None = None
@@ -25,9 +25,9 @@ class Prenotazione(Partecipazione):
             "dataPrenotazione": self.__dataPrenotazione
         }
 
-    # ---------- PrenotaTurno ----------
+    #  PrenotaTurno 
     def prenotaTurno(self, turno: Turno, volontario: Volontario) -> str:
-        """Restituisce "" se la prenotazione e' registrata, altrimenti il messaggio di errore."""
+        
         datiTurno = turno.getDati()
         if datiTurno["stato"] != StatoAttivita.PROGRAMMATO or datiTurno["postiLiberi"] == 0:
             return "Il turno non ha piu' posti liberi."
@@ -43,7 +43,6 @@ class Prenotazione(Partecipazione):
         self.__dataPrenotazione = orologio.adesso().date()
         self.__turno, self.__volontario = turno, volontario
         turno.aggiungiPrenotazione(self)
-        #turno.setPostiLiberi(datiTurno["postiLiberi"] - 1)
         volontario.aggiungiPartecipazione(self)
         dati = GestoreDati().carica()
         dati["prenotazioni"][self.__codice] = self
@@ -61,7 +60,7 @@ class Prenotazione(Partecipazione):
                 return True
         return False
 
-    # ---------- get usati dagli altri casi d'uso ----------
+    # get usati dagli altri casi d'uso 
     def getTurno(self) -> Turno:
         assert self.__turno is not None, "Turno non associato"
         return self.__turno
@@ -81,7 +80,7 @@ class Prenotazione(Partecipazione):
         assert self.__turno is not None, "Turno non associato"
         return self.__turno.getDati()
 
-    # ---------- Partecipazione ----------
+    #  Partecipazione 
     def getDatiVolontario(self) -> dict:
         assert self.__volontario is not None, "Volontario non associato"
         return self.__volontario.getDati()
@@ -105,7 +104,7 @@ class Prenotazione(Partecipazione):
                                          f"e' stato eliminato.")
             self.__volontario.eliminaPartecipazione(self)
 
-    # ---------- attore Tempo ----------
+    #  attore Tempo 
     def inviaPromemoria(self) -> None:
         if self.__turno is not None and self.__volontario is not None:
             d = self.__turno.getDati()
