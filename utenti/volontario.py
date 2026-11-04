@@ -62,7 +62,7 @@ class Volontario(Utente):
             return False
         if not FORMATO_EMAIL.match(email) or not FORMATO_PASSWORD.match(password):
             return False
-        for utente in GestoreDati().carica()["utenti"].values():  # NF3
+        for utente in GestoreDati().carica()["utenti"].values(): 
             if utente.getEmail() == email:
                 return False
         return True
@@ -143,7 +143,7 @@ class Volontario(Utente):
             "oreServizio": self.__oreServizio
         }
 
-    # EliminaAccount (ridefinito) 
+    # EliminaAccount 
     def eliminaAccount(self) -> None:
         dati = GestoreDati().carica()
         for prenotazione in list(self.__prenotazioni):
