@@ -71,20 +71,20 @@ class VistaLogin(QWidget):
         # Pulsante centrato "Accedi"
         btn_acc_layout = QHBoxLayout()
         btn_acc_layout.addStretch()
-        self.btn_login = QPushButton("Accedi")
-        self.btn_login.setFixedWidth(200)
-        self.btn_login.clicked.connect(self.login_click)
-        btn_acc_layout.addWidget(self.btn_login)
+        btn_login = QPushButton("Accedi")
+        btn_login.setFixedWidth(200)
+        btn_login.clicked.connect(self.login_click)
+        btn_acc_layout.addWidget(btn_login)
         btn_acc_layout.addStretch()
         main_layout.addLayout(btn_acc_layout)
 
         # Link "Password dimenticata?" centrato
         btn_rec_layout = QHBoxLayout()
         btn_rec_layout.addStretch()
-        self.btn_recupera = QPushButton("Password dimenticata?")
-        self.btn_recupera.setStyleSheet("background: transparent; border: none; color: #3182CE; font-weight: normal; text-decoration: underline;")
-        self.btn_recupera.clicked.connect(self.recupera_credenziali_click)
-        btn_rec_layout.addWidget(self.btn_recupera)
+        btn_recupera = QPushButton("Password dimenticata?")
+        btn_recupera.setStyleSheet("background: transparent; border: none; color: #3182CE; font-weight: normal; text-decoration: underline;")
+        btn_recupera.clicked.connect(self.recupera_credenziali_click)
+        btn_rec_layout.addWidget(btn_recupera)
         btn_rec_layout.addStretch()
         main_layout.addLayout(btn_rec_layout)
 
@@ -94,13 +94,13 @@ class VistaLogin(QWidget):
         reg_layout = QHBoxLayout()
         reg_layout.setSpacing(12)
 
-        self.btn_reg_vol = QPushButton("Registrati come Volontario")
-        self.btn_reg_vol.clicked.connect(self.registrazione_volontario_click)
-        reg_layout.addWidget(self.btn_reg_vol, 1)
+        btn_reg_vol = QPushButton("Registrati come Volontario")
+        btn_reg_vol.clicked.connect(self.registrazione_volontario_click)
+        reg_layout.addWidget(btn_reg_vol, 1)
 
-        self.btn_reg_ref = QPushButton("Registrati come Referente")
-        self.btn_reg_ref.clicked.connect(self.registrazione_referente_click)
-        reg_layout.addWidget(self.btn_reg_ref, 1)
+        btn_reg_ref = QPushButton("Registrati come Referente")
+        btn_reg_ref.clicked.connect(self.registrazione_referente_click)
+        reg_layout.addWidget(btn_reg_ref, 1)
 
         main_layout.addLayout(reg_layout)
 
