@@ -150,7 +150,6 @@ def popola_dati():
         setattr(isc, "_Iscrizione__volontario", v)
         setattr(isc, "_Iscrizione__dataIscrizione", oggi - timedelta(days=2))
         corsi_creati["C-031"].aggiungiIscrizione(isc)
-        #corsi_creati["C-031"].setPostiLiberi(corsi_creati["C-031"].getDati()["postiLiberi"] - 1)
         v.aggiungiPartecipazione(isc)
         dati["iscrizioni"][f"ISC-031-{idx+1:02d}"] = isc
 
@@ -162,7 +161,6 @@ def popola_dati():
     setattr(isc_m, "_Iscrizione__volontario", v_mario)
     setattr(isc_m, "_Iscrizione__dataIscrizione", oggi - timedelta(days=1))
     corsi_creati["C-033"].aggiungiIscrizione(isc_m)
-    #corsi_creati["C-033"].setPostiLiberi(corsi_creati["C-033"].getDati()["postiLiberi"] - 1)
     v_mario.aggiungiPartecipazione(isc_m)
     dati["iscrizioni"]["ISC-033-01"] = isc_m
 
@@ -204,7 +202,6 @@ def popola_dati():
         setattr(p, "_Prenotazione__volontario", v_mario)
         setattr(p, "_Prenotazione__dataPrenotazione", t.getDati()["data"] - timedelta(days=3))
         t.aggiungiPrenotazione(p)
-        #t.setPostiLiberi(max(0, t.getDati()["postiLiberi"] - 1))
         v_mario.aggiungiPartecipazione(p)
         dati["prenotazioni"][f"PREN-M-P{idx+1:02d}"] = p
 
@@ -218,7 +215,6 @@ def popola_dati():
         setattr(p, "_Prenotazione__volontario", v)
         setattr(p, "_Prenotazione__dataPrenotazione", t.getDati()["data"] - timedelta(days=2))
         t.aggiungiPrenotazione(p)
-        #t.setPostiLiberi(max(0, t.getDati()["postiLiberi"] - 1))
         v.aggiungiPartecipazione(p)
         dati["prenotazioni"][f"PREN-OTH-{idx+1:02d}"] = p
 
@@ -229,7 +225,6 @@ def popola_dati():
     setattr(p_fut1, "_Prenotazione__volontario", v_mario)
     setattr(p_fut1, "_Prenotazione__dataPrenotazione", oggi - timedelta(days=1))
     turni_creati["T-170"].aggiungiPrenotazione(p_fut1)
-    #turni_creati["T-170"].setPostiLiberi(turni_creati["T-170"].getDati()["postiLiberi"] - 1)
     v_mario.aggiungiPartecipazione(p_fut1)
     dati["prenotazioni"]["PREN-M-170"] = p_fut1
 
@@ -241,7 +236,6 @@ def popola_dati():
     setattr(p_fut2, "_Prenotazione__volontario", v_laura)
     setattr(p_fut2, "_Prenotazione__dataPrenotazione", oggi - timedelta(days=1))
     turni_creati["T-170"].aggiungiPrenotazione(p_fut2)
-    #turni_creati["T-170"].setPostiLiberi(turni_creati["T-170"].getDati()["postiLiberi"] - 1)
     v_laura.aggiungiPartecipazione(p_fut2)
     dati["prenotazioni"]["PREN-L-170"] = p_fut2
 
@@ -253,7 +247,6 @@ def popola_dati():
     setattr(p_fut3, "_Prenotazione__volontario", v_luca)
     setattr(p_fut3, "_Prenotazione__dataPrenotazione", oggi)
     turni_creati["T-172"].aggiungiPrenotazione(p_fut3)
-    #turni_creati["T-172"].setPostiLiberi(turni_creati["T-172"].getDati()["postiLiberi"] - 1)
     v_luca.aggiungiPartecipazione(p_fut3)
     dati["prenotazioni"]["PREN-V-172"] = p_fut3
 
