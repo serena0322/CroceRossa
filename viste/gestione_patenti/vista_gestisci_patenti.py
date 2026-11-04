@@ -36,7 +36,6 @@ class VistaGestisciPatenti(QWidget):
         self.tabella = crea_tabella(["Codice", "Tipo", "Data di scadenza"], self)
         main_layout.addWidget(self.tabella)
 
-        # Separatore
         main_layout.addSpacing(6)
 
         # Sezione "Gestisci una patente"
@@ -56,7 +55,7 @@ class VistaGestisciPatenti(QWidget):
         codice_row.addWidget(self.codice, 1)
         main_layout.addLayout(codice_row)
 
-        # Tre pulsanti affiancati: Inserisci | Modifica | Rimuovi
+        # Tre pulsanti: Inserisci | Modifica | Rimuovi
         btn_row = QHBoxLayout()
         btn_row.setSpacing(12)
 
