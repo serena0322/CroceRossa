@@ -1,11 +1,11 @@
-"""VistaGestisciPatenti (GestionePatenti) secondo le specifiche del PDF e mockup (pag. 104).
+"""VistaGestisciPatenti (GestionePatenti).
 Layout:
 - Intestazione 'Le mie patenti'
 - Tabella: Codice | Tipo | Data di scadenza
 - Sezione 'Gestisci una patente':
   - Codice patente [line edit]
-  - Tre pulsanti affiancati: Inserisci | Modifica | Rimuovi
-- Banner di errore (es. 'Codice già presente.')
+  - Tre pulsanti affiancati: Inserisci | Modifica | Elimina
+  - Banner di errore (es. 'Codice già presente.')
 """
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
@@ -55,7 +55,7 @@ class VistaGestisciPatenti(QWidget):
         codice_row.addWidget(self.codice, 1)
         main_layout.addLayout(codice_row)
 
-        # Tre pulsanti: Inserisci | Modifica | Rimuovi
+        # Tre pulsanti: Inserisci | Modifica | Elimina
         btn_row = QHBoxLayout()
         btn_row.setSpacing(12)
 
@@ -67,7 +67,7 @@ class VistaGestisciPatenti(QWidget):
         self.btn_mod.clicked.connect(self.modifica_click)
         btn_row.addWidget(self.btn_mod, 1)
 
-        self.btn_elim = QPushButton("Rimuovi")
+        self.btn_elim = QPushButton("Elimina")
         self.btn_elim.clicked.connect(self.elimina_click)
         btn_row.addWidget(self.btn_elim, 1)
 
