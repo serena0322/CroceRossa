@@ -26,7 +26,7 @@ class Patente:
         """Valida a una certa data (es. la data del turno) se non scade prima."""
         return self.__dataScadenza >= data
 
-    # ---------- inserimento ----------
+    # inserimento
     def inserisciPatente(self, codice: str) -> bool:
         """True se il codice e' libero (la patente non e' presente)."""
         return len(self.ricercaPatente({"codice": codice})) == 0
@@ -39,7 +39,7 @@ class Patente:
         volontario.aggiungiPatente(self)
         GestoreDati().salva(dati)
 
-    # ---------- modifica ----------
+    # modifica
     def modificaPatente(self, codice: str, volontario: Volontario) -> dict:
         """Dati della patente se e' tra quelle del Volontario, altrimenti {}."""
         trovate = self.ricercaPatente({"codice": codice})
@@ -51,7 +51,7 @@ class Patente:
         patente.setDataScadenza(dataScadenza)
         GestoreDati().salva(GestoreDati().carica())
 
-    # ---------- rimozione ----------
+    # rimozione
     def rimuoviPatente(self, codice: str, volontario: Volontario) -> bool:
         trovate = self.ricercaPatente({"codice": codice})
         if not trovate or trovate[0] not in volontario.visualizzaPatenti():
@@ -62,7 +62,7 @@ class Patente:
         GestoreDati().salva(dati)
         return True
 
-    # ---------- RicercaPatente (incluso) ----------
+    # RicercaPatente
     def ricercaPatente(self, criterio: dict) -> list[Patente]:
         criterio = self.__prelevaCriterio(criterio)
         trovate: list[Patente] = []
