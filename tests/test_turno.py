@@ -83,7 +83,7 @@ class TestCUDTurno(TestBase):
         self.assertEqual(len(self.email), 1)
         self.assertIn("eliminato", self.email[0][1])
 
-    def test_turno_in_corso_non_rimovibile(self):
+    def test_turno_in_corso_non_eliminabile(self):
         # turno non ancora iniziato
         self.vai_a(datetime(2026, 11, 2, 7, 0))
         t = self.nuovo_turno("T1", giorno=date(2026, 11, 2), inizio=time(8, 0), fine=time(12, 0))
