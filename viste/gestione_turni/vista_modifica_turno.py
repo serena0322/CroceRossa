@@ -41,8 +41,6 @@ class VistaModificaTurno(QWidget):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(12)
 
-        # Intestazione come mockup pag. 105: "Modifica turno T-170"
-
         grid = QGridLayout()
         grid.setHorizontalSpacing(16)
         grid.setVerticalSpacing(8)
@@ -74,7 +72,7 @@ class VistaModificaTurno(QWidget):
         grid.addWidget(self.data, row, 1)
         row += 1
 
-        # Ora inizio & Ora fine affiancati
+        # Ora inizio - Ora fine
         lbl_orari = QLabel("Ora inizio")
         lbl_orari.setStyleSheet("font-size: 13px; font-weight: 500;")
         grid.addWidget(lbl_orari, row, 0)
