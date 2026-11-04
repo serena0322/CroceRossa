@@ -22,7 +22,6 @@ class VistaPrenotatiTurno(QWidget):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(14)
 
-        # Intestazione come mockup pag. 104: "Prenotati al turno T-170"
         main_layout.addWidget(QLabel(f"Prenotati al turno {codice}"))
 
         # Tabella colonne: Nome | Cognome | E-mail | Telefono | Prenotato il
