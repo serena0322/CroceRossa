@@ -1,0 +1,136 @@
+============================================================
+CREDENZIALI DI ACCESSO
+Password per tutti gli account: password123
+============================================================
+
+
+Se vuoi ripristinare il dataset iniziale, basta rieseguire `python3 inizializza_dati.py`
+
+---
+
+### 1. Referenti (4)
+
+1. **`referente@cri.it`**
+   - **Password:** `password123`
+   - **Settore Gestito:** Emergenza
+   - **Telefono:** `3339876543`
+   - **Comitato:** Ancona
+   - **Codice Autorizzazione:** `CRI-REF-001`
+
+2. **`referente.sanitario@cri.it`**
+   - **Password:** `password123`
+   - **Settore Gestito:** Sanitario
+   - **Telefono:** `3401122334`
+   - **Comitato:** Ancona
+   - **Codice Autorizzazione:** `CRI-REF-002`
+
+3. **`referente.formazione@cri.it`**
+   - **Password:** `password123`
+   - **Settore Gestito:** Formazione
+   - **Telefono:** `3495566778`
+   - **Comitato:** Ancona
+   - **Codice Autorizzazione:** `CRI-REF-003`
+
+4. **`referente.sociale@cri.it`**
+   - **Password:** `password123`
+   - **Settore Gestito:** Sociale
+   - **Telefono:** `3489988776`
+   - **Comitato:** Ancona
+   - **Codice Autorizzazione:** `CRI-REF-004`
+
+---
+
+### 2. Volontari (11)
+
+1. **Laura Bianchi** — `laura.bianchi@cri.it`
+   - **Password:** `password123`
+   - **Codice Fiscale:** `BNCLRA85B41H501K`
+   - **Telefono:** `3471122334`
+   - **Comitato:** Ancona
+   - **Ore di Servizio:** `5.0`
+   - **Patente:** `CRI-331245` (Patente 3, scad. 20/05/2028)
+
+2. **Luca Verdi** — `luca.verdi@cri.it`
+   - **Password:** `password123`
+   - **Codice Fiscale:** `VRDLCU90C15H501Y`
+   - **Telefono:** `3205566778`
+   - **Comitato:** Ancona
+   - **Ore di Servizio:** `0.0`
+   - **Patente:** `CRI-601245` (Patente 5, scad. 18/06/2029)
+
+3. **Giulia Neri** — `giulia.neri@cri.it`
+   - **Password:** `password123`
+   - **Codice Fiscale:** `NRIGLI92D45H501A`
+   - **Telefono:** `3394455667`
+   - **Comitato:** Ancona
+   - **Ore di Servizio:** `0.0`
+   - **Patente:** `CRI-112233` (B, scad. 10/01/2029)
+
+4. **Marco Ferrari** — `marco.ferrari@cri.it`
+   - **Password:** `password123`
+   - **Codice Fiscale:** `FRRMRC88E12H501B`
+   - **Telefono:** `3318899001`
+   - **Comitato:** Ancona
+   - **Ore di Servizio:** `0.0`
+   - **Patente:** `CRI-778899` (Patente 4, scad. 15/11/2027)
+
+5. **Sara Esposito** — `sara.esposito@cri.it`
+   - **Password:** `password123`
+   - **Codice Fiscale:** `SPSSRA95F55H501C`
+   - **Telefono:** `3452233445`
+   - **Comitato:** Ancona
+   - **Ore di Servizio:** `0.0`
+   - **Patente:** `CRI-990011` (Patente 2, scad. 12/04/2030)
+
+6. **Andrea Romano** — `andrea.romano@cri.it`
+   - **Password:** `password123`
+   - **Codice Fiscale:** `RMNDRA82G08H501D`
+   - **Telefono:** `3407788990`
+   - **Comitato:** Ancona
+   - **Ore di Servizio:** `0.0`
+   - **Patente:** `CRI-223344` (Patente 5, scad. 30/08/2028)
+
+7. **Elena Galli** — `elena.galli@cri.it`
+   - **Password:** `password123`
+   - **Codice Fiscale:** `GLLLNE94H62H501E`
+   - **Telefono:** `3286677889`
+   - **Comitato:** Ancona
+   - **Ore di Servizio:** `0.0`
+   - **Patente:** *Nessuna patente*
+
+8. **Davide Conti** — `davide.conti@cri.it`
+   - **Password:** `password123`
+   - **Codice Fiscale:** `CNTDVD87L22H501F`
+   - **Telefono:** `3331122445`
+   - **Comitato:** Ancona
+   - **Ore di Servizio:** `0.0`
+   - **Patente:** `CRI-556677` (CRI 5, scad. 05/10/2029)
+
+9. **Chiara Rizzo** — `chiara.rizzo@cri.it`
+   - **Password:** `password123`
+   - **Codice Fiscale:** `RZZCHR96M50H501G`
+   - **Telefono:** `3475566112`
+   - **Comitato:** Ancona
+   - **Ore di Servizio:** `0.0`
+   - **Patente:** `CRI-445566` (B, scad. 28/02/2028)
+
+10. **Simone Marini** — `simone.marini@cri.it`
+    - **Password:** `password123`
+    - **Codice Fiscale:** `MRNSMN89P18H501H`
+    - **Telefono:** `3348877665`
+    - **Comitato:** Ancona
+    - **Ore di Servizio:** `0.0`
+    - **Patente:** `CRI-889900` (Patente 4, scad. 19/07/2027)
+
+11. **Federica Greco** — `federica.greco@cri.it`
+    - **Password:** `password123`
+    - **Codice Fiscale:** `GRCFRC93R48H501I`
+    - **Telefono:** `3493344556`
+    - **Comitato:** Ancona
+    - **Ore di Servizio:** `0.0`
+    - **Patente:** *Nessuna patente*
+
+---
+
+### 8. Codici Autorizzazione Referenti (19)
+`CRI-REF-001`, `CRI-REF-002`, `CRI-REF-003`, `CRI-REF-004`, `CRI-REF-005`, `CRI-REF-006`, `CRI-REF-007`, `CRI-REF-008`, `CRI-REF-009`, `CRI-REF-010`, `CRI-REF-011`, `CRI-REF-012`, `CRI-REF-013`, `CRI-REF-014`, `CRI-REF-015`, `CRI2026`, `REF_ANCONA`, `REF_MILANO`, `REF_ROMA`
