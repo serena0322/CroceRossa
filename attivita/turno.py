@@ -155,7 +155,7 @@ class Turno(Programmabile):
         GestoreDati().salva(dati)
         return True
 
-    # RicercaTurno (incluso) 
+    # RicercaTurno
     def ricercaTurno(self, criterio: dict) -> list[Turno]:
         criterio = self.__prelevaCriterio(criterio)
         trovati: list[Turno] = []
@@ -181,7 +181,7 @@ class Turno(Programmabile):
                 if not (self.__stato == StatoAttivita.PROGRAMMATO and self.__postiLiberi > 0):
                     return False
             elif chiave == "tipoServizio":
-                # Ricerca insensibile a maiuscole/minuscole e per sottostringa per facilitare l'input da testo
+                # Case-insensitive 
                 if valore.lower() not in self.__tipoServizio.lower():
                     return False
             elif self.getDati().get(chiave) != valore:
