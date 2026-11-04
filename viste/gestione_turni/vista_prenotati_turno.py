@@ -1,4 +1,4 @@
-"""VistaPrenotatiTurno (GestioneTurni) secondo le specifiche del PDF e mockup (pag. 104).
+"""VistaPrenotatiTurno (GestioneTurni).
 Layout:
 - Intestazione: 'Prenotati al turno <codice>'
 - Tabella: Nome | Cognome | E-mail | Telefono | Prenotato il
