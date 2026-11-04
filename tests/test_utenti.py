@@ -115,9 +115,9 @@ class TestPatenti(TestBase):
         p.inserisciModifiche(v.visualizzaPatenti()[0], date(2029, 1, 1))
         self.assertEqual(v.visualizzaPatenti()[0].getDati()["dataScadenza"], date(2029, 1, 1))
 
-        # Rimozione patente
-        ok_rimossa = p.eliminaPatente("P100", v)
-        self.assertTrue(ok_rimossa)
+        # Elimina patente
+        ok_eliminata = p.eliminaPatente("P100", v)
+        self.assertTrue(ok_eliminata)
         self.assertEqual(len(v.visualizzaPatenti()), 0)
 
     def test_patente_di_un_altro_volontario_non_modificabile(self):
@@ -130,8 +130,8 @@ class TestPatenti(TestBase):
         dati_modifica = p.modificaPatente("P100", v2)
         self.assertEqual(dati_modifica, {})
 
-        rimosso = p.eliminaPatente("P100", v2)
-        self.assertFalse(rimosso)
+        eliminata = p.eliminaPatente("P100", v2)
+        self.assertFalse(eliminata)
 
     def test_validita(self):
         p = Patente()
