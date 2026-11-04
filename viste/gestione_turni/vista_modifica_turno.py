@@ -1,4 +1,4 @@
-"""VistaModificaTurno (GestioneTurni) secondo le specifiche del PDF e mockup (pag. 105).
+"""VistaModificaTurno (GestioneTurni).
 Layout a due colonne:
 - Titolo 'Modifica turno <codice>'
 - Form:
