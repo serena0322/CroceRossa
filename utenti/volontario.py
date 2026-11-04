@@ -86,15 +86,18 @@ class Volontario(Utente):
 
     def aggiungiPartecipazione(self, partecipazione: Partecipazione) -> None:
         from attivita.prenotazione import Prenotazione
+        from attivita.iscrizione import Iscrizione
         if isinstance(partecipazione, Prenotazione):
             self.__prenotazioni.append(partecipazione)
-        else:
+        elif isinstance(partecipazione, Iscrizione):
             self.__iscrizioni.append(partecipazione)
 
     def eliminaPartecipazione(self, partecipazione: Partecipazione) -> None:
-        if partecipazione in self.__prenotazioni:
+        from attivita.prenotazione import Prenotazione
+        from attivita.iscrizione import Iscrizione
+        if isinstance(partecipazione, Prenotazione) and partecipazione in self.__prenotazioni:
             self.__prenotazioni.remove(partecipazione)
-        elif partecipazione in self.__iscrizioni:
+        elif isinstance(partecipazione, Iscrizione) and partecipazione in self.__iscrizioni:
             self.__iscrizioni.remove(partecipazione)
 
     # ---------- VisualizzaPrenotazioni / AnnullaPrenotazione ----------

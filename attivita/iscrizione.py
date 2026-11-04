@@ -51,15 +51,18 @@ class Iscrizione(Partecipazione):
         return any(i.getVolontario() is volontario for i in corso.getIscrizioni())
 
     def getVolontario(self) -> Volontario:
+        assert self.__volontario is not None, "Volontario non associato"
         return self.__volontario
 
     def getDataIscrizione(self) -> date:
         return self.__dataIscrizione
 
     def getDataInizioCorso(self) -> date:
+        assert self.__corso is not None, "Corso non associato"
         return self.__corso.getDataInizio()
 
     def getDatiCorso(self) -> dict:
+        assert self.__corso is not None, "Corso non associato"
         return self.__corso.getDati()
 
     def setSuperato(self) -> None:
@@ -73,16 +76,20 @@ class Iscrizione(Partecipazione):
 
     # ---------- Partecipazione ----------
     def getDatiVolontario(self) -> dict:
+        assert self.__volontario is not None, "Volontario non associato"
         return self.__volontario.getDati()
 
     def liberaPosti(self) -> None:
-        self.__corso.eliminaIscrizione(self)
-        
+        if self.__corso is not None:
+            self.__corso.eliminaIscrizione(self)
+
     def notificaModifica(self) -> None:
-        self.__volontario.inviaEmail("Corso modificato",
-                                     f"Il corso {self.__corso.getDati()['nome']} e' stato modificato.")
+        if self.__corso is not None and self.__volontario is not None:
+            self.__volontario.inviaEmail("Corso modificato",
+                                         f"Il corso {self.__corso.getDati()['nome']} e' stato modificato.")
 
     def notificaEliminazione(self) -> None:
-        self.__volontario.inviaEmail("Corso eliminato",
-                                     f"Il corso {self.__corso.getDati()['nome']} e' stato eliminato.")
-        self.__volontario.eliminaPartecipazione(self)
+        if self.__corso is not None and self.__volontario is not None:
+            self.__volontario.inviaEmail("Corso eliminato",
+                                         f"Il corso {self.__corso.getDati()['nome']} e' stato eliminato.")
+            self.__volontario.eliminaPartecipazione(self)

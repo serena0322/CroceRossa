@@ -7,6 +7,7 @@ Riproduce l'estetica esatta dei mockup del PDF (pagine 4-14):
 - Tabelle e liste alternate con intestazioni chiare e righe evidenziate
 - Finestre con spaziatura e gerarchia ordinata
 """
+from PyQt5.QtWidgets import QLabel
 
 FOGLIO_DI_STILE = """
 /* Reset generale */
@@ -213,9 +214,8 @@ def applica_tema(app):
     app.setStyleSheet(FOGLIO_DI_STILE)
 
 
-def crea_label_errore(parent=None) -> "QLabel":
+def crea_label_errore(parent=None) -> QLabel:
     """Crea una QLabel stilizzata come banner di errore rosso, inizialmente nascosta."""
-    from PyQt5.QtWidgets import QLabel
     lbl = QLabel(parent)
     lbl.setProperty("error_banner", "true")
     lbl.setWordWrap(True)

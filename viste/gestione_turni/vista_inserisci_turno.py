@@ -55,7 +55,7 @@ class VistaInserisciTurno(QWidget):
             lbl = QLabel(label_text)
             lbl.setStyleSheet("font-size: 13px; font-weight: 500;")
             txt = QLineEdit(self)
-            txt.setText(str(default_val))
+            txt.setText(default_val)
             self.qlines[key] = txt
             grid.addWidget(lbl, row, 0)
             grid.addWidget(txt, row, 1)
