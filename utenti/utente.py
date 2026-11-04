@@ -7,7 +7,7 @@ from dati.gestore_dati import GestoreDati
 from supporto import posta
 
 FORMATO_EMAIL = re.compile(r"^[\w.+-]+@[\w-]+(\.[\w-]+)+$")
-FORMATO_PASSWORD = re.compile(r"^[A-Za-z0-9]{6,}$")  # NF2
+FORMATO_PASSWORD = re.compile(r"^[A-Za-z0-9]{6,}$")  
 
 class Utente(ABC):
     def __init__(self): 
@@ -16,7 +16,7 @@ class Utente(ABC):
         self.__password = ""
         self.__telefono = ""
 
-    # ---------- get / set usati nei sequence ----------
+    # get / set usati nei sequence
     def getEmail(self) -> str:
         return self.__email
 
@@ -42,7 +42,7 @@ class Utente(ABC):
     @abstractmethod
     def getDati(self) -> dict: ...
 
-    # ---------- Login ----------
+    # Login
     def login(self) -> None:
         """Messaggio d'avvio del caso d'uso: nel codice lo fa partire VistaLogin."""
         pass
@@ -61,7 +61,7 @@ class Utente(ABC):
         """L'apertura della home giusta la fa la vista (VistaLogin)."""
         pass
 
-    # ---------- RecuperaCredenziali (estensione di Login) ----------
+    # RecuperaCredenziali (estensione di Login)
     def recuperaCredenziali(self) -> None:
         """Messaggio d'avvio dell'estensione: lo fa partire VistaRecuperaCredenziali."""
         pass
@@ -90,7 +90,7 @@ class Utente(ABC):
     def inviaEmail(self, oggetto: str, testo: str) -> None:
         posta.invia(self.__email, oggetto, testo)
 
-    # ---------- ModificaDati ----------
+    # ModificaDati
     def modificaDati(self, email: str, telefono: str, password: str) -> bool:
         dati = GestoreDati().carica()
         altro = dati["utenti"].get(email)
@@ -103,7 +103,7 @@ class Utente(ABC):
         GestoreDati().salva(dati)
         return True
 
-    # ---------- EliminaAccount ----------
+    # EliminaAccount
     def eliminaAccount(self) -> None:
         dati = GestoreDati().carica()
         dati["utenti"].pop(self.__email, None)
