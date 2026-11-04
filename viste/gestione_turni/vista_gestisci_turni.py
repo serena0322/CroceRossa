@@ -1,11 +1,11 @@
-"""VistaGestisciTurni (GestioneTurni) secondo le specifiche del PDF e mockup (pag. 104).
+"""VistaGestisciTurni (GestioneTurni).
 Layout:
 - Intestazione 'Gestisci turni'
 - Tabella: Codice | Data | Luogo | Mezzo | Paziente | Patente
 - Pulsante 'Visualizza prenotati' centrato
 - Sezione 'Gestisci un turno':
   - Codice turno [line edit]
-  - Tre pulsanti affiancati: Inserisci | Modifica | Rimuovi
+  - Tre pulsanti affiancati: Inserisci | Modifica | Elimina
 - Banner di errore (es. 'Turno non trovato o non più programmato.')
 """
 from PyQt5.QtWidgets import (
@@ -65,7 +65,7 @@ class VistaGestisciTurni(QWidget):
         codice_row.addWidget(self.codice, 1)
         main_layout.addLayout(codice_row)
 
-        # Tre pulsanti: Inserisci | Modifica | Rimuovi
+        # Tre pulsanti: Inserisci | Modifica | Elimina
         btn_row = QHBoxLayout()
         btn_row.setSpacing(12)
 
@@ -77,7 +77,7 @@ class VistaGestisciTurni(QWidget):
         self.btn_mod.clicked.connect(self.modifica_click)
         btn_row.addWidget(self.btn_mod, 1)
 
-        self.btn_elim = QPushButton("Rimuovi")
+        self.btn_elim = QPushButton("Elimina")
         self.btn_elim.clicked.connect(self.elimina_click)
         btn_row.addWidget(self.btn_elim, 1)
 
