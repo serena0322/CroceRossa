@@ -89,8 +89,7 @@ class VistaLogin(QWidget):
         main_layout.addLayout(btn_rec_layout)
 
         main_layout.addSpacing(8)
-
-        # Riga inferiore con i due pulsanti di registrazione affiancati
+        
         reg_layout = QHBoxLayout()
         reg_layout.setSpacing(12)
 
