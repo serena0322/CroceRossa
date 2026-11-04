@@ -137,7 +137,7 @@ class Turno(Programmabile):
                       patenteRichiesta, corsiRichiesti, mezzo, materialeNecessario)
         turno.setPostiLiberi(postiTotali - prenotati)
         for prenotazione in turno.getPrenotazioni():
-            prenotazione.notificaModifica()
+            prenotazione.avvisaModifica()
         GestoreDati().salva(GestoreDati().carica())
         return True
 
