@@ -1,4 +1,4 @@
-"""VistaTurniDisponibili (PrenotazioneTurni) secondo le specifiche del PDF e mockup (pag. 105).
+"""VistaTurniDisponibili (PrenotazioneTurni).
 Layout:
 - Intestazione 'Turni disponibili'
 - Filtri su riga:
