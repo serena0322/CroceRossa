@@ -35,9 +35,7 @@ class VistaTurniDisponibili(QWidget):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(14)
 
-        # Intestazione come mockup pag. 105: "Turni disponibili"
-
-        # Riga filtri: Data [dataEdit]  Tipo di servizio [lineEdit]
+        # Riga filtri
         filtro_layout = QHBoxLayout()
         filtro_layout.setSpacing(14)
 
