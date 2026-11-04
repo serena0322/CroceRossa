@@ -3,7 +3,7 @@ Layout:
 - Intestazione: 'Croce Rossa Ancona - Home Volontario'
 - Titolo grande: 'Ciao <Nome> <Cognome>'
 - Sezione 'Area Utente':
-    Riga 1: [Profilo]  [Carriera]
+    Riga 1: [Account]  [Carriera]
     Riga 2: [Le mie patenti] centrato/largo
 - Sezione 'Area Attività':
     Riga 1: [Turni disponibili]   [Catalogo corsi]
@@ -40,9 +40,9 @@ class VistaHomeVolontario(QWidget):
 
         riga_ut1 = QHBoxLayout()
         riga_ut1.setSpacing(12)
-        btn_prof = QPushButton("Profilo")
-        btn_prof.clicked.connect(self.go_account)
-        riga_ut1.addWidget(btn_prof, 1)
+        btn_account = QPushButton("Account")
+        btn_account.clicked.connect(self.go_account)
+        riga_ut1.addWidget(btn_account, 1)
 
         btn_carr = QPushButton("Carriera")
         btn_carr.clicked.connect(self.go_carriera)
