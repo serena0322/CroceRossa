@@ -116,7 +116,7 @@ class TestPatenti(TestBase):
         self.assertEqual(v.visualizzaPatenti()[0].getDati()["dataScadenza"], date(2029, 1, 1))
 
         # Rimozione patente
-        ok_rimossa = p.rimuoviPatente("P100", v)
+        ok_rimossa = p.eliminaPatente("P100", v)
         self.assertTrue(ok_rimossa)
         self.assertEqual(len(v.visualizzaPatenti()), 0)
 
@@ -130,7 +130,7 @@ class TestPatenti(TestBase):
         dati_modifica = p.modificaPatente("P100", v2)
         self.assertEqual(dati_modifica, {})
 
-        rimosso = p.rimuoviPatente("P100", v2)
+        rimosso = p.eliminaPatente("P100", v2)
         self.assertFalse(rimosso)
 
     def test_validita(self):
