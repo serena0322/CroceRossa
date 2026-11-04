@@ -1,4 +1,4 @@
-"""VistaPrenotazioni (PrenotazioneTurni) secondo le specifiche del PDF e mockup (pag. 106).
+"""VistaPrenotazioni (PrenotazioneTurni).
 Layout:
 - Intestazione 'Le mie prenotazioni'
 - Tabella (Data, Orario, Codice turno)
