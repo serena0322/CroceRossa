@@ -30,8 +30,6 @@ class VistaDettagliCorso(QWidget):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(14)
 
-        # Intestazione come mockup: "Dettagli corso C-031"
-
         grid = QGridLayout()
         grid.setHorizontalSpacing(24)
         grid.setVerticalSpacing(8)
