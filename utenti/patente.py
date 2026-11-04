@@ -51,7 +51,7 @@ class Patente:
         patente.setDataScadenza(dataScadenza)
         GestoreDati().salva(GestoreDati().carica())
 
-    # rimozione
+    # eliminazione
     def eliminaPatente(self, codice: str, volontario: Volontario) -> bool:
         trovate = self.ricercaPatente({"codice": codice})
         if not trovate or trovate[0] not in volontario.visualizzaPatenti():
