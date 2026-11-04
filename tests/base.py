@@ -37,7 +37,7 @@ class TestBase(unittest.TestCase):
     def vai_a(self, istante: datetime) -> None:
         self.ora = istante
 
-    # ---------- dati di prova ----------
+    # dati di prova
     def nuovo_volontario(self, email="mario@cri.it", cf="RSSMRA80A01H501U") -> Volontario:
         v = Volontario()
         ok = v.inserisciInformazioni("Mario", "Rossi", cf, email, "3331234567",
