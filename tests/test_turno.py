@@ -76,7 +76,7 @@ class TestCUDTurno(TestBase):
         Prenotazione().prenotaTurno(t, v)
         self.email.clear()
 
-        ok = Turno().rimuoviTurno("T1")
+        ok = Turno().eliminaTurno("T1")
         self.assertTrue(ok)
         self.assertNotIn("T1", GestoreDati().carica()["turni"])
         self.assertEqual(len(v.visualizzaPrenotazioni()), 0)
@@ -92,7 +92,7 @@ class TestCUDTurno(TestBase):
         Turno().aggiornaStatoTurni()
         self.assertEqual(t.getStato(), StatoAttivita.IN_CORSO)
 
-        ok = Turno().rimuoviTurno("T1")
+        ok = Turno().eliminaTurno("T1")
         self.assertFalse(ok)
 
     def test_visualizza_prenotati_turno(self):
