@@ -83,9 +83,9 @@ class VistaGestisciCorsi(QWidget):
         self.btn_mod.clicked.connect(self.modifica_click)
         btn_row.addWidget(self.btn_mod, 1)
 
-        self.btn_rim = QPushButton("Rimuovi")
-        self.btn_rim.clicked.connect(self.rimuovi_click)
-        btn_row.addWidget(self.btn_rim, 1)
+        self.btn_elim = QPushButton("Rimuovi")
+        self.btn_elim.clicked.connect(self.elimina_click)
+        btn_row.addWidget(self.btn_elim, 1)
 
         layout.addLayout(btn_row)
 
@@ -119,7 +119,7 @@ class VistaGestisciCorsi(QWidget):
         ha_codice = bool(self.codice.text().strip())
         self.btn_ins.setEnabled(ha_codice)
         self.btn_mod.setEnabled(ha_codice)
-        self.btn_rim.setEnabled(ha_codice)
+        self.btn_elim.setEnabled(ha_codice)
 
     def _get_selected_corso(self) -> Corso | None:
         idx = self.tabella.currentRow()
@@ -178,7 +178,7 @@ class VistaGestisciCorsi(QWidget):
         self.vista_modifica = VistaModificaCorso(trovati[0], self.load_corsi)
         self.vista_modifica.show()
 
-    def rimuovi_click(self) -> None:
+    def elimina_click(self) -> None:
         nascondi_errore(self.lbl_errore)
         cod = self.codice.text().strip()
         ok = Corso().eliminaCorso(cod)
