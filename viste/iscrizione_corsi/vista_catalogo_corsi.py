@@ -1,4 +1,4 @@
-"""VistaCatalogoCorsi (IscrizioneCorsi) secondo le specifiche del PDF e mockup (catalogo_corsi.png).
+"""VistaCatalogoCorsi (IscrizioneCorsi).
 Layout:
 - Intestazione 'Catalogo corsi'
 - Riga filtro: 'Tipo di corso' [QLineEdit testo libero]  [Pulsante Filtra]
@@ -124,4 +124,4 @@ class VistaCatalogoCorsi(QWidget):
             nascondi_errore(self.lbl_errore)
             self.load_corsi()
         else:
-            mostra_errore(self.lbl_errore, "Sei già iscritto a questo corso.")
+            mostra_errore(self.lbl_errore, "Iscrizione non possibile: sei già iscritto o il corso non ha posti liberi.")
