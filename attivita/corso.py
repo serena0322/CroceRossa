@@ -132,7 +132,7 @@ class Corso(Programmabile):
             return False
         dati = GestoreDati().carica()
         for iscrizione in trovati[0].getIscrizioni():
-            iscrizione.notificaEliminazione()
+            iscrizione.avvisaEliminazione()
             dati["iscrizioni"].pop(iscrizione.getDati()["codice"], None)
         del dati["corsi"][codice]
         GestoreDati().salva(dati)
