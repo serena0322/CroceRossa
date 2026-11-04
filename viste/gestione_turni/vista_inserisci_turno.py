@@ -74,7 +74,7 @@ class VistaInserisciTurno(QWidget):
         grid.addWidget(self.data, row, 1)
         row += 1
 
-        # Ora inizio & Ora fine affiancati
+        # Ora inizio - Ora fine
         lbl_orari = QLabel("Ora inizio")
         lbl_orari.setStyleSheet("font-size: 13px; font-weight: 500;")
         grid.addWidget(lbl_orari, row, 0)
