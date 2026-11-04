@@ -33,7 +33,7 @@ class VistaHomeReferente(QWidget):
         riga1 = QHBoxLayout()
         riga1.setSpacing(12)
         btn_prof = QPushButton("Profilo")
-        btn_prof.clicked.connect(self.go_profilo)
+        btn_prof.clicked.connect(self.go_account)
         riga1.addWidget(btn_prof, 1)
 
         btn_stats = QPushButton("Statistiche")
@@ -70,7 +70,7 @@ class VistaHomeReferente(QWidget):
         self.vista_successiva = VistaStatistiche()
         self.vista_successiva.show()
 
-    def go_profilo(self) -> None:
+    def go_account(self) -> None:
         from viste.gestione_account.vista_profilo import VistaProfilo
         self.vista_successiva = VistaProfilo(self.referente)
         self.vista_successiva.show()
