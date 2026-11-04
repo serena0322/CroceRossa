@@ -1,4 +1,4 @@
-"""VistaModificaCorso (GestioneCorsi) secondo le specifiche del PDF e mockup.
+"""VistaModificaCorso (GestioneCorsi).
 Layout a due colonne con:
 - Titolo 'Modifica corso <codice>'
 - Form con label a sinistra e campi a destra
