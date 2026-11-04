@@ -28,7 +28,7 @@ class VistaHomeReferente(QWidget):
         lbl_ciao.setStyleSheet("font-size: 18px; font-weight: bold; color: #1A202C;")
         main_layout.addWidget(lbl_ciao)
 
-        # Griglia 2x2 dei pulsanti esattamente come da mockup:
+        # Griglia 2x2 dei pulsanti
         # Riga 1: [Profilo] [Statistiche]
         riga1 = QHBoxLayout()
         riga1.setSpacing(12)
