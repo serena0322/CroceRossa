@@ -32,9 +32,7 @@ class VistaGestisciTurni(QWidget):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(12)
 
-        # Intestazione come mockup pag. 104: "Gestisci turni"
-
-        # Tabella colonne mockup: Codice | Data | Luogo | Mezzo | Paziente | Patente
+        # Tabella colonne: Codice | Data | Luogo | Mezzo | Paziente | Patente
         self.tabella = crea_tabella(["Codice", "Data", "Luogo", "Mezzo", "Paziente", "Patente"], self)
         main_layout.addWidget(self.tabella)
 
@@ -48,7 +46,6 @@ class VistaGestisciTurni(QWidget):
         btn_v_layout.addStretch()
         main_layout.addLayout(btn_v_layout)
 
-        # Separatore/spazio
         main_layout.addSpacing(6)
 
         # Sezione "Gestisci un turno"
@@ -68,7 +65,7 @@ class VistaGestisciTurni(QWidget):
         codice_row.addWidget(self.codice, 1)
         main_layout.addLayout(codice_row)
 
-        # Tre pulsanti affiancati: Inserisci | Modifica | Rimuovi
+        # Tre pulsanti: Inserisci | Modifica | Rimuovi
         btn_row = QHBoxLayout()
         btn_row.setSpacing(12)
 
@@ -86,7 +83,7 @@ class VistaGestisciTurni(QWidget):
 
         main_layout.addLayout(btn_row)
 
-        # Banner di errore in fondo
+        # Banner di errore
         self.lbl_errore = crea_label_errore(self)
         main_layout.addWidget(self.lbl_errore)
 
