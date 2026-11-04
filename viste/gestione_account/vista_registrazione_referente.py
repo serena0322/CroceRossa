@@ -1,4 +1,4 @@
-"""VistaRegistrazioneReferente (GestioneAccount) secondo le specifiche del PDF e mockup (pag. 104).
+"""VistaRegistrazioneReferente (GestioneAccount).
 Layout a due colonne:
 - Titolo 'Registrazione Referente'
 - Campi:
