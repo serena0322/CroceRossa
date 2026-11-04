@@ -7,7 +7,7 @@ from supporto import orologio
 PERCORSO_BACKUP = "backup"
 
 class GestoreBackup:
-    def __init__(self):  # create(): void
+    def __init__(self):  # create()
         self.__percorsoBackup = PERCORSO_BACKUP
 
     def effettuaBackup(self) -> None:
