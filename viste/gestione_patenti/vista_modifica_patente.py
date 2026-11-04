@@ -1,4 +1,4 @@
-"""VistaModificaPatente (GestionePatenti) secondo le specifiche del PDF e mockup (pag. 104).
+"""VistaModificaPatente (GestionePatenti).
 Layout a due colonne:
 - Titolo 'Modifica patente'
 - Codice (QLineEdit in sola lettura)
