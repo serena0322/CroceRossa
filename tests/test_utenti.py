@@ -126,7 +126,7 @@ class TestPatenti(TestBase):
         p = Patente()
         p.inserisciDatiPatente("P100", "CRI 5", date(2028, 1, 1), v1)
 
-        # v2 prova a modificare o rimuovere la patente di v1
+        # v2 prova a modificare o eliminare la patente di v1
         dati_modifica = p.modificaPatente("P100", v2)
         self.assertEqual(dati_modifica, {})
 
