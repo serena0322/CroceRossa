@@ -32,7 +32,6 @@ class VistaInserisciPatente(QWidget):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(14)
 
-        # Intestazione come mockup pag. 104: "Nuova patente"
 
         grid = QGridLayout()
         grid.setHorizontalSpacing(16)
