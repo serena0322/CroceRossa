@@ -3,7 +3,7 @@ Layout:
 - Intestazione: 'Croce Rossa Ancona - Home Referente'
 - Saluto: 'Ciao'
 - Due righe con 2 pulsanti affiancati:
-    Riga 1: [Profilo]        [Statistiche]
+    Riga 1: [Account]        [Statistiche]
     Riga 2: [Gestisci turni] [Gestisci corsi]
 """
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton
@@ -29,12 +29,12 @@ class VistaHomeReferente(QWidget):
         main_layout.addWidget(lbl_ciao)
 
         # Griglia 2x2 dei pulsanti
-        # Riga 1: [Profilo] [Statistiche]
+        # Riga 1: [Account] [Statistiche]
         riga1 = QHBoxLayout()
         riga1.setSpacing(12)
-        btn_prof = QPushButton("Profilo")
-        btn_prof.clicked.connect(self.go_account)
-        riga1.addWidget(btn_prof, 1)
+        btn_account = QPushButton("Account")
+        btn_account.clicked.connect(self.go_account)
+        riga1.addWidget(btn_account, 1)
 
         btn_stats = QPushButton("Statistiche")
         btn_stats.clicked.connect(self.go_statistiche)
