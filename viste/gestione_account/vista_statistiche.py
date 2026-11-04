@@ -46,7 +46,6 @@ class VistaStatistiche(QWidget):
         self.on_Changed("Volontari")
 
     def on_Changed(self, cat_label: str) -> None:
-        # Pulisce i widget correnti
         for i in reversed(range(self.content_layout.count())):
             item = self.content_layout.itemAt(i)
             w = item.widget()
