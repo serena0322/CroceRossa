@@ -162,7 +162,7 @@ class VistaGestisciTurni(QWidget):
     def rimuovi_click(self) -> None:
         nascondi_errore(self.lbl_errore)
         cod = self.codice.text().strip()
-        ok = Turno().rimuoviTurno(cod)
+        ok = Turno().eliminaTurno(cod)
         if ok:
             nascondi_errore(self.lbl_errore)
             self.load_turni()
