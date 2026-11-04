@@ -6,7 +6,7 @@ Layout:
 - Banner errore orizzontale ('Il corso non è concluso o non ha iscritti.')
 - Sezione 'Gestisci un corso':
     - Riga 'Codice corso' con QLineEdit
-    - Tre pulsanti affiancati: 'Inserisci', 'Modifica', 'Rimuovi'
+    - Tre pulsanti affiancati: 'Inserisci', 'Modifica', 'Elimina'
 """
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
@@ -71,7 +71,7 @@ class VistaGestisciCorsi(QWidget):
         codice_row.addWidget(self.codice, 1)
         layout.addLayout(codice_row)
 
-        # Tre pulsanti affiancati: Inserisci | Modifica | Rimuovi
+        # Tre pulsanti affiancati: Inserisci | Modifica | Elimina
         btn_row = QHBoxLayout()
         btn_row.setSpacing(12)
 
@@ -83,7 +83,7 @@ class VistaGestisciCorsi(QWidget):
         self.btn_mod.clicked.connect(self.modifica_click)
         btn_row.addWidget(self.btn_mod, 1)
 
-        self.btn_elim = QPushButton("Rimuovi")
+        self.btn_elim = QPushButton("Elimina")
         self.btn_elim.clicked.connect(self.elimina_click)
         btn_row.addWidget(self.btn_elim, 1)
 
