@@ -24,6 +24,8 @@ class VistaProfilo(QWidget):
         self.setWindowTitle("Profilo")
         self.resize(500, 360)
 
+        self.vista_login = None
+
         self.qlines: dict[str, QLineEdit] = {}
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(20, 20, 20, 20)
