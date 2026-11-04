@@ -1,4 +1,4 @@
-"""VistaInserisciPatente (GestionePatenti) secondo le specifiche del PDF e mockup (pag. 104).
+"""VistaInserisciPatente (GestionePatenti).
 Layout a due colonne:
 - Titolo 'Nuova patente'
 - Codice (QLineEdit precompilato)
