@@ -89,7 +89,7 @@ class Prenotazione(Partecipazione):
         if self.__turno is not None:
             self.__turno.eliminaPrenotazione(self)
 
-    def notificaModifica(self) -> None:
+    def avvisaModifica(self) -> None:
         if self.__turno is not None and self.__volontario is not None:
             d = self.__turno.getDati()
             self.__volontario.inviaEmail("Turno modificato",
