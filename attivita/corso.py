@@ -126,7 +126,7 @@ class Corso(Programmabile):
         GestoreDati().salva(GestoreDati().carica())
         return True
 
-    def rimuoviCorso(self, codice: str) -> bool:
+    def eliminaCorso(self, codice: str) -> bool:
         trovati = self.ricercaCorso({"codice": codice})
         if not trovati or trovati[0].getStato() != StatoAttivita.PROGRAMMATO:
             return False
